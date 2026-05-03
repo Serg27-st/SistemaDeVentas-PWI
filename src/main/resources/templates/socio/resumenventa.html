@@ -1,0 +1,113 @@
+ <!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="description" content="">
+<meta name="author" content="">
+
+<title>GymControl</title>
+
+
+<!-- Bootstrap core CSS -->
+<link th:href="@{vendor/bootstrap/css/bootstrap.min.css}"
+	rel="stylesheet">
+
+<!-- Custom styles for this template -->
+<link th:href="@{css/heroic-features.css}" rel="stylesheet">
+
+</head>
+
+<body>
+
+	<!-- Navigation -->
+	<div th:include="socio\template_socio.html::header" th:if="${sesion==null}">	
+	</div>
+	
+  <div th:include="socio\template_socio.html::header-user"th:unless="${sesion==null}"> </div>
+
+    <!-- Page Content -->
+    <div class="container">
+
+
+      <!-- Page Heading/Breadcrumbs -->
+      <h1 class="mt-4 mb-3">
+        GymControl <small>Resumen de la orden</small>
+      </h1>
+
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a th:href="@{/}">Home</a></li>
+        <li class="breadcrumb-item active">Orden</li>
+      </ol>
+
+      <!-- Blog Post -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="row">
+           <div class="col-lg-9">
+             <div class="card-body">
+              <h5 class="card-title">
+                DATOS ORDEN
+              </h5>
+              <h6 th:text="'Nombre: '+${socio.nombre}">Nombre:</h6>
+              <h6 th:text="'Correo: '+${socio.email}">Correo:</h6>
+              <h6 th:text="'Direccion: '+${socio.direccion}">Direccion:</h6>
+
+              <h5 class="card-title">
+                PRODUCTOS
+              </h5>
+              <div class="alert alert-light" role="alert">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Producto</th>
+                      <th scope="col">Precio</th>
+                      <th scope="col">Cantidad</th>
+                      <th scope="col">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr th:each="dventa:${cart}">
+                     <td th:text="${dventa.nombre}"></td>
+                     <td th:text="${dventa.precioUnitario}"></td>
+                     <td th:text="${dventa.cantidad}"></td>
+                     <td th:text="${dventa.total}"></td>
+
+                   </tr>
+                 </tbody>
+               </table>
+             </div>
+
+           </div>
+         </div>
+         </div>
+
+
+
+         <div class="col-lg-3">
+          <h2 class="card-title">Resumen Orden</h2>
+
+          <ul class="list-group">
+            <li class="list-group-item"><h5 th:text=" 'total: ' + ${venta.montoTotal}"> </h5></li>
+            <a th:href="@{saveVenta}" class="btn btn-dark">Generar</a>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- /.container -->
+
+  <!-- Footer -->
+	<div th:include="socio/template_socio.html::footer">
+	</div>
+
+	<!-- Bootstrap core JavaScript -->
+	<script th:src="@{/vendor/jquery/jquery.min.js}"></script>
+	<script th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+
+</body>
+
+</html>
