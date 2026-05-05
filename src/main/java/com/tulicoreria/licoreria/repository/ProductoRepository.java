@@ -1,14 +1,15 @@
 package com.tulicoreria.licoreria.repository;
 
-import com.tulicoreria.licoreria.model.Categoria;
-import com.tulicoreria.licoreria.model.Producto;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.tulicoreria.licoreria.model.Categoria;
+import com.tulicoreria.licoreria.model.Producto;
 
 @Repository
 public interface ProductoRepository extends JpaRepository<Producto, Long> {

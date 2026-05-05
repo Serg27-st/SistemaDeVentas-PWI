@@ -1,11 +1,12 @@
 package com.tulicoreria.licoreria.repository;
 
-import com.tulicoreria.licoreria.model.Usuario;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.tulicoreria.licoreria.model.Usuario;
 
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {

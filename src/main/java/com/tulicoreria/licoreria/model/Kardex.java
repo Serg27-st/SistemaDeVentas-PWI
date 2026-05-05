@@ -21,12 +21,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "kardex")
+@Table(name = "Kardex")
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class kardex {
+public class Kardex {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

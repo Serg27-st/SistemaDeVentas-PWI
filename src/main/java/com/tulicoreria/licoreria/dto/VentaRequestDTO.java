@@ -20,3 +20,4 @@ public class VentaRequestDTO {
     // Al menos un detalle es obligatorio
     private List<DetalleVentaRequestDTO> detalles;
 }
+ 
