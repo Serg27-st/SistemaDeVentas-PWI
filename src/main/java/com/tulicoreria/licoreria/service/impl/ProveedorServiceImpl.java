@@ -39,13 +39,6 @@ public class ProveedorServiceImpl implements ProveedorService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public ProveedorResponseDTO buscarPorRuc(String ruc) {
-        return toDTO(proveedorRepository.findByRuc(ruc)
-                .orElseThrow(() -> new RuntimeException("Proveedor no encontrado con RUC: " + ruc)));
-    }
-
-    @Override
     @Transactional
     public ProveedorResponseDTO crear(ProveedorRequestDTO dto) {
         if (proveedorRepository.existsByRuc(dto.getRuc())) {
@@ -80,8 +73,7 @@ public class ProveedorServiceImpl implements ProveedorService {
     @Override
     @Transactional
     public void desactivar(Long id) {
-        Proveedor proveedor = proveedorRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Proveedor no encontrado con id: " + id));
+        Proveedor proveedor = proveedorRepository.findById(id).orElseThrow(() -> new RuntimeException("Proveedor no encontrado con id: " + id));
         proveedor.setActivo(false);
         proveedorRepository.save(proveedor);
     }

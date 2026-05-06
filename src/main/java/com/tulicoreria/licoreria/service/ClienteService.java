@@ -17,4 +17,5 @@ public interface ClienteService {
 
     // Usado internamente por VentaService
     Cliente obtenerEntidad(Long id);
+    ClienteResponseDTO toDTO(Cliente cliente);
 }

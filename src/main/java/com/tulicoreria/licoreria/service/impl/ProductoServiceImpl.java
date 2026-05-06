@@ -132,7 +132,6 @@ public class ProductoServiceImpl implements ProductoService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Producto obtenerEntidad(Long id) {
         return productoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado con id: " + id));

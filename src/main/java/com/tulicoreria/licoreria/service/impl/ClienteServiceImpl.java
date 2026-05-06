@@ -82,13 +82,13 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Cliente obtenerEntidad(Long id) {
         return clienteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado con id: " + id));
     }
 
-    private ClienteResponseDTO toDTO(Cliente c) {
+    @Override
+    public ClienteResponseDTO toDTO(Cliente c) {
         return ClienteResponseDTO.builder()
                 .id(c.getId())
                 .nombre(c.getNombre())

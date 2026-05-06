@@ -1,23 +1,38 @@
 package com.tulicoreria.licoreria.service.impl;
 
-import com.tulicoreria.licoreria.dto.*;
-import com.tulicoreria.licoreria.model.*;
-import com.tulicoreria.licoreria.model.Venta.EstadoVenta;
-import com.tulicoreria.licoreria.model.Venta.MetodoPago;
-import com.tulicoreria.licoreria.model.Venta.TipoComprobante;
-import com.tulicoreria.licoreria.repository.*;
-import com.tulicoreria.licoreria.service.VentaService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.tulicoreria.licoreria.dto.DetalleVentaRequestDTO;
+import com.tulicoreria.licoreria.dto.DetalleVentaResponseDTO;
+import com.tulicoreria.licoreria.dto.VentaRequestDTO;
+import com.tulicoreria.licoreria.dto.VentaResponseDTO;
+import com.tulicoreria.licoreria.model.Cliente;
+import com.tulicoreria.licoreria.model.DetalleVenta;
+import com.tulicoreria.licoreria.model.Kardex;
+import com.tulicoreria.licoreria.model.Producto;
+import com.tulicoreria.licoreria.model.Usuario;
+import com.tulicoreria.licoreria.model.Venta;
+import com.tulicoreria.licoreria.model.Venta.EstadoVenta;
+import com.tulicoreria.licoreria.model.Venta.MetodoPago;
+import com.tulicoreria.licoreria.model.Venta.TipoComprobante;
+import com.tulicoreria.licoreria.repository.ClienteRepository;
+import com.tulicoreria.licoreria.repository.KardexRepository;
+import com.tulicoreria.licoreria.repository.ProductoRepository;
+import com.tulicoreria.licoreria.repository.UsuarioRepository;
+import com.tulicoreria.licoreria.repository.VentaRepository;
+import com.tulicoreria.licoreria.service.VentaService;
+
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+@Data
 @Service
 @RequiredArgsConstructor
 public class VentaServiceImpl implements VentaService {
@@ -34,23 +49,22 @@ public class VentaServiceImpl implements VentaService {
     @Transactional
     public VentaResponseDTO registrar(VentaRequestDTO dto) {
 
-        // 1. Obtener vendedor desde Spring Security
-        String username = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
+        // 1. Vendedor actual desde Spring Security
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Usuario vendedor = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Vendedor no encontrado"));
 
-        // 2. Obtener y validar cliente si fue proporcionado
+        // 2. Cliente opcional
         Cliente cliente = null;
         if (dto.getClienteId() != null) {
             cliente = clienteRepository.findById(dto.getClienteId())
                     .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
 
-            // 3. Verificar mayoría de edad — obligatorio para venta de alcohol
+            // 3. Verificar mayoría de edad
             if (!cliente.esMayorDeEdad()) {
                 throw new RuntimeException(
-                    "El cliente " + cliente.getNombre() + " " + cliente.getApellido() +
-                    " es menor de edad. No se puede realizar la venta de alcohol."
+                    "El cliente " + cliente.getNombre() + " es menor de edad. " +
+                    "No se puede realizar la venta de alcohol."
                 );
             }
         }
@@ -62,8 +76,7 @@ public class VentaServiceImpl implements VentaService {
         for (DetalleVentaRequestDTO detalleDTO : dto.getDetalles()) {
             Producto producto = productoRepository.findById(detalleDTO.getProductoId())
                     .orElseThrow(() -> new RuntimeException(
-                        "Producto no encontrado con id: " + detalleDTO.getProductoId()
-                    ));
+                        "Producto no encontrado con id: " + detalleDTO.getProductoId()));
 
             // 5. Validar stock disponible
             if (producto.getStock() < detalleDTO.getCantidad()) {
@@ -77,9 +90,10 @@ public class VentaServiceImpl implements VentaService {
             // 6. Calcular subtotal del detalle con descuento
             BigDecimal descuento = detalleDTO.getDescuentoPorcentaje() != null
                     ? detalleDTO.getDescuentoPorcentaje() : BigDecimal.ZERO;
+
             BigDecimal factor = BigDecimal.ONE.subtract(
-                    descuento.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP)
-            );
+                    descuento.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
+
             BigDecimal subtotalDetalle = producto.getPrecioVenta()
                     .multiply(BigDecimal.valueOf(detalleDTO.getCantidad()))
                     .multiply(factor)
@@ -129,9 +143,10 @@ public class VentaServiceImpl implements VentaService {
             detalle.setVenta(venta);
             venta.getDetalles().add(detalle);
         }
+
         Venta ventaGuardada = ventaRepository.save(venta);
 
-        // 12. Registrar salidas en Kardex
+        // 12. Registrar en Kardex
         for (DetalleVenta detalle : detalles) {
             Producto producto = detalle.getProducto();
             kardexRepository.save(Kardex.builder()
@@ -160,8 +175,7 @@ public class VentaServiceImpl implements VentaService {
             throw new RuntimeException("La venta ya se encuentra anulada");
         }
 
-        String username = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Usuario usuario = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
@@ -209,7 +223,6 @@ public class VentaServiceImpl implements VentaService {
                 .orElseThrow(() -> new RuntimeException("Comprobante no encontrado: " + numeroComprobante)));
     }
 
-    // ── Privados ─────────────────────────────────────────────────────────────
     private String generarNumeroComprobante(TipoComprobante tipo) {
         String ultimo = ventaRepository.findUltimoNumeroComprobante(tipo);
         int siguiente = 1;
@@ -219,10 +232,11 @@ public class VentaServiceImpl implements VentaService {
         return tipo.name() + "-" + String.format("%06d", siguiente);
     }
 
-    private VentaResponseDTO toDTO(Venta v) {
-        List<DetalleVentaResponseDTO> detallesDTO = v.getDetalles().stream()
-                .map(d -> DetalleVentaResponseDTO.builder()
-                        .id(d.getId())
+    @Override
+    public VentaResponseDTO toDTO(Venta v) {
+        List<DetalleVentaResponseDTO> detallesDTO = v.getDetalles().stream() 
+                .map(d-> DetalleVentaResponseDTO.builder()
+                        .id(d.getId().longValue())
                         .productoNombre(d.getProducto().getNombre())
                         .productoCodigo(d.getProducto().getCodigo())
                         .productoMarca(d.getProducto().getMarca())
@@ -233,6 +247,7 @@ public class VentaServiceImpl implements VentaService {
                         .subtotal(d.getSubtotal())
                         .build())
                 .toList();
+
 
         return VentaResponseDTO.builder()
                 .id(v.getId())
