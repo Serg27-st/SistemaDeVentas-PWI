@@ -1,16 +1,23 @@
 package com.tulicoreria.licoreria.controller;
 
-import com.tulicoreria.licoreria.dto.CategoriaRequestDTO;
-import com.tulicoreria.licoreria.service.CategoriaService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.tulicoreria.licoreria.dto.CategoriaRequestDTO;
+import com.tulicoreria.licoreria.dto.CategoriaResponseDTO;
+import com.tulicoreria.licoreria.service.CategoriaService;
+
+import lombok.RequiredArgsConstructor;
+
 @Controller
-@RequestMapping("/categorias")
+@RequestMapping("/categories") // Nota: Si en tu app manejas "/categorias", déjalo como /categorias
 @RequiredArgsConstructor
 public class CategoriaController {
 
@@ -23,48 +30,63 @@ public class CategoriaController {
     }
 
     @GetMapping("/nueva")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')") // 🔑 CORREGIDO: matches exact DB value "ROLE_ADMIN"
     public String nuevaForm(Model model) {
         model.addAttribute("categoria", new CategoriaRequestDTO());
         return "categorias/formulario";
     }
 
     @PostMapping("/nueva")
-    @PreAuthorize("hasRole('ADMIN')")
-    public String crear(@ModelAttribute CategoriaRequestDTO dto,
-                        RedirectAttributes flash) {
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')") // 🔑 CORREGIDO
+    public String crear(@ModelAttribute("categoria") CategoriaRequestDTO dto,
+            Model model,
+            RedirectAttributes flash) {
         try {
             categoriaService.crear(dto);
             flash.addFlashAttribute("exito", "Categoría creada correctamente");
+            return "redirect:/categorias";
         } catch (RuntimeException e) {
-            flash.addFlashAttribute("error", e.getMessage());
+            // Mantiene los datos rellenados si algo falla (ej. nombre duplicado)
+            model.addAttribute("error", e.getMessage());
+            return "categorias/formulario";
         }
-        return "redirect:/categorias";
     }
 
     @GetMapping("/editar/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')") // 🔑 CORREGIDO
     public String editarForm(@PathVariable Long id, Model model) {
-        model.addAttribute("categoria", categoriaService.buscarPorId(id));
+        // Obtenemos el DTO de respuesta que viene de la base de datos
+        CategoriaResponseDTO responseDTO = categoriaService.buscarPorId(id);
+
+        // 🛠️ CORREGIDO: Construimos el RequestDTO mapeando explícitamente el ID que Thymeleaf necesita evaluar
+        CategoriaRequestDTO requestDTO = CategoriaRequestDTO.builder()
+                .id(responseDTO.getId())
+                .nombre(responseDTO.getNombre())
+                .descripcion(responseDTO.getDescripcion())
+                .build();
+
+        model.addAttribute("categoria", requestDTO);
         return "categorias/formulario";
     }
 
     @PostMapping("/editar/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')") // 🔑 CORREGIDO
     public String actualizar(@PathVariable Long id,
-                             @ModelAttribute CategoriaRequestDTO dto,
-                             RedirectAttributes flash) {
+            @ModelAttribute("categoria") CategoriaRequestDTO dto,
+            Model model,
+            RedirectAttributes flash) {
         try {
             categoriaService.actualizar(id, dto);
             flash.addFlashAttribute("exito", "Categoría actualizada correctamente");
+            return "redirect:/categorias";
         } catch (RuntimeException e) {
-            flash.addFlashAttribute("error", e.getMessage());
+            model.addAttribute("error", e.getMessage());
+            return "categorias/formulario";
         }
-        return "redirect:/categorias";
     }
 
     @PostMapping("/desactivar/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')") // 🔑 CORREGIDO
     public String desactivar(@PathVariable Long id, RedirectAttributes flash) {
         try {
             categoriaService.desactivar(id);

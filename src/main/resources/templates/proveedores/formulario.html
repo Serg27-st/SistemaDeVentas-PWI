@@ -1,67 +1,143 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
-th:replace="~{admin/layout :: layout(
-          titulo=${proveedor != null ? 'Editar Proveedor' : 'Nuevo Proveedor'},
-          
-          
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+    th:replace="~{admin/layout :: layout(
+          titulo=${proveedor.id != null ? 'Editar Proveedor' : 'Nuevo Proveedor'},
           currentPage='proveedores',
           content=~{::main-content},
           extraHead=~{},
-          extraScripts=~{})}">
+          extraScripts=~{::scripts})}">
+
 <head>
 </head>
+
 <body>
-<main th:fragment="main-content">
+    <main th:fragment="main-content">
 
-    <div class="d-flex align-items-center justify-content-between mb-3">
-<h3 class="m-0" th:text="${proveedor != null ? 'Editar Proveedor' : 'Nuevo Proveedor'}"></h3>
-    </div>
-
-    <div class="card-dark">
-        <form th:action="${proveedor != null and proveedor.id != null ? @{'/proveedores/editar/' + ${proveedor.id}} : @'/proveedores/nuevo'}"
-              th:object="${proveedor}"
-              method="post" class="row g-3">
-
-            <div class="col-md-6">
-                <label class="form-label">Razón social</label>
-                <input class="form-control form-control-dark" th:field="*{razonSocial}" required/>
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <h3 class="m-0 text-white"
+                    th:text="${proveedor.id != null ? '📝 Editar Proveedor' : '📦 Nuevo Proveedor'}"></h3>
+                <p class="text-muted small m-0">Completa la información oficial del proveedor para el control de
+                    inventario.</p>
             </div>
+            <a th:href="@{/proveedores}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Regresar al listado
+            </a>
+        </div>
 
-            <div class="col-md-6">
-                <label class="form-label">RUC</label>
-                <input class="form-control form-control-dark" th:field="*{ruc}" required/>
-            </div>
+        <div class="card card-dark shadow-lg border-0 p-4" style="background-color: #1e222b; border-radius: 12px;">
 
-            <div class="col-md-6">
-                <label class="form-label">Dirección</label>
-                <input class="form-control form-control-dark" th:field="*{direccion}"/>
-            </div>
+            <form
+                th:action="${proveedor.id != null} ? @{/proveedores/editar/{id}(id=${proveedor.id})} : @{/proveedores/nuevo}"
+                th:object="${proveedor}" method="post" class="row g-3 needs-validation" novalidate>
 
-            <div class="col-md-6">
-                <label class="form-label">Teléfono</label>
-                <input class="form-control form-control-dark" th:field="*{telefono}"/>
-            </div>
+                <div class="col-12">
+                    <div class="form-section-title"><i class="bi bi-building me-2"></i>Datos de la Empresa</div>
+                </div>
 
-            <div class="col-md-6">
-                <label class="form-label">Correo</label>
-                <input type="email" class="form-control form-control-dark" th:field="*{correo}"/>
-            </div>
+                <div class="col-md-6">
+                    <label class="form-label text-light">Razón Social <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text input-group-text-dark"><i class="bi bi-pencil-square"></i></span>
+                        <input class="form-control form-control-dark" th:field="*{razonSocial}"
+                            placeholder="Ej: Distribuidora de Licores S.A.C." required />
+                        <div class="invalid-feedback">Por favor, ingresa la razón social.</div>
+                    </div>
+                </div>
 
-            <div class="col-md-6">
-                <label class="form-label">Contacto</label>
-                <input class="form-control form-control-dark" th:field="*{contactoNombre}"/>
-            </div>
+                <div class="col-md-6">
+                    <label class="form-label text-light">RUC <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text input-group-text-dark"><i class="bi bi-card-text"></i></span>
+                        <input class="form-control form-control-dark" th:field="*{ruc}" id="rucInput"
+                            placeholder="Ej: 20123456789" required autocomplete="off" />
+                        <div class="invalid-feedback">El número de RUC es obligatorio (11 dígitos).</div>
+                    </div>
+                </div>
 
-            <div class="col-12 d-flex justify-content-end gap-2">
-                <a th:href="@{/proveedores}" class="btn btn-outline-amber">Volver</a>
-                <button sec:authorize="hasAnyRole('ADMIN','ALMACEN')" type="submit" class="btn btn-amber">
-                    <i class="bi bi-save me-1"></i> Guardar
-                </button>
-            </div>
-        </form>
-    </div>
+                <div class="col-12">
+                    <label class="form-label text-light">Dirección Fiscal</label>
+                    <div class="input-group">
+                        <span class="input-group-text input-group-text-dark"><i class="bi bi-geo-alt"></i></span>
+                        <input class="form-control form-control-dark" th:field="*{direccion}"
+                            placeholder="Ej: Av. Revolución 123, Villa El Salvador" />
+                    </div>
+                </div>
 
-</main>
+                <div class="col-12">
+                    <div class="form-section-title"><i class="bi bi-person-lines-fill me-2"></i>Información de Contacto
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label text-light">Nombre del Contacto</label>
+                    <div class="input-group">
+                        <span class="input-group-text input-group-text-dark"><i class="bi bi-person"></i></span>
+                        <input class="form-control form-control-dark" th:field="*{contactoNombre}"
+                            placeholder="Ej: Juan Pérez" />
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label text-light">Teléfono / Celular</label>
+                    <div class="input-group">
+                        <span class="input-group-text input-group-text-dark"><i class="bi bi-telephone"></i></span>
+                        <input type="tel" class="form-control form-control-dark" th:field="*{telefono}"
+                            placeholder="Ej: 987654321" />
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label text-light">Correo Electrónico</label>
+                    <div class="input-group">
+                        <span class="input-group-text input-group-text-dark"><i class="bi bi-envelope"></i></span>
+                        <input type="email" class="form-control form-control-dark" th:field="*{correo}"
+                            placeholder="Ej: contacto@proveedor.com" />
+                        <div class="invalid-feedback">Por favor, introduce un correo electrónico válido.</div>
+                    </div>
+                </div>
+
+                <div class="col-12 d-flex justify-content-end gap-2 mt-4 pt-3 border-top border-secondary">
+                    <a th:href="@{/proveedores}" class="btn btn-outline-secondary px-4">Cancelar</a>
+                    <button sec:authorize="hasAnyAuthority('ROLE_ADMIN','ROLE_ALMACEN')" type="submit"
+                        class="btn btn-amber px-4">
+                        <i class="bi bi-save me-2"></i>Guardar Proveedor
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <th:block th:fragment="scripts">
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                'use strict'
+
+                // 1. Validación de envío nativa de Bootstrap 5
+                const forms = document.querySelectorAll('.needs-validation');
+                Array.from(forms).forEach(form => {
+                    form.addEventListener('submit', event => {
+                        if (!form.checkValidity()) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+
+                // 2. Filtro dinámico para el campo de RUC
+                const rucInput = document.getElementById('rucInput');
+                if (rucInput) {
+                    rucInput.addEventListener('input', function (e) {
+                        this.value = this.value.replace(/[^0-9]/g, '');
+                        if (this.value.length > 11) {
+                            this.value = this.value.slice(0, 11);
+                        }
+                    });
+                }
+            });
+        </script>
+    </th:block>
 </body>
+
 </html>
