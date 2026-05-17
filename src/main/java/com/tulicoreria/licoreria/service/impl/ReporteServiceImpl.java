@@ -35,9 +35,10 @@ public class ReporteServiceImpl implements ReporteService {
     public ReporteVentasMesDTO reporteVentasPorMes(int mes, int anio) {
 
         Object[] totales  = ventaRepository.findTotalesPorMes(mes, anio);
-        BigDecimal subtotal = totales[0] != null ? (BigDecimal) totales[0] : BigDecimal.ZERO;
-        BigDecimal igv      = totales[1] != null ? (BigDecimal) totales[1] : BigDecimal.ZERO;
-        BigDecimal total    = totales[2] != null ? (BigDecimal) totales[2] : BigDecimal.ZERO;
+        BigDecimal subtotal = toBigDecimal(totales, 0);
+        BigDecimal igv      = toBigDecimal(totales, 1);
+        BigDecimal total    = toBigDecimal(totales, 2);
+
 
         LocalDateTime inicio = LocalDateTime.of(anio, mes, 1, 0, 0);
         LocalDateTime fin    = inicio.plusMonths(1).minusSeconds(1);
@@ -176,6 +177,25 @@ public class ReporteServiceImpl implements ReporteService {
     private String nombreMes(int mes) {
         return Month.of(mes).getDisplayName(TextStyle.FULL, new Locale("es", "PE"));
     }
+
+    private BigDecimal toBigDecimal(Object[] arr, int idx) {
+        if (arr == null || idx < 0 || idx >= arr.length) {
+            return BigDecimal.ZERO;
+        }
+        Object value = arr[idx];
+        if (value == null) {
+            return BigDecimal.ZERO;
+        }
+        if (value instanceof BigDecimal bd) {
+            return bd;
+        }
+        if (value instanceof Number n) {
+            // Convierte cualquier Number (Long/Integer/Double/etc.) a BigDecimal vía toString
+            return new BigDecimal(n.toString());
+        }
+        return BigDecimal.ZERO;
+    }
+
 
     // ════════════════════════════════════════════════════════════════════════
     // DTOs INTERNOS — solo usados por ReporteService

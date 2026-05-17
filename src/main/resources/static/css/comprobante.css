@@ -1,0 +1,154 @@
+/* Ticket comprobante de ventas - estilos para impresión */
+
+body {
+    font-family: 'Courier New', monospace;
+    background: #f8f9fa;
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.ticket {
+    width: 320px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.ticket-header {
+    text-align: center;
+    border-bottom: 2px dashed #ddd;
+    padding-bottom: 1rem;
+}
+
+.ticket-logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.ticket-ruc {
+    font-size: 0.75rem;
+    color: #666;
+}
+
+.ticket-tipo {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-top: 0.5rem;
+}
+
+.ticket-numero {
+    font-size: 0.85rem;
+    color: #444;
+}
+
+.ticket-section {
+    border-bottom: 1px dashed #ddd;
+    padding: 0.75rem 0;
+    font-size: 0.8rem;
+}
+
+.ticket-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.2rem;
+}
+
+.ticket-label {
+    color: #666;
+}
+
+.ticket-value {
+    font-weight: 600;
+}
+
+.ticket-items {
+    padding: 0.75rem 0;
+    font-size: 0.8rem;
+}
+
+.ticket-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px dotted #eee;
+}
+
+.ticket-item:last-child {
+    border-bottom: none;
+}
+
+.item-nombre {
+    font-weight: 600;
+}
+
+.item-detalle {
+    color: #888;
+    font-size: 0.72rem;
+}
+
+.item-precio {
+    text-align: right;
+}
+
+.ticket-totales {
+    border-top: 2px dashed #ddd;
+    padding-top: 0.75rem;
+    font-size: 0.82rem;
+}
+
+.total-final {
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-top: 1px dashed #ddd;
+    padding-top: 0.5rem;
+    margin-top: 0.3rem;
+}
+
+.ticket-footer {
+    text-align: center;
+    padding-top: 1rem;
+    font-size: 0.72rem;
+    color: #888;
+    border-top: 1px dashed #ddd;
+    margin-top: 0.75rem;
+}
+
+.badge-estado {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.anulada {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* Solo para pantalla — ocultar en impresión */
+.btn-imprimir {
+    display: block;
+}
+
+@media print {
+    body {
+        background: #fff;
+        padding: 0;
+    }
+
+    .ticket {
+        box-shadow: none;
+        border: none;
+    }
+
+    .btn-imprimir {
+        display: none !important;
+    }
+}
+

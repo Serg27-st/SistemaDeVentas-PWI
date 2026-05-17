@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{admin/layout :: layout(
+          titulo='Detalle Cliente',
+          currentPage='clientes',
+          content=~{::main-content},
+          extraHead=~{},
+          extraScripts=~{})}">
+<head>
+</head>
+<body>
+<main th:fragment="main-content">
+
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h3 class="m-0" th:text="${cliente.nombre + ' ' + cliente.apellido}">Cliente</h3>
+        <div class="d-flex gap-2">
+            <a th:href="@{'/clientes/editar/' + ${cliente.id}}" class="btn btn-outline-amber" sec:authorize="hasAnyRole('ADMIN','VENDEDOR')">
+                <i class="bi bi-pencil me-1"></i> Editar
+            </a>
+            <a th:href="@{/clientes}" class="btn btn-outline-amber">Volver</a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card-dark h-100 p-3">
+                <h6 class="mb-3">Información</h6>
+                <div class="d-flex justify-content-between py-1">
+                    <span class="text-muted">Tipo documento</span>
+                    <span th:text="${cliente.tipoDocumento}"></span>
+                </div>
+                <div class="d-flex justify-content-between py-1">
+                    <span class="text-muted">Número documento</span>
+                    <span th:text="${cliente.numeroDocumento}"></span>
+                </div>
+                <div class="d-flex justify-content-between py-1">
+                    <span class="text-muted">Fecha nacimiento</span>
+                    <span th:text="${cliente.fechaNacimiento != null ? cliente.fechaNacimiento : '-'}"></span>
+                </div>
+                <div class="d-flex justify-content-between py-1">
+                    <span class="text-muted">Teléfono</span>
+                    <span th:text="${cliente.telefono != null ? cliente.telefono : '-'}"></span>
+                </div>
+                <div class="d-flex justify-content-between py-1">
+                    <span class="text-muted">Correo</span>
+                    <span th:text="${cliente.correo != null ? cliente.correo : '-'}"></span>
+                </div>
+                <div class="d-flex justify-content-between py-1">
+                    <span class="text-muted">Dirección</span>
+                    <span th:text="${cliente.direccion != null ? cliente.direccion : '-'}"></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card-dark h-100 p-3">
+                <h6 class="mb-3">Accesos</h6>
+                <div class="alert alert-secondary mb-0">
+                    <small>
+                        Desde el punto de venta puedes seleccionar este cliente.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+</body>
+</html>

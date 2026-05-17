@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+th:replace="~{admin/layout :: layout(
+          titulo=${proveedor != null ? 'Editar Proveedor' : 'Nuevo Proveedor'},
+          
+          
+          currentPage='proveedores',
+          content=~{::main-content},
+          extraHead=~{},
+          extraScripts=~{})}">
+<head>
+</head>
+<body>
+<main th:fragment="main-content">
+
+    <div class="d-flex align-items-center justify-content-between mb-3">
+<h3 class="m-0" th:text="${proveedor != null ? 'Editar Proveedor' : 'Nuevo Proveedor'}"></h3>
+    </div>
+
+    <div class="card-dark">
+        <form th:action="${proveedor != null and proveedor.id != null ? @{'/proveedores/editar/' + ${proveedor.id}} : @'/proveedores/nuevo'}"
+              th:object="${proveedor}"
+              method="post" class="row g-3">
+
+            <div class="col-md-6">
+                <label class="form-label">Razón social</label>
+                <input class="form-control form-control-dark" th:field="*{razonSocial}" required/>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">RUC</label>
+                <input class="form-control form-control-dark" th:field="*{ruc}" required/>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Dirección</label>
+                <input class="form-control form-control-dark" th:field="*{direccion}"/>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Teléfono</label>
+                <input class="form-control form-control-dark" th:field="*{telefono}"/>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Correo</label>
+                <input type="email" class="form-control form-control-dark" th:field="*{correo}"/>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Contacto</label>
+                <input class="form-control form-control-dark" th:field="*{contactoNombre}"/>
+            </div>
+
+            <div class="col-12 d-flex justify-content-end gap-2">
+                <a th:href="@{/proveedores}" class="btn btn-outline-amber">Volver</a>
+                <button sec:authorize="hasAnyRole('ADMIN','ALMACEN')" type="submit" class="btn btn-amber">
+                    <i class="bi bi-save me-1"></i> Guardar
+                </button>
+            </div>
+        </form>
+    </div>
+
+</main>
+</body>
+</html>

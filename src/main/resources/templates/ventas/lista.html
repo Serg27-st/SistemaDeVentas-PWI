@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(
+          titulo='Ventas | Licorería',
+          currentPage='ventas',
+          content=~{::main-content},
+          extraHead=~{},
+          extraScripts=~{::scripts})}">
+
+<head>
+    <title>Ventas</title>
+</head>
+
+<body>
+    <th:block th:fragment="main-content">
+
+        <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+            <div>
+                <h4 class="page-title mb-1">Historial de ventas</h4>
+                <p class="text-muted mb-0 small">Consulta y gestiona todas las ventas realizadas</p>
+            </div>
+            <a th:href="@{/ventas/nueva}" class="btn btn-warning fw-semibold">
+                <i class="bi bi-cart-plus me-1"></i>Nueva venta
+            </a>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-primary-soft">
+                        <i class="bi bi-receipt text-primary"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value" th:text="${ventas != null ? #lists.size(ventas) : 0}">0</div>
+                        <div class="stat-label">Total ventas</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-success-soft">
+                        <i class="bi bi-check2-circle text-success"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value"
+                            th:text="${ventas != null ? ventas.?[estado.name() == 'COMPLETADA'].size() : 0}">
+                            0
+                        </div>
+                        <div class="stat-label">Completadas</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-danger-soft">
+                        <i class="bi bi-x-circle text-danger"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value"
+                            th:text="${ventas != null ? ventas.?[estado.name() == 'ANULADA'].size() : 0}">
+                            0
+                        </div>
+                        <div class="stat-label">Anuladas</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-warning-soft">
+                        <i class="bi bi-cash-stack text-warning"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value">
+                            S/. <span
+                                th:text="${ventas != null && #lists.size(ventas) > 0 ? #numbers.formatDecimal(#aggregates.sum(ventas.?[estado.name() == 'COMPLETADA'].![total]), 1, 'COMMA', 2, 'POINT') : '0.00'}">
+                                0.00
+                            </span>
+                        </div>
+                        <div class="stat-label">Total facturado</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body py-3">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-4">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-search text-muted"></i>
+                            </span>
+                            <input type="text" id="buscador" class="form-control border-start-0"
+                                placeholder="N° comprobante o cliente..." />
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <select id="filtroEstado" class="form-select form-select-sm">
+                            <option value="">Todos los estados</option>
+                            <option value="COMPLETADA">Completada</option>
+                            <option value="ANULADA">Anulada</option>
+                            <option value="PENDIENTE">Pendiente</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select id="filtroTipo" class="form-select form-select-sm">
+                            <option value="">Comprobante</option>
+                            <option value="BOLETA">Boleta</option>
+                            <option value="FACTURA">Factura</option>
+                            <option value="TICKET">Ticket</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select id="filtroPago" class="form-select form-select-sm">
+                            <option value="">Método de pago</option>
+                            <option value="EFECTIVO">Efectivo</option>
+                            <option value="YAPE">Yape</option>
+                            <option value="PLIN">Plin</option>
+                            <option value="TARJETA">Tarjeta</option>
+                            <option value="TRANSFERENCIA">Transferencia</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="limpiarFiltros()">
+                            <i class="bi bi-x me-1"></i>Limpiar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="tablaVentas">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="ps-4">Comprobante</th>
+                                <th>Cliente</th>
+                                <th>Vendedor</th>
+                                <th>Fecha</th>
+                                <th>Pago</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-center pe-4">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="v : ${ventas}"
+                                th:data-comprobante="${v.numeroComprobante != null ? #strings.toLowerCase(v.numeroComprobante) : ''}"
+                                th:data-cliente="${v.clienteNombre != null ? #strings.toLowerCase(v.clienteNombre) : ''}"
+                                th:data-estado="${v.estado}" th:data-tipo="${v.tipoComprobante}"
+                                th:data-pago="${v.metodoPago}">
+
+                                <td class="ps-4">
+                                    <a th:href="@{/ventas/{id}(id=${v.id})}"
+                                        class="fw-semibold text-decoration-none text-primary"
+                                        th:text="${v.numeroComprobante}"></a>
+                                    <small class="text-muted d-block" th:text="${v.tipoComprobante}"></small>
+                                </td>
+
+                                <td>
+                                    <span th:text="${v.clienteNombre}"></span>
+                                    <small class="text-muted d-block"
+                                        th:if="${v.clienteDocumento != null && v.clienteDocumento != '-'}"
+                                        th:text="${v.clienteDocumento}"></small>
+                                </td>
+
+                                <td th:text="${v.vendedorNombre}"></td>
+
+                                <td>
+                                    <span
+                                        th:text="${v.fechaHora != null ? #temporals.format(v.fechaHora,'dd/MM/yyyy') : ''}"></span>
+                                    <small class="text-muted d-block"
+                                        th:text="${v.fechaHora != null ? #temporals.format(v.fechaHora,'HH:mm') : ''}"></small>
+                                </td>
+
+                                <td>
+                                    <span th:switch="${v.metodoPago.name()}"> <span th:case="'EFECTIVO'">
+                                            <i class="bi bi-cash text-success me-1"></i>Efectivo
+                                        </span>
+                                        <span th:case="'YAPE'">
+                                            <i class="bi bi-phone text-primary me-1"></i>Yape
+                                        </span>
+                                        <span th:case="'PLIN'">
+                                            <i class="bi bi-phone text-info me-1"></i>Plin
+                                        </span>
+                                        <span th:case="'TARJETA'">
+                                            <i class="bi bi-credit-card text-primary me-1"></i>Tarjeta
+                                        </span>
+                                        <span th:case="'TRANSFERENCIA'">
+                                            <i class="bi bi-bank text-secondary me-1"></i>Transf.
+                                        </span>
+                                    </span>
+                                </td>
+
+                                <td class="text-end fw-bold"
+                                    th:text="|S/. ${#numbers.formatDecimal(v.total != null ? v.total : 0, 1, 'COMMA', 2, 'POINT')}|">
+                                </td>
+
+                                <td class="text-center">
+                                    <span th:switch="${v.estado.name()}">
+                                        <span th:case="'COMPLETADA'" class="badge bg-success">Completada</span>
+                                        <span th:case="'ANULADA'" class="badge bg-danger">Anulada</span>
+                                        <span th:case="'PENDIENTE'" class="badge bg-warning text-dark">Pendiente</span>
+                                    </span>
+                                </td>
+
+                                <td class="text-center pe-4">
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <a th:href="@{/ventas/{id}(id=${v.id})}"
+                                            class="btn btn-sm btn-outline-secondary" title="Ver">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a th:href="@{/ventas/{id}/comprobante(id=${v.id})}"
+                                            class="btn btn-sm btn-outline-primary" title="Imprimir" target="_blank">
+                                            <i class="bi bi-printer"></i>
+                                        </a>
+                                        <form th:if="${v.estado.name() == 'COMPLETADA'}"
+                                            th:action="@{/ventas/{id}/anular(id=${v.id})}" method="post"
+                                            class="d-inline"
+                                            onsubmit="return confirm('¿Anular esta venta? El stock será devuelto al inventario.')">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Anular">
+                                                <i class="bi bi-x-circle"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <tr id="filaSinResultados" style="display:none">
+                                <td colspan="8" class="text-center py-5 text-muted">
+                                    <i class="bi bi-search fs-2 d-block mb-2 text-secondary"></i>
+                                    No se encontraron ventas que coincidan con los filtros.
+                                </td>
+                            </tr>
+
+                            <tr th:if="${#lists.isEmpty(ventas)}">
+                                <td colspan="8" class="text-center py-5 text-muted">
+                                    <i class="bi bi-receipt fs-2 d-block mb-2 text-secondary"></i>
+                                    No hay ventas registradas en el sistema.
+                                    <a th:href="@{/ventas/nueva}"
+                                        class="d-block mt-2 text-warning fw-semibold text-decoration-none">
+                                        Registrar primera venta
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </th:block>
+
+    <th:block th:fragment="scripts">
+        <script>
+            const buscador = document.getElementById('buscador');
+            const filtroEst = document.getElementById('filtroEstado');
+            const filtroTipo = document.getElementById('filtroTipo');
+            const filtroPago = document.getElementById('filtroPago');
+            const filas = document.querySelectorAll('#tablaVentas tbody tr[data-comprobante]');
+            const filaSinRes = document.getElementById('filaSinResultados');
+
+            function filtrar() {
+                const q = buscador.value.toLowerCase().trim();
+                const est = filtroEst.value;
+                const tipo = filtroTipo.value;
+                const pago = filtroPago.value;
+                let visible = 0;
+
+                filas.forEach(fila => {
+                    const matchQ = !q || fila.dataset.comprobante.includes(q) || fila.dataset.cliente.includes(q);
+                    const matchEst = !est || fila.dataset.estado === est;
+                    const matchTipo = !tipo || fila.dataset.tipo === tipo;
+                    const matchPago = !pago || fila.dataset.pago === pago;
+                    const mostrar = matchQ && matchEst && matchTipo && matchPago;
+
+                    fila.style.display = mostrar ? '' : 'none';
+                    if (mostrar) visible++;
+                });
+
+                filaSinRes.style.display = visible === 0 ? '' : 'none';
+            }
+
+            function limpiarFiltros() {
+                buscador.value = filtroEst.value = filtroTipo.value = filtroPago.value = '';
+                filtrar();
+            }
+
+            buscador.addEventListener('input', filtrar);
+            [filtroEst, filtroTipo, filtroPago].forEach(s => s.addEventListener('change', filtrar));
+        </script>
+    </th:block>
+</body>
+
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{admin/layout :: layout(
+          titulo='Proveedores',
+          currentPage='proveedores',
+          content=~{::main-content},
+          extraHead=~{},
+          extraScripts=~{})}">
+<head>
+</head>
+<body>
+<main th:fragment="main-content">
+
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h3 class="m-0">Proveedores</h3>
+        <a th:href="@{/proveedores/nuevo}" class="btn btn-amber" sec:authorize="hasAnyRole('ADMIN','ALMACEN')">
+            <i class="bi bi-plus-lg me-1"></i> Nuevo Proveedor
+        </a>
+    </div>
+
+    <div class="card-dark">
+        <div class="table-responsive">
+            <table class="table table-dark-custom table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>Razón social</th>
+                    <th>RUC</th>
+                    <th>Teléfono</th>
+                    <th>Correo</th>
+                    <th>Estado</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${proveedores}">
+                    <td th:text="${p.razonSocial}">RS</td>
+                    <td th:text="${p.ruc}">RUC</td>
+                    <td th:text="${p.telefono != null ? p.telefono : '-'}">-</td>
+                    <td th:text="${p.correo != null ? p.correo : '-'}">-</td>
+                    <td>ACTIVO</td>
+
+
+                    <td class="text-end">
+                        <a th:href="@{'/proveedores/editar/' + ${p.id}}" class="btn btn-outline-amber btn-sm" sec:authorize="hasAnyRole('ADMIN','ALMACEN')">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form th:action="@{'/proveedores/desactivar/' + ${p.id}}" method="post" style="display:inline-block;" sec:authorize="hasRole('ADMIN')">
+                            <button type="submit" class="btn btn-outline-danger btn-sm ms-1" onclick="return confirm('¿Desactivar este proveedor?')">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(proveedores)}">
+                    <td colspan="6" class="text-center text-muted py-4">No hay proveedores.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+</body>
+</html>

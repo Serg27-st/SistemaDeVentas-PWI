@@ -1,7 +1,6 @@
 package com.tulicoreria.licoreria.model;
 
 import java.math.BigDecimal;
-import java.util.concurrent.atomic.LongAdder;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -28,7 +27,7 @@ public class DetalleVenta {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private LongAdder id;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "venta_id", nullable = false)

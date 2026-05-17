@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+th:replace="~{admin/layout :: layout(
+          titulo='Reportes | Licorería',
+          currentPage='reportes',
+          content=~{::main-content},
+          extraHead=~{},
+          extraScripts=~{})}">
+<head><title>Reportes</title></head>
+<body>
+<th:block th:fragment="main-content">
+
+    <!-- Cabecera -->
+    <div class="mb-4">
+        <h4 class="page-title mb-1">Reportes</h4>
+        <p class="text-muted mb-0 small">
+            Consulta e información del sistema
+        </p>
+    </div>
+
+    <!-- Cards de reportes -->
+    <div class="row g-4">
+
+        <!-- Reporte 1 — Ventas por mes -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 reporte-card">
+                <div class="card-body p-4 text-center">
+                    <div class="reporte-icon bg-primary-soft mb-3 mx-auto">
+                        <i class="bi bi-bar-chart-line text-primary fs-2"></i>
+                    </div>
+                    <h5 class="fw-bold">Ventas por mes</h5>
+                    <p class="text-muted small mb-4">
+                        Resumen mensual de ventas con desglose por tipo
+                        de comprobante, método de pago e IGV.
+                    </p>
+                    <a th:href="@{/reportes/ventas-mes}"
+                       class="btn btn-primary w-100 fw-semibold">
+                        <i class="bi bi-arrow-right me-2"></i>Ver reporte
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reporte 2 — Por cliente -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 reporte-card">
+                <div class="card-body p-4 text-center">
+                    <div class="reporte-icon bg-success-soft mb-3 mx-auto">
+                        <i class="bi bi-people text-success fs-2"></i>
+                    </div>
+                    <h5 class="fw-bold">Ventas por cliente</h5>
+                    <p class="text-muted small mb-4">
+                        Ranking de clientes con mayor consumo mensual,
+                        cantidad de compras y total gastado.
+                    </p>
+                    <a th:href="@{/reportes/clientes}"
+                       class="btn btn-success w-100 fw-semibold">
+                        <i class="bi bi-arrow-right me-2"></i>Ver reporte
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reporte 3 — Por producto -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 reporte-card">
+                <div class="card-body p-4 text-center">
+                    <div class="reporte-icon bg-warning-soft mb-3 mx-auto">
+                        <i class="bi bi-box-seam text-warning fs-2"></i>
+                    </div>
+                    <h5 class="fw-bold">Ventas por producto</h5>
+                    <p class="text-muted small mb-4">
+                        Productos más vendidos del mes con unidades
+                        despachadas e ingresos generados.
+                    </p>
+                    <a th:href="@{/reportes/productos}"
+                       class="btn btn-warning w-100 fw-semibold">
+                        <i class="bi bi-arrow-right me-2"></i>Ver reporte
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</th:block>
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+th:replace="~{admin/layout :: layout(
+          titulo='Reporte por Cliente | Licorería',
+          currentPage='reporte-clientes',
+          content=~{::main-content},
+          extraHead=~{},
+          extraScripts=~{::scripts})}"
+<head><title>Reporte por Cliente</title></head>
+<body>
+<th:block th:fragment="main-content">
+
+    <!-- Cabecera -->
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <a th:href="@{/reportes}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h4 class="page-title mb-1">Ventas por cliente</h4>
+                <p class="text-muted mb-0 small">
+                    Ranking mensual —
+                    <span th:text="${reporte.nombreMes + ' ' + reporte.anio}"
+                          class="fw-semibold text-dark"></span>
+                </p>
+            </div>
+        </div>
+        <!-- Selector mes/año -->
+        <form th:action="@{/reportes/clientes}" method="get"
+              class="d-flex gap-2 align-items-center">
+            <select name="mes" class="form-select form-select-sm" style="width:130px">
+                <option th:each="m : ${#numbers.sequence(1,12)}"
+                        th:value="${m}" th:selected="${m == mes}"
+                        th:text="${#temporals.format(#temporals.create(2026,m,1),'MMMM')}">
+                </option>
+            </select>
+            <select name="anio" class="form-select form-select-sm" style="width:90px">
+                <option th:each="a : ${#numbers.sequence(2024,2026)}"
+                        th:value="${a}" th:selected="${a == anio}"
+                        th:text="${a}">
+                </option>
+            </select>
+            <button type="submit" class="btn btn-success btn-sm fw-semibold">
+                <i class="bi bi-search me-1"></i>Consultar
+            </button>
+        </form>
+    </div>
+
+    <!-- Tarjetas resumen -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon bg-success-soft">
+                    <i class="bi bi-people text-success"></i>
+                </div>
+                <div>
+                    <div class="stat-value" th:text="${reporte.totalClientes}">0</div>
+                    <div class="stat-label">Clientes del mes</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon bg-primary-soft">
+                    <i class="bi bi-cash-stack text-primary"></i>
+                </div>
+                <div>
+                    <div class="stat-value"
+                         th:text="'S/. ' + ${#numbers.formatDecimal(reporte.totalVendido,1,2)}">
+                        S/. 0.00
+                    </div>
+                    <div class="stat-label">Total vendido</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon bg-warning-soft">
+                    <i class="bi bi-trophy text-warning"></i>
+                </div>
+                <div>
+                    <div class="stat-value"
+                         th:text="${!#lists.isEmpty(reporte.clientes) ?
+                             reporte.clientes[0].nombreCompleto.split(' ')[0] : '-'}">
+                        -
+                    </div>
+                    <div class="stat-label">Mejor cliente</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla ranking -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom px-4 py-3">
+            <h6 class="fw-bold mb-0">
+                <i class="bi bi-person-lines-fill me-2 text-success"></i>
+                Ranking de clientes —
+                <span th:text="${reporte.nombreMes + ' ' + reporte.anio}"></span>
+            </h6>
+        </div>
+        <div class="card-body p-0">
+
+            <!-- Sin datos -->
+            <div th:if="${#lists.isEmpty(reporte.clientes)}"
+                 class="text-center py-5 text-muted">
+                <i class="bi bi-people fs-2 d-block mb-2"></i>
+                No hubo ventas con clientes registrados en este período
+            </div>
+
+            <div class="table-responsive" th:if="${!#lists.isEmpty(reporte.clientes)}">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="ps-4" style="width:60px">#</th>
+                            <th>Cliente</th>
+                            <th>Documento</th>
+                            <th class="text-center">Compras</th>
+                            <th class="text-end">Total gastado</th>
+                            <th class="text-end pe-4">% del total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="cliente, iter : ${reporte.clientes}">
+
+                            <!-- Posición con medalla -->
+                            <td class="ps-4">
+                                <span th:if="${iter.index == 0}"
+                                      class="badge bg-warning text-dark fs-6">🥇</span>
+                                <span th:if="${iter.index == 1}"
+                                      class="badge bg-secondary fs-6">🥈</span>
+                                <span th:if="${iter.index == 2}"
+                                      class="badge bg-warning-subtle text-warning-emphasis fs-6">🥉</span>
+                                <span th:if="${iter.index > 2}"
+                                      class="text-muted fw-semibold"
+                                      th:text="${iter.index + 1}"></span>
+                            </td>
+
+                            <!-- Nombre -->
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="user-avatar-sm"
+                                         th:style="'background:' + ${iter.index == 0 ? '#d97706' :
+                                             (iter.index == 1 ? '#6b7280' : '#374151')}">
+                                        <span th:text="${#strings.substring(cliente.nombreCompleto,0,1)}">
+                                        </span>
+                                    </div>
+                                    <span class="fw-semibold"
+                                          th:text="${cliente.nombreCompleto}"></span>
+                                </div>
+                            </td>
+
+                            <!-- Documento -->
+                            <td>
+                                <span class="badge bg-light text-dark border"
+                                      th:text="${cliente.tipoDocumento}"></span>
+                                <span class="ms-1" th:text="${cliente.numeroDocumento}"></span>
+                            </td>
+
+                            <!-- Cantidad compras -->
+                            <td class="text-center">
+                                <span class="badge bg-primary-subtle text-primary-emphasis fs-6"
+                                      th:text="${cliente.cantidadCompras}"></span>
+                            </td>
+
+                            <!-- Total gastado -->
+                            <td class="text-end fw-bold"
+                                th:text="'S/. ' + ${#numbers.formatDecimal(cliente.totalGastado,1,2)}">
+                            </td>
+
+                            <!-- Porcentaje -->
+                            <td class="text-end pe-4">
+                                <div class="d-flex align-items-center justify-content-end gap-2">
+                                    <div class="progress flex-grow-1" style="height:6px;max-width:80px">
+                                        <div class="progress-bar bg-success"
+                                             th:style="'width:' + ${reporte.totalVendido.compareTo(T(java.math.BigDecimal).ZERO) > 0 ?
+                                                 cliente.totalGastado.multiply(T(java.math.BigDecimal).valueOf(100))
+                                                 .divide(reporte.totalVendido,0,T(java.math.RoundingMode).HALF_UP) : 0} + '%'">
+                                        </div>
+                                    </div>
+                                    <small class="text-muted"
+                                           th:text="${reporte.totalVendido.compareTo(T(java.math.BigDecimal).ZERO) > 0 ?
+                                               cliente.totalGastado.multiply(T(java.math.BigDecimal).valueOf(100))
+                                               .divide(reporte.totalVendido,1,T(java.math.RoundingMode).HALF_UP) + '%'
+                                               : '0%'}">
+                                    </small>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+
+                    <!-- Fila total -->
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="4" class="ps-4 fw-bold">Total</td>
+                            <td class="text-end fw-bold text-success"
+                                th:text="'S/. ' + ${#numbers.formatDecimal(reporte.totalVendido,1,2)}">
+                            </td>
+                            <td class="text-end pe-4 fw-bold">100%</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</th:block>
+
+<th:block th:fragment="scripts">
+<script>
+document.querySelectorAll('select[name="mes"], select[name="anio"]')
+    .forEach(sel => sel.addEventListener('change', () => sel.form.submit()));
+</script>
+</th:block>
+</body>
+</html>

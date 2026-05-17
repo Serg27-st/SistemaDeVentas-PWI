@@ -103,7 +103,20 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
            "WHERE v.estado = 'COMPLETADA' " +
            "AND MONTH(v.fechaHora) = :mes " +
            "AND YEAR(v.fechaHora) = :anio")
-    Object[] findTotalesPorMes(
+Object[] findTotalesPorMes(
+            @Param("mes") int mes,
+            @Param("anio") int anio
+    );
+
+    // Variante tipada para evitar inconsistencias de mapeo del Object[]
+    @Query("SELECT COALESCE(SUM(v.subtotal), 0), " +
+           "COALESCE(SUM(v.igv), 0), " +
+           "COALESCE(SUM(v.total), 0) " +
+           "FROM Venta v " +
+           "WHERE v.estado = 'COMPLETADA' " +
+           "AND MONTH(v.fechaHora) = :mes " +
+           "AND YEAR(v.fechaHora) = :anio")
+    Object[] findTotalesPorMesOpt(
             @Param("mes") int mes,
             @Param("anio") int anio
     );

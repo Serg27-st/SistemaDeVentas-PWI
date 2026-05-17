@@ -1,9 +1,14 @@
-package com.tulicoreria.licoreria.dto;
-
-import com.tulicoreria.licoreria.model.Cliente.TipoDocumento;
-import lombok.*;
+ package com.tulicoreria.licoreria.dto;
 
 import java.time.LocalDate;
+
+import com.tulicoreria.licoreria.model.Cliente.TipoDocumento;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter @Setter
 @NoArgsConstructor

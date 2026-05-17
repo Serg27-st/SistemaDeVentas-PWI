@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{admin/layout :: layout(
+          titulo=${cliente != null and cliente.id != null ? 'Editar Cliente' : 'Nuevo Cliente'},
+          currentPage='clientes',
+          content=~{::main-content},
+          extraHead=~{},
+          extraScripts=~{})}">
+<head>
+</head>
+<body>
+<main th:fragment="main-content">
+
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h3 class="m-0" th:text="${cliente != null and cliente.id != null ? 'Editar Cliente' : 'Nuevo Cliente'}"></h3>
+    </div>
+
+    <div class="card-dark">
+        <form th:action="${cliente != null and cliente.id != null ? @{'/clientes/editar/' + ${cliente.id}} : @'/clientes/nuevo'}"
+              th:object="${cliente}"
+              method="post" class="row g-3">
+
+            <div class="col-md-6">
+                <label class="form-label">Nombre</label>
+                <input class="form-control form-control-dark" th:field="*{nombre}" required/>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Apellido</label>
+                <input class="form-control form-control-dark" th:field="*{apellido}" required/>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Tipo documento</label>
+                <select class="form-select form-select-dark" th:field="*{tipoDocumento}" required>
+                    <option value="DNI">DNI</option>
+                    <option value="RUC">RUC</option>
+                    <option value="PASAPORTE">PASAPORTE</option>
+                </select>
+            </div>
+
+            <div class="col-md-8">
+                <label class="form-label">Número documento</label>
+                <input class="form-control form-control-dark" th:field="*{numeroDocumento}" required/>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Fecha nacimiento</label>
+                <input type="date" class="form-control form-control-dark" th:field="*{fechaNacimiento}"/>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Teléfono</label>
+                <input class="form-control form-control-dark" th:field="*{telefono}"/>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Correo</label>
+                <input type="email" class="form-control form-control-dark" th:field="*{correo}"/>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Dirección</label>
+                <input class="form-control form-control-dark" th:field="*{direccion}"/>
+            </div>
+
+            <div class="col-12 d-flex justify-content-end gap-2">
+                <a th:href="@{/clientes}" class="btn btn-outline-amber">Volver</a>
+                <button sec:authorize="hasAnyRole('ADMIN','VENDEDOR')" type="submit" class="btn btn-amber">
+                    <i class="bi bi-save me-1"></i> Guardar
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+</main>
+</body>
+</html>

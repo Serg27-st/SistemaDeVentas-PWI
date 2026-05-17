@@ -1,4 +1,7 @@
-/* ── CONFIGURACIÓN GENERAL Y TIPOGRAFÍA ── */
+/* ==========================================================================
+   Estilos específicos de login - Versión Corporativa Premium
+   ========================================================================== */
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -7,19 +10,32 @@
 
 body {
     min-height: 100vh;
-    background: #f8fafc;
-    /* Gris/Azul ultra-limpio del fondo general de la imagen */
+    background: #1e293b;
+    /* El azul marino oscuro idéntico al fondo del login del mockup */
     font-family: 'DM Sans', sans-serif;
-    color: #334155;
     display: flex;
     align-items: center;
     justify-content: center;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* ── LOGIN CARD (Fiel al estilo "Login Administrador") ── */
+/* Fondo decorativo (Efecto de iluminación sutil adaptado al azul) */
+body::before {
+    content: '';
+    position: fixed;
+    top: -30%;
+    right: -10%;
+    width: 700px;
+    height: 700px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
 .login-wrapper {
     width: 100%;
     max-width: 440px;
+    /* Ajuste leve para dar mejor aire a los componentes internos */
     padding: 2rem;
     position: relative;
     z-index: 1;
@@ -27,40 +43,37 @@ body {
 
 .login-card {
     background: #ffffff;
-    /* Fondo blanco puro */
+    /* Caja contenedora blanca pura del mockup */
     border: 1px solid #e2e8f0;
-    /* Borde sutil gris claro */
     border-radius: 16px;
-    /* Esquinas redondeadas ejecutivas */
+    /* Bordes redondeados modernos y limpios */
     padding: 3rem 2.5rem;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-    /* Sombra suave idéntica al mockup */
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
 }
 
-/* Logo de la Licorería */
+/* ── LOGO Y IDENTIDAD ── */
 .brand-logo {
     font-family: 'Playfair Display', serif;
     font-size: 2rem;
     font-weight: 700;
     color: #1e293b;
-    /* Azul marino corporativo del Sidebar */
-    letter-spacing: 1.5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+    /* Color del título principal en el login claro */
+    letter-spacing: 1px;
+    text-align: center;
 }
 
 .brand-sub {
     color: #64748b;
-    /* Gris intermedio */
+    /* Gris intermedio sofisticado */
     font-size: 0.85rem;
-    letter-spacing: 1px;
-    font-weight: 500;
-    margin-top: 4px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-top: 6px;
+    text-align: center;
 }
 
-/* ── INPUTS Y FORMULARIOS MODERNOS ── */
+/* ── FORMULARIOS Y CAJAS DE TEXTO ── */
 .form-label {
     color: #475569;
     font-size: 0.85rem;
@@ -69,25 +82,22 @@ body {
     display: block;
 }
 
-.input-group {
-    box-shadow: none;
-}
-
 .input-group-text {
-    background: #f1f5f9;
-    /* Fondo gris claro suave para los iconos */
+    background: #f8fafc;
+    /* Fondo gris claro suave para los iconos de usuario/candado */
     border: 1px solid #cbd5e1;
-    color: #64748b;
+    color: #94a3b8;
     border-right: none;
-    transition: all 0.2s;
+    padding: 0 1rem;
 }
 
 .form-control {
     background: #ffffff;
     border: 1px solid #cbd5e1;
-    color: #1e293b;
-    padding: 0.75rem 1rem;
+    color: #0f172a;
+    padding: 0.8rem 1rem;
     font-size: 0.95rem;
+    border-radius: 8px;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
@@ -95,13 +105,12 @@ body {
     color: #94a3b8;
 }
 
-/* Enfoque / Focus (Estilo azul premium) */
+/* Estado Focus (Efecto de enfoque en azul de interfaz limpia) */
 .form-control:focus {
     background: #ffffff;
     border-color: #3b82f6;
-    /* Azul de enfoque */
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-    color: #1e293b;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+    color: #0f172a;
 }
 
 .input-group:focus-within .input-group-text {
@@ -109,11 +118,12 @@ body {
     color: #3b82f6;
 }
 
+/* Botón Ojo (Mostrar/Ocultar Contraseña) */
 .btn-ojo {
     background: #ffffff;
     border: 1px solid #cbd5e1;
     border-left: none;
-    color: #64748b;
+    color: #94a3b8;
     cursor: pointer;
     padding: 0 1rem;
     transition: color 0.2s, border-color 0.2s;
@@ -127,38 +137,38 @@ body {
     border-color: #3b82f6;
 }
 
-/* ── BOTÓN PRINCIPAL (Azul Marino / Dark Navy del mockup) ── */
+/* ── BOTÓN DE INGRESO (Mismo azul marino del fondo general) ── */
 .btn-ingresar {
     background: #1e293b;
-    /* Azul oscuro del Sidebar */
+    /* Botón oscuro que contrasta perfectamente sobre la tarjeta blanca */
     border: none;
     color: #ffffff;
     font-weight: 600;
     border-radius: 8px;
-    padding: 0.85rem;
+    padding: 0.9rem;
     font-size: 1rem;
+    letter-spacing: 0.5px;
     width: 100%;
-    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
     cursor: pointer;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
 }
 
 .btn-ingresar:hover {
     background: #0f172a;
-    /* Tono más oscuro al pasar el cursor */
-    box-shadow: 0 4px 12px rgba(30, 41, 59, 0.2);
+    /* Oscurece al pasar el cursor */
+    box-shadow: 0 4px 12px rgba(30, 41, 59, 0.25);
 }
 
 .btn-ingresar:active {
-    transform: scale(0.98);
+    transform: scale(0.99);
 }
 
-/* ── ELEMENTOS COMPLEMENTARIOS ── */
+/* ── ELEMENTOS DE CONTROL / ALERTAS ── */
 .divisor {
     border-color: #e2e8f0;
     margin: 1.75rem 0;
 }
 
-/* Alertas */
 .alerta-error {
     background: #fef2f2;
     border: 1px solid #fca5a5;
@@ -177,10 +187,20 @@ body {
     padding: 0.8rem 1rem;
 }
 
-/* Link recuperar / volver */
+.badge-aviso {
+    background: rgba(59, 130, 246, 0.05);
+    border: 1px solid rgba(59, 130, 246, 0.15);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    color: #2563eb;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+/* Enlaces (¿Olvidaste tu contraseña? / Volver) */
 .link-volver {
     color: #3b82f6;
-    /* Color azul de acento */
+    /* El color azul que maneja tus links en las maquetas */
     font-size: 0.88rem;
     font-weight: 500;
     text-decoration: none;
@@ -195,14 +215,16 @@ body {
     text-decoration: underline;
 }
 
+/* Pie de página con los derechos reservados */
 .pie {
     color: #94a3b8;
+    /* Cambiado a un tono claro para que resalte sobre el fondo general marino */
     font-size: 0.8rem;
     text-align: center;
     margin-top: 1.5rem;
 }
 
-/* Corrección de bordes del Input Group de Bootstrap */
+/* ── CONTROL DE BORDES INTERNOS (INPUT GROUP DE BOOTSTRAP) ── */
 .input-group .input-group-text {
     border-radius: 8px 0 0 8px;
 }

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{admin/layout :: layout(
+          titulo='Órdenes de Compra',
+          currentPage='ordenes',
+          content=~{::main-content},
+          extraHead=~{},
+          extraScripts=~{})}">
+<head>
+</head>
+<body>
+<main th:fragment="main-content">
+
+       <!-- Cabecera -->
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+        <div>
+            <h4 class="page-title mb-1">Órdenes de compra</h4>
+            <p class="text-muted mb-0 small">
+                Gestiona las compras realizadas a proveedores
+            </p>
+        </div>
+        <a th:href="@{/ordenes/nueva}" class="btn btn-warning fw-semibold">
+            <i class="bi bi-plus-lg me-1"></i>Nueva orden
+        </a>
+    </div>
+ 
+    <!-- Tarjetas resumen -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-primary-soft">
+                    <i class="bi bi-clipboard-check text-primary"></i>
+                </div>
+                <div>
+                    <div class="stat-value" th:text="${#lists.size(ordenes)}">0</div>
+                    <div class="stat-label">Total órdenes</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-warning-soft">
+                    <i class="bi bi-hourglass-split text-warning"></i>
+                </div>
+                <div>
+                    <div class="stat-value" th:text="${#lists.size(pendientes)}">0</div>
+                    <div class="stat-label">Pendientes</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-success-soft">
+                    <i class="bi bi-check2-circle text-success"></i>
+                </div>
+                <div>
+                         <div class="stat-value"
+                         th:text="${ordenes.?[estado == 'RECIBIDA'].size()}">
+                        0
+                    </div>
+                    <div class="stat-label">Recibidas</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-danger-soft">
+                    <i class="bi bi-x-circle text-danger"></i>
+                </div>
+<div>
+                    <div class="stat-value"
+                         th:text="${ordenes.?[estado == 'ANULADA'].size()}">
+                        0
+                    </div>
+                    <div class="stat-label">Anuladas</div>
+                </div>
+            </div>
+        </div>
+    </div>
+ 
+    <!-- Alerta órdenes pendientes -->
+    <div th:if="${!#lists.isEmpty(pendientes)}"
+         class="alert alert-warning alert-dismissible fade show mb-4">
+        <i class="bi bi-truck me-2"></i>
+        Tienes <strong th:text="${#lists.size(pendientes)}"></strong>
+        orden(es) pendiente(s) de recibir.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+ 
+    <!-- Filtros -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body py-3">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-4">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input type="text" id="buscador"
+                               class="form-control border-start-0"
+                               placeholder="N° orden o proveedor..."/>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select id="filtroEstado" class="form-select form-select-sm">
+                        <option value="">Todos los estados</option>
+                        <option value="PENDIENTE">Pendiente</option>
+                        <option value="RECIBIDA">Recibida</option>
+                        <option value="PARCIAL">Parcial</option>
+                        <option value="ANULADA">Anulada</option>
+                    </select>
+                </div>
+                <div class="col-md-2 text-end">
+                    <button class="btn btn-outline-secondary btn-sm"
+                            onclick="limpiarFiltros()">
+                        <i class="bi bi-x me-1"></i>Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+ 
+    <!-- Tabla -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="tablaOrdenes">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="ps-4">N° Orden</th>
+                            <th>Proveedor</th>
+                            <th>Fecha emisión</th>
+                            <th>Entrega estimada</th>
+                            <th class="text-end">Total</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-center pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="o : ${ordenes}"
+                            th:data-numero="${#strings.toLowerCase(o.numeroOrden)}"
+                            th:data-proveedor="${#strings.toLowerCase(o.proveedorRazonSocial)}"
+                            th:data-estado="${o.estado}">
+ 
+                            <!-- N° Orden -->
+                            <td class="ps-4">
+                                <a th:href="@{/ordenes/{id}(id=${o.id})}"
+                                   class="fw-semibold text-decoration-none"
+                                   th:text="${o.numeroOrden}">
+                                </a>
+                            </td>
+ 
+                            <!-- Proveedor -->
+                            <td>
+                                <div class="fw-semibold"
+                                     th:text="${o.proveedorRazonSocial}"></div>
+                                <small class="text-muted"
+                                       th:text="'RUC: ' + ${o.proveedorRuc}"></small>
+                            </td>
+ 
+                            <!-- Fecha emisión -->
+                            <td>
+                                <span th:text="${#temporals.format(o.fechaEmision,'dd/MM/yyyy')}">
+                                </span>
+                                <small class="text-muted d-block"
+                                       th:text="${#temporals.format(o.fechaEmision,'HH:mm')}">
+                                </small>
+                            </td>
+ 
+                            <!-- Entrega estimada -->
+                            <td>
+                                <span th:if="${o.fechaEntregaEstimada != null}"
+                                      th:text="${#temporals.format(o.fechaEntregaEstimada,'dd/MM/yyyy')}">
+                                </span>
+                                <span th:if="${o.fechaEntregaEstimada == null}"
+                                      class="text-muted">—</span>
+                            </td>
+ 
+                            <!-- Total -->
+                            <td class="text-end fw-bold"
+                                th:text="'S/. ' + ${#numbers.formatDecimal(o.total,1,2)}">
+                            </td>
+ 
+                            <!-- Estado -->
+                            <td class="text-center">
+                                <span th:switch="${o.estado}">
+                                    <span th:case="'PENDIENTE'"
+                                          class="badge bg-warning text-dark">
+                                        <i class="bi bi-hourglass-split me-1"></i>Pendiente
+                                    </span>
+                                    <span th:case="'RECIBIDA'"
+                                          class="badge bg-success">
+                                        <i class="bi bi-check2 me-1"></i>Recibida
+                                    </span>
+                                    <span th:case="'PARCIAL'"
+                                          class="badge bg-info text-dark">
+                                        <i class="bi bi-half me-1"></i>Parcial
+                                    </span>
+                                    <span th:case="'ANULADA'"
+                                          class="badge bg-danger">
+                                        <i class="bi bi-x me-1"></i>Anulada
+                                    </span>
+                                </span>
+                            </td>
+ 
+                            <!-- Acciones -->
+                            <td class="text-center pe-4">
+                                <div class="d-flex gap-1 justify-content-center">
+                                    <a th:href="@{/ordenes/{id}(id=${o.id})}"
+                                       class="btn btn-sm btn-outline-secondary"
+                                       title="Ver detalle">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <!-- Anular solo si está PENDIENTE -->
+                                    <form th:if="${o.estado == 'PENDIENTE'}"
+                                          th:action="@{/ordenes/{id}/anular(id=${o.id})}"
+                                          method="post" class="d-inline"
+                                          onsubmit="return confirm('¿Anular esta orden?')">
+                                        <input type="hidden"
+                                               th:name="${_csrf.parameterName}"
+                                               th:value="${_csrf.token}"/>
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-danger"
+                                                title="Anular">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+ 
+                        <!-- Sin resultados filtro -->
+                        <tr id="filaSinResultados" style="display:none">
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-search fs-2 d-block mb-2"></i>
+                                No se encontraron órdenes
+                            </td>
+                        </tr>
+ 
+                        <!-- Lista vacía -->
+                        <tr th:if="${#lists.isEmpty(ordenes)}">
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-clipboard fs-2 d-block mb-2"></i>
+                                No hay órdenes de compra registradas.
+                                <a th:href="@{/ordenes/nueva}"
+                                   class="d-block mt-2 text-warning">
+                                    Crear primera orden
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+ 
+</main>
+ 
+<th:block th:fragment="scripts">
+<script>
+const buscador   = document.getElementById('buscador');
+const filtroEst  = document.getElementById('filtroEstado');
+const filas      = document.querySelectorAll('#tablaOrdenes tbody tr[data-numero]');
+const filaSinRes = document.getElementById('filaSinResultados');
+ 
+function filtrar() {
+    const q   = buscador.value.toLowerCase();
+    const est = filtroEst.value;
+    let visible = 0;
+ 
+    filas.forEach(fila => {
+        const matchQ   = !q   || fila.dataset.numero.includes(q)
+                              || fila.dataset.proveedor.includes(q);
+        const matchEst = !est || fila.dataset.estado === est;
+        const mostrar  = matchQ && matchEst;
+        fila.style.display = mostrar ? '' : 'none';
+        if (mostrar) visible++;
+    });
+ 
+    filaSinRes.style.display = visible === 0 ? '' : 'none';
+}
+ 
+function limpiarFiltros() {
+    buscador.value = '';
+    filtroEst.value = '';
+    filtrar();
+}
+ 
+buscador.addEventListener('input', filtrar);
+filtroEst.addEventListener('change', filtrar);
+</script>
+</th:block>
+</body>
+</html>

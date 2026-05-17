@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+    th:replace="~{admin/layout :: layout(
+          titulo=${categoria != null && categoria.idCategoria != null ? 'Editar Categoría | Licorería' : 'Nueva Categoría | Licorería'},
+          currentPage='categorias',
+          content=~{::main-content},
+          extraHead=null,
+          extraScripts=~{::extraScripts})}">
+
+<head>
+    <title th:text="${categoria != null and categoria.id != null ? 'Editar Categoría' : 'Nueva Categoría'}"></title>
+</head>
+
+<body>
+
+    <th:block th:fragment="main-content">
+
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a th:href="@{/categorias}" class="btn btn-outline-secondary btn-sm rounded-circle">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h4 class="fw-bold mb-1" style="color: var(--text-main);"
+                    th:text="${categoria != null and categoria.id != null ? 'Editar Categoría' : 'Nueva Categoría'}">
+                </h4>
+                <p class="text-muted mb-0 small"
+                    th:text="${categoria != null and categoria.id != null ? 'Modifica los datos de la categoría seleccionada.' : 'Registra una nueva categoría para organizar tus licores.'}">
+                </p>
+            </div>
+        </div>
+
+        <div class="card-dark p-4 shadow-sm">
+            <form
+                th:action="${categoria != null and categoria.id != null ? @{'/categorias/editar/' + ${categoria.id}} : @{'/categorias/nueva'}}"
+                th:object="${categoria}" method="post" class="row g-4">
+
+                <input type="hidden" th:field="*{id}" th:if="${categoria != null and categoria.id != null}" />
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold" style="color: #475569; font-size: 0.9rem;">Nombre de la
+                        Categoría</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-tag"></i></span>
+                        <input type="text" class="form-control border-start-0" th:field="*{nombre}"
+                            placeholder="Ej. Rones, Whiskys, Cervezas..." required
+                            style="border-radius: 0 0.375rem 0.375rem 0;" />
+                    </div>
+                    <div class="text-danger small mt-1" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}">
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold" style="color: #475569; font-size: 0.9rem;">Descripción</label>
+                    <input type="text" class="form-control" th:field="*{descripcion}"
+                        placeholder="Breve descripción de las características o tipos de licores..." />
+                    <div class="text-danger small mt-1" th:if="${#fields.hasErrors('descripcion')}"
+                        th:errors="*{descripcion}"></div>
+                </div>
+
+                <div class="col-12 my-2">
+                    <hr style="border-top: 1px solid var(--border-soft); margin: 0;">
+                </div>
+
+                <div class="col-12 d-flex justify-content-end gap-2 pt-2">
+                    <a th:href="@{/categorias}" class="btn btn-light border fw-semibold btn-sm px-3"
+                        style="color: #475569;">
+                        Cancelar
+                    </a>
+
+                    <button sec:authorize="hasRole('ADMIN')" type="submit"
+                        class="btn btn-primary btn-sm fw-semibold px-4 shadow-sm"
+                        style="background-color: var(--accent-blue); border: none;">
+                        <i class="bi bi-save me-1"></i> Guardar Categoría
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </th:block>
+
+    <th:block th:fragment="extraScripts">
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.querySelector("form");
+            const nombreInput = document.getElementById("nombre");
+            const descripcionInput = document.getElementById("descripcion");
+            const guardarBtn = form.querySelector("button[type='submit']");
+
+            // 1. Limpieza dinámica de espacios en blanco al salir del campo
+            if (nombreInput) {
+                nombreInput.addEventListener("blur", function () {
+                    this.value = this.value.trim();
+                });
+            }
+
+            if (descripcionInput) {
+                descripcionInput.addEventListener("blur", function () {
+                    this.value = this.value.trim().replace(/\s+/g, ' '); // Quita espacios duplicados internos
+                });
+            }
+
+            // 2. Feedback visual y prevención de doble envío (Double-Submit Prevention)
+            form.addEventListener("submit", function (e) {
+                // Verificar validez nativa de HTML5 por si acaso
+                if (!form.checkValidity()) {
+                    e.preventDefault();
+                    form.classList.add('was-validated');
+                    return;
+                }
+
+                // Si todo está bien, deshabilitar botón y mostrar spinner de carga
+                if (guardarBtn) {
+                    guardarBtn.disabled = true;
+                    guardarBtn.innerHTML = `
+                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        Guardando...
+                    `;
+                }
+            });
+
+            // 3. Efecto visual Focus Smooth en el Input Group
+            // Hace que todo el contenedor del icono se ilumine cuando el input tiene el foco
+            if (nombreInput) {
+                const inputGroup = nombreInput.closest(".input-group");
+                if (inputGroup) {
+                    const addon = inputGroup.querySelector(".input-group-text");
+                    
+                    nombreInput.addEventListener("focus", function () {
+                        addon.style.borderColor = "var(--accent-blue)";
+                        addon.style.backgroundColor = "#eff6ff"; // Tono azul muy suave
+                        addon.style.color = "var(--accent-blue)";
+                    });
+
+                    nombreInput.addEventListener("blur", function () {
+                        addon.style.borderColor = "";
+                        addon.style.backgroundColor = "";
+                        addon.style.color = "";
+                    });
+                }
+            }
+        });
+    </script>
+</th:block>
+
+</body>
+
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(
+          titulo='Reporte Ventas por Mes | Licorería',
+          currentPage='reporte-mes',
+          content=~{::main-content},
+          extraHead=null,
+          extraScripts=~{::extraScripts})}">
+
+<head>
+    <title>Reporte Ventas por Mes</title>
+</head>
+
+<body>
+
+    <th:block th:fragment="main-content">
+
+        <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <a th:href="@{/reportes}" class="btn btn-outline-secondary btn-sm rounded-circle">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div>
+                    <h4 class="fw-bold mb-1" style="color: var(--text-main);">Ventas por mes</h4>
+                    <p class="text-muted mb-0 small">
+                        Resumen mensual —
+                        <span th:text="${reporte.nombreMes + ' ' + reporte.anio}" class="fw-semibold text-dark"></span>
+                    </p>
+                </div>
+            </div>
+
+            <form th:action="@{/reportes/ventas-mes}" method="get" class="d-flex gap-2 align-items-center">
+                <select name="mes" class="form-select form-select-sm shadow-sm" style="width:130px">
+                    <option th:each="m : ${#numbers.sequence(1,12)}" th:value="${m}" th:selected="${m == mes}"
+                        th:text="${#temporals.format(#temporals.create(2026,m,1),'MMMM')}">
+                    </option>
+                </select>
+                <select name="anio" class="form-select form-select-sm shadow-sm" style="width:90px">
+                    <option th:each="a : ${#numbers.sequence(2024,2026)}" th:value="${a}" th:selected="${a == anio}"
+                        th:text="${a}">
+                    </option>
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm fw-semibold shadow-sm"
+                    style="background-color: var(--accent-blue); border:none;">
+                    <i class="bi bi-search me-1"></i>Consultar
+                </button>
+            </form>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <i class="bi bi-receipt icon text-primary" style="background-color: #eff6ff;"></i>
+                    <div class="value" th:text="${reporte.cantidadVentas}">0</div>
+                    <div class="label">Ventas realizadas</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <i class="bi bi-cash-stack icon text-success" style="background-color: #f0fdf4;"></i>
+                    <div class="value" th:text="'S/. ' + ${#numbers.formatDecimal(reporte.total,1,2)}">S/. 0.00</div>
+                    <div class="label">Total vendido</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <i class="bi bi-percent icon text-warning" style="background-color: #fffbeb;"></i>
+                    <div class="value" th:text="'S/. ' + ${#numbers.formatDecimal(reporte.igv,1,2)}">S/. 0.00</div>
+                    <div class="label">IGV (18%)</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <i class="bi bi-graph-up icon text-info" style="background-color: #ecfeff;"></i>
+                    <div class="value" th:text="'S/. ' + ${#numbers.formatDecimal(reporte.ticketPromedio,1,2)}">S/. 0.00
+                    </div>
+                    <div class="label">Ticket promedio</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="card-dark">
+                    <div class="mb-3">
+                        <h6 class="fw-bold mb-0">
+                            <i class="bi bi-receipt me-2 text-primary"></i>
+                            Por tipo de comprobante
+                        </h6>
+                    </div>
+                    <div th:if="${#lists.isEmpty(reporte.porTipoComprobante)}" class="text-center py-4 text-muted">
+                        <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                        Sin ventas en este período
+                    </div>
+                    <div th:each="comp : ${reporte.porTipoComprobante}" class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <span th:text="${comp.tipoComprobante}" class="fw-semibold text-capitalize"
+                                    style="color: var(--text-main)"></span>
+                                <span class="badge bg-slate-100 text-muted"
+                                    style="background-color: #f1f5f9; color: #475569; font-size: 0.75rem;"
+                                    th:text="${comp.cantidadVentas + ' ventas'}"></span>
+                            </div>
+                            <span class="fw-bold" th:text="'S/. ' + ${#numbers.formatDecimal(comp.total,1,2)}"></span>
+                        </div>
+                        <div class="progress" style="height:6px; background-color: #e2e8f0;">
+                            <div class="progress-bar bg-primary" th:style="'width:' + ${reporte.total.compareTo(T(java.math.BigDecimal).ZERO) > 0 ?
+                                 comp.total.multiply(T(java.math.BigDecimal).valueOf(100)).divide(reporte.total,0,T(java.math.RoundingMode).HALF_UP)
+                                 : 0} + '%'">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card-dark">
+                    <div class="mb-3">
+                        <h6 class="fw-bold mb-0">
+                            <i class="bi bi-credit-card me-2 text-success"></i>
+                            Por método de pago
+                        </h6>
+                    </div>
+                    <div th:if="${#lists.isEmpty(reporte.porMetodoPago)}" class="text-center py-4 text-muted">
+                        <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                        Sin ventas en este período
+                    </div>
+                    <div th:each="pago : ${reporte.porMetodoPago}" class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <i th:class="${'bi ' +
+                                (#strings.equals(pago.metodoPago,'EFECTIVO') ? 'bi-cash text-success' :
+                                (#strings.equals(pago.metodoPago,'TARJETA') ? 'bi-credit-card text-primary' :
+                                (#strings.equals(pago.metodoPago,'YAPE') ? 'bi-phone text-info' :
+                                'bi-bank text-secondary')))}">
+                                </i>
+                                <span class="fw-semibold" th:text="${pago.metodoPago}"
+                                    style="color: var(--text-main)"></span>
+                                <span class="badge"
+                                    style="background-color: #f1f5f9; color: #475569; font-size: 0.75rem;"
+                                    th:text="${pago.cantidadVentas + ' ventas'}"></span>
+                            </div>
+                            <span class="fw-bold" th:text="'S/. ' + ${#numbers.formatDecimal(pago.total,1,2)}"></span>
+                        </div>
+                        <div class="progress" style="height:6px; background-color: #e2e8f0;">
+                            <div class="progress-bar bg-success" th:style="'width:' + ${reporte.total.compareTo(T(java.math.BigDecimal).ZERO) > 0 ?
+                                 pago.total.multiply(T(java.math.BigDecimal).valueOf(100)).divide(reporte.total,0,T(java.math.RoundingMode).HALF_UP)
+                                 : 0} + '%'">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-dark p-0 overflow-hidden">
+            <div class="border-bottom px-4 py-3 bg-white">
+                <h6 class="fw-bold mb-0" style="color: var(--text-main)">
+                    <i class="bi bi-file-earmark-text me-2 text-secondary"></i>
+                    Resumen tributario —
+                    <span th:text="${reporte.nombreMes + ' ' + reporte.anio}"></span>
+                </h6>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <tbody>
+                        <tr>
+                            <td class="ps-4 text-muted" style="border-bottom: 1px solid var(--border-soft)">Subtotal
+                                (sin IGV)</td>
+                            <td class="text-end pe-4 fw-semibold" style="border-bottom: 1px solid var(--border-soft)"
+                                th:text="'S/. ' + ${#numbers.formatDecimal(reporte.subtotal,1,2)}">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="ps-4 text-muted" style="border-bottom: 1px solid var(--border-soft)">IGV (18%)
+                            </td>
+                            <td class="text-end pe-4 fw-semibold" style="border-bottom: 1px solid var(--border-soft)"
+                                th:text="'S/. ' + ${#numbers.formatDecimal(reporte.igv,1,2)}">
+                            </td>
+                        </tr>
+                        <tr style="background-color: #f8fafc;">
+                            <td class="ps-4 fw-bold" style="color: var(--text-main)">Total facturado</td>
+                            <td class="text-end pe-4 fw-bold fs-5 text-primary"
+                                th:text="'S/. ' + ${#numbers.formatDecimal(reporte.total,1,2)}">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </th:block>
+
+    <th:block th:fragment="extraScripts">
+        <script>
+            // Auto-submit del selector de mes/año al cambiar
+            document.querySelectorAll('select[name="mes"], select[name="anio"]')
+                .forEach(sel => sel.addEventListener('change', () => sel.form.submit()));
+        </script>
+    </th:block>
+
+</body>
+
+</html>

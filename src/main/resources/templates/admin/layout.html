@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:fragment="layout(titulo, currentPage, content, extraHead, extraScripts)">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="${titulo != null ? titulo + ' — Licorería' : 'Licorería Admin'}">Admin</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <link th:href="@{/css/layout.css}" rel="stylesheet" />
+
+    <th:block th:replace="${extraHead} ?: ~{}"></th:block>
+</head>
+
+<body>
+
+    <nav class="sidebar">
+        <div class="sidebar-brand">
+            <h1><i class="bi bi-droplet-fill me-2" style="color: #3b82f6;"></i>LICORERÍA</h1>
+            <small>Panel Administrativo</small>
+        </div>
+
+        <div class="sidebar-section">Principal</div>
+        <a th:href="@{/dashboard}" class="sidebar-link" th:classappend="${currentPage == 'dashboard'} ? 'active'">
+            <i class="bi bi-grid-1x2-fill"></i> Dashboard
+        </a>
+
+        <div class="sidebar-section" sec:authorize="hasAnyRole('ADMIN','VENDEDOR')">Ventas</div>
+        <a th:href="@{/ventas}" class="sidebar-link" sec:authorize="hasAnyRole('ADMIN','VENDEDOR')"
+           th:classappend="${currentPage == 'ventas'} ? 'active'">
+            <i class="bi bi-receipt"></i> Ventas
+        </a>
+        <a th:href="@{/ventas/nueva}" class="sidebar-link" sec:authorize="hasAnyRole('ADMIN','VENDEDOR')"
+           th:classappend="${currentPage == 'punto-venta'} ? 'active'">
+            <i class="bi bi-cart-plus-fill"></i> Punto de Venta
+        </a>
+        <a th:href="@{/clientes}" class="sidebar-link" sec:authorize="hasAnyRole('ADMIN','VENDEDOR')"
+           th:classappend="${currentPage == 'clientes'} ? 'active'">
+            <i class="bi bi-people-fill"></i> Clientes
+        </a>
+
+        <div class="sidebar-section" sec:authorize="hasAnyRole('ADMIN','ALMACEN')">Inventario</div>
+        <a th:href="@{/productos}" class="sidebar-link" sec:authorize="hasAnyRole('ADMIN','ALMACEN')"
+           th:classappend="${currentPage == 'productos'} ? 'active'">
+            <i class="bi bi-box-seam-fill"></i> Productos
+        </a>
+        <a th:href="@{/ordenes}" class="sidebar-link" sec:authorize="hasAnyRole('ADMIN','ALMACEN')"
+           th:classappend="${currentPage == 'ordenes'} ? 'active'">
+            <i class="bi bi-truck"></i> Órdenes de Compra
+        </a>
+        <a th:href="@{/kardex}" class="sidebar-link" sec:authorize="hasAnyRole('ADMIN','ALMACEN')"
+           th:classappend="${currentPage == 'kardex'} ? 'active'">
+            <i class="bi bi-journal-text"></i> Kardex
+        </a>
+
+        <div class="sidebar-section" sec:authorize="hasAnyRole('ADMIN','ALMACEN')">Administración</div>
+        <a th:href="@{/categorias}" class="sidebar-link" sec:authorize="hasRole('ADMIN')"
+           th:classappend="${currentPage == 'categorias'} ? 'active'">
+            <i class="bi bi-tags-fill"></i> Categorías
+        </a>
+        <a th:href="@{/proveedores}" class="sidebar-link" sec:authorize="hasAnyRole('ADMIN','ALMACEN')"
+           th:classappend="${currentPage == 'proveedores'} ? 'active'">
+            <i class="bi bi-building"></i> Proveedores
+        </a>
+        <a th:href="@{/reportes}" class="sidebar-link" sec:authorize="hasRole('ADMIN')"
+           th:classappend="${currentPage == 'reportes'} ? 'active'">
+            <i class="bi bi-bar-chart-fill"></i> Reportes
+        </a>
+        <a th:href="@{/usuarios}" class="sidebar-link" sec:authorize="hasRole('ADMIN')"
+           th:classappend="${currentPage == 'usuarios'} ? 'active'">
+            <i class="bi bi-person-gear"></i> Usuarios
+        </a>
+
+        <div class="sidebar-footer">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <i class="bi bi-person-circle" style="font-size:1.2rem; color: #3b82f6;"></i>
+                <div>
+                    <div style="font-size:0.85rem; font-weight:600; color: #ffffff;" sec:authentication="name">Usuario</div>
+                    <div style="font-size:0.75rem; color: #94a3b8;">
+                        <span sec:authorize="hasRole('ADMIN')">Administrador</span>
+                        <span sec:authorize="hasRole('VENDEDOR')">Vendedor</span>
+                        <span sec:authorize="hasRole('ALMACEN')">Almacén</span>
+                    </div>
+                </div>
+            </div>
+            
+            <form th:action="@{/logout}" method="post" id="logoutForm" class="d-inline">
+                <button type="submit" class="sidebar-link px-0 w-100 text-start bg-transparent border-0 text-secondary" 
+                        style="padding-left:0 !important; color: #94a3b8;">
+                    <i class="bi bi-box-arrow-left me-1"></i> Cerrar sesión
+                </button>
+            </form>
+        </div>
+    </nav>
+
+    <div class="topbar">
+        <span class="topbar-title" th:text="${titulo != null ? titulo : 'Dashboard'}">Dashboard</span>
+        <div class="topbar-right">
+            <span class="text-muted" style="font-size:0.85rem; font-weight:500;"
+                  th:text="${#temporals.format(#temporals.createNow(), 'dd MMM yyyy')}"></span>
+            <a th:href="@{/ventas/nueva}" class="btn btn-primary btn-sm rounded-pill px-3"
+               sec:authorize="hasAnyRole('ADMIN','VENDEDOR')"
+               style="background-color: var(--accent-blue); border: none;">
+                <i class="bi bi-plus-lg me-1"></i>Nueva Venta
+            </a>
+        </div>
+    </div>
+
+    <main class="main-content">
+
+        <div th:if="${exito}" class="alerta-exito p-3 mb-4 d-flex align-items-center gap-2 alert alert-success">
+            <i class="bi bi-check-circle-fill"></i>
+            <span th:text="${exito}"></span>
+        </div>
+        <div th:if="${error}" class="alerta-error p-3 mb-4 d-flex align-items-center gap-2 alert alert-danger">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span th:text="${error}"></span>
+        </div>
+
+        <th:block th:replace="${content}"></th:block>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <th:block th:replace="${extraScripts} ?: ~{}"></th:block>
+</body>
+
+</html>
