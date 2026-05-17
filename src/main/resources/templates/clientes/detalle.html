@@ -1,69 +1,186 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
       th:replace="~{admin/layout :: layout(
-          titulo='Detalle Cliente',
+          titulo='Detalle de Clientes | Licorería',
           currentPage='clientes',
           content=~{::main-content},
           extraHead=~{},
           extraScripts=~{})}">
-<head>
-</head>
+<head><title>Detalle Cliente</title></head>
 <body>
-<main th:fragment="main-content">
+<th:block th:fragment="main-content">
 
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <h3 class="m-0" th:text="${cliente.nombre + ' ' + cliente.apellido}">Cliente</h3>
-        <div class="d-flex gap-2">
-            <a th:href="@{'/clientes/editar/' + ${cliente.id}}" class="btn btn-outline-amber" sec:authorize="hasAnyRole('ADMIN','VENDEDOR')">
-                <i class="bi bi-pencil me-1"></i> Editar
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <a th:href="@{/clientes}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i>
             </a>
-            <a th:href="@{/clientes}" class="btn btn-outline-amber">Volver</a>
+            <div>
+                <h4 class="page-title mb-0"
+                    th:text="${cliente.nombreCompleto}"></h4>
+                <p class="text-muted mb-0 small"
+                   th:text="${cliente.tipoDocumento + ': ' + cliente.numeroDocumento}">
+                </p>
+            </div>
         </div>
+        <a th:href="@{/clientes/editar/{id}(id=${cliente.id})}"
+           class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-pencil me-1"></i>Editar
+        </a>
     </div>
 
-    <div class="row g-3">
-        <div class="col-md-6">
-            <div class="card-dark h-100 p-3">
-                <h6 class="mb-3">Información</h6>
-                <div class="d-flex justify-content-between py-1">
-                    <span class="text-muted">Tipo documento</span>
-                    <span th:text="${cliente.tipoDocumento}"></span>
+    <div class="row g-4">
+
+        <div class="col-lg-4">
+
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body p-4 text-center">
+                    <div class="user-avatar-lg mx-auto mb-3"
+                         th:style="'background: ' + (cliente.mayorDeEdad ? '#0d6efd' : '#dc3545') + ';'">
+                        <span th:text="${cliente.nombre != null and !#strings.isEmpty(cliente.nombre) ? #strings.substring(cliente.nombre,0,1).toUpperCase() : 'C'}"></span>
+                    </div>
+                    <h5 class="fw-bold mb-1"
+                        th:text="${cliente.nombreCompleto}"></h5>
+                    <div class="mb-2">
+                        <span class="badge bg-light text-dark border"
+                              th:text="${cliente.tipoDocumento}"></span>
+                        <span class="ms-1 text-muted"
+                              th:text="${cliente.numeroDocumento}"></span>
+                    </div>
+                    <span th:if="${cliente.mayorDeEdad}"
+                          class="badge bg-success">
+                        <i class="bi bi-check-circle me-1"></i>Mayor de edad (18+)
+                    </span>
+                    <span th:if="${!cliente.mayorDeEdad}"
+                          class="badge bg-danger">
+                        <i class="bi bi-x-circle me-1"></i>Menor de edad
+                    </span>
                 </div>
-                <div class="d-flex justify-content-between py-1">
-                    <span class="text-muted">Número documento</span>
-                    <span th:text="${cliente.numeroDocumento}"></span>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-semibold">
+                        <i class="bi bi-person-lines-fill me-2 text-warning"></i>
+                        Información de contacto
+                    </h6>
                 </div>
-                <div class="d-flex justify-content-between py-1">
-                    <span class="text-muted">Fecha nacimiento</span>
-                    <span th:text="${cliente.fechaNacimiento != null ? cliente.fechaNacimiento : '-'}"></span>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item px-4 py-3"
+                            th:if="${cliente.fechaNacimiento != null}">
+                            <small class="text-muted d-block">Fecha de nacimiento</small>
+                            <span class="fw-semibold" th:text="${#temporals.format(cliente.fechaNacimiento,'dd/MM/yyyy')}"></span>
+                        </li>
+                        <li class="list-group-item px-4 py-3"
+                            th:if="${cliente.telefono != null and !#strings.isEmpty(cliente.telefono)}">
+                            <small class="text-muted d-block">Teléfono</small>
+                            <a th:href="'tel:+51' + ${cliente.telefono}"
+                               class="text-decoration-none fw-semibold"
+                               th:text="${'+51 ' + cliente.telefono}"></a>
+                        </li>
+                        <li class="list-group-item px-4 py-3"
+                            th:if="${cliente.correo != null and !#strings.isEmpty(cliente.correo)}">
+                            <small class="text-muted d-block">Correo electrónico</small>
+                            <a th:href="'mailto:' + ${cliente.correo}"
+                               class="text-decoration-none fw-semibold"
+                               th:text="${cliente.correo}"></a>
+                        </li>
+                        <li class="list-group-item px-4 py-3"
+                            th:if="${cliente.direccion != null and !#strings.isEmpty(cliente.direccion)}">
+                            <small class="text-muted d-block">Dirección</small>
+                            <span class="fw-semibold" th:text="${cliente.direccion}"></span>
+                        </li>
+                    </ul>
                 </div>
-                <div class="d-flex justify-content-between py-1">
-                    <span class="text-muted">Teléfono</span>
-                    <span th:text="${cliente.telefono != null ? cliente.telefono : '-'}"></span>
-                </div>
-                <div class="d-flex justify-content-between py-1">
-                    <span class="text-muted">Correo</span>
-                    <span th:text="${cliente.correo != null ? cliente.correo : '-'}"></span>
-                </div>
-                <div class="d-flex justify-content-between py-1">
-                    <span class="text-muted">Dirección</span>
-                    <span th:text="${cliente.direccion != null ? cliente.direccion : '-'}"></span>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="text-center">
+                        <div class="display-6 fw-bold text-primary"
+                             th:text="${cliente.totalVentas}">0</div>
+                        <div class="text-muted small fw-semibold text-uppercase">compras realizadas</div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card-dark h-100 p-3">
-                <h6 class="mb-3">Accesos</h6>
-                <div class="alert alert-secondary mb-0">
-                    <small>
-                        Desde el punto de venta puedes seleccionar este cliente.
-                    </small>
+
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white border-0 py-3">
+                    <h6 class="mb-0 fw-semibold">
+                        <i class="bi bi-receipt me-2"></i>
+                        Historial de compras
+                        <span class="badge bg-warning text-dark ms-2"
+                              th:text="${cliente.totalVentas}">0</span>
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+
+                    <div th:if="${cliente.totalVentas == 0}"
+                         class="text-center py-5 text-muted">
+                        <i class="bi bi-cart-x fs-2 d-block mb-2"></i>
+                        Este cliente aún no ha registrado transacciones comerciales.
+                    </div>
+
+                    <div class="table-responsive"
+                         th:if="${cliente.totalVentas > 0}">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Comprobante</th>
+                                    <th>Fecha</th>
+                                    <th>Pago</th>
+                                    <th class="text-end">Total</th>
+                                    <th class="text-center">Estado</th>
+                                    <th class="text-center pe-4">Ver</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="v : ${ventas}">
+                                    <td class="ps-4">
+                                        <span class="fw-semibold d-block"
+                                              th:text="${v.numeroComprobante}"></span>
+                                        <small class="text-muted"
+                                               th:text="${v.tipoComprobante}"></small>
+                                    </td>
+                                    <td>
+                                        <span th:text="${#temporals.format(v.fechaHora,'dd/MM/yyyy')}"></span>
+                                        <small class="text-muted d-block"
+                                               th:text="${#temporals.format(v.fechaHora,'HH:mm')}"></small>
+                                    </td>
+                                    <td th:text="${v.metodoPago}"></td>
+                                    <td class="text-end fw-bold text-dark"
+                                        th:text="'S/. ' + ${#numbers.formatDecimal(v.total, 1, 'POINT', 2, 'COMMA')}">
+                                    </td>
+                                    <td class="text-center">
+                                        <span th:switch="${v.estado}">
+                                            <span th:case="'COMPLETADA'"
+                                                  class="badge bg-success-subtle text-success border border-success-subtle">Completada</span>
+                                            <span th:case="'ANULADA'"
+                                                  class="badge bg-danger-subtle text-danger border border-danger-subtle">Anulada</span>
+                                            <span th:case="'PENDIENTE'"
+                                                  class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Pendiente</span>
+                                            <span th:case="*" 
+                                                  class="badge bg-secondary-subtle text-secondary" th:text="${v.estado}"></span>
+                                        </span>
+                                    </td>
+                                    <td class="text-center pe-4">
+                                        <a th:href="@{/ventas/{id}(id=${v.id})}"
+                                           class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-</main>
+</th:block>
 </body>
 </html>

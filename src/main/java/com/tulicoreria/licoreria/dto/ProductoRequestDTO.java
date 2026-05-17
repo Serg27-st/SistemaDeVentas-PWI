@@ -8,7 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -23,9 +24,9 @@ public class ProductoRequestDTO {
     private BigDecimal gradoAlcohol;
     private BigDecimal precioCompra;
     private BigDecimal precioVenta;
+    private Integer stock;        // 👈 AGREGA ESTA LÍNEA EXACTAMENTE AQUÍ
     private Integer stockMinimo;
 
-    // Solo IDs — el Service busca los objetos completos con el Repository
     private Long categoriaId;
     private Long proveedorId;
 }

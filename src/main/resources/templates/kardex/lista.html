@@ -1,64 +1,298 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
-      th:replace="~{admin/layout :: layout(
-          titulo='Kardex',
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(
+          titulo='Kardex Producto | Licorería',
           currentPage='kardex',
           content=~{::main-content},
           extraHead=~{},
-          extraScripts=~{})}">
+          extraScripts=~{::scripts})}">
+
 <head>
+    <title>Kardex</title>
 </head>
+
 <body>
-<main th:fragment="main-content">
+    <th:block th:fragment="main-content">
 
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <h3 class="m-0">Kardex</h3>
-        <form class="d-flex gap-2" method="get" th:action="@{/kardex}">
+        <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
             <div>
-                <label class="form-label">Inicio</label>
-                <input type="datetime-local" class="form-control form-control-dark" name="inicio" th:value="${inicio}"/>
+                <h4 class="page-title mb-1">Kardex de Inventario</h4>
+                <p class="text-muted mb-0 small">
+                    Registro y trazabilidad de todos los movimientos de stock
+                </p>
             </div>
-            <div>
-                <label class="form-label">Fin</label>
-                <input type="datetime-local" class="form-control form-control-dark" name="fin" th:value="${fin}"/>
-            </div>
-            <div class="align-self-end">
-                <button class="btn btn-amber" type="submit">
-                    <i class="bi bi-search me-1"></i> Filtrar
-                </button>
-            </div>
-        </form>
-    </div>
-
-    <div class="card-dark">
-        <div class="table-responsive px-3 pb-3">
-            <table class="table table-dark-custom table-hover mb-0">
-                <thead>
-                <tr>
-                    <th>Fecha</th>
-                    <th>Producto</th>
-                    <th>Tipo movimiento</th>
-                    <th>Cantidad</th>
-                    <th>Saldo</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="m : ${movimientos}">
-                    <td th:text="${m.fecha != null ? m.fecha : '-'}">--</td>
-                    <td th:text="${m.producto != null ? m.producto.nombre : '-'}">Producto</td>
-                    <td th:text="${m.tipoMovimiento != null ? m.tipoMovimiento : '-'}">MOV</td>
-                    <td th:text="${m.cantidad}">0</td>
-                    <td th:text="${m.saldo}">0</td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(movimientos)}">
-                    <td colspan="5" class="text-center text-muted py-4">No hay movimientos en el rango seleccionado.</td>
-                </tr>
-                </tbody>
-            </table>
         </div>
-    </div>
 
-</main>
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body py-3">
+                <form th:action="@{/kardex}" method="get">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold mb-1">Desde</label>
+                            <input type="datetime-local" name="inicio" class="form-control form-control-sm"
+                                th:value="${inicio != null ? #temporals.format(inicio, 'yyyy-MM-dd''T''HH:mm') : ''}" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold mb-1">Hasta</label>
+                            <input type="datetime-local" name="fin" class="form-control form-control-sm"
+                                th:value="${fin != null ? #temporals.format(fin, 'yyyy-MM-dd''T''HH:mm') : ''}" />
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-warning btn-sm w-100">
+                                <i class="bi bi-search me-1"></i>Consultar
+                            </button>
+                        </div>
+                        <div class="col-md-2">
+                            <a th:href="@{/kardex}" class="btn btn-outline-secondary btn-sm w-100">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Resetear
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4"
+            th:with="
+         totalMovs=${movimientos != null ? #lists.size(movimientos) : 0},
+         entradasCount=${movimientos != null ? #aggregates.sum(movimientos.![tipo.name() == 'ENTRADA_COMPRA' or tipo.name() == 'ENTRADA_DEVOLUCION' ? 1 : 0]) : 0},
+         salidasCount=${movimientos != null ? #aggregates.sum(movimientos.![tipo.name() == 'SALIDA_VENTA' or tipo.name() == 'SALIDA_MERMA' ? 1 : 0]) : 0},
+         ajustesCount=${movimientos != null ? #aggregates.sum(movimientos.![tipo.name() == 'AJUSTE_POSITIVO' or tipo.name() == 'AJUSTE_NEGATIVO' ? 1 : 0]) : 0}">
+
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-2 bg-primary bg-opacity-10 text-primary rounded">
+                            <i class="bi bi-arrow-left-right fs-4"></i>
+                        </div>
+                        <div>
+                            <div class="fs-4 fw-bold" th:text="${totalMovs}">0</div>
+                            <div class="text-muted small">Total movimientos</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-2 bg-success bg-opacity-10 text-success rounded">
+                            <i class="bi bi-arrow-down-circle fs-4"></i>
+                        </div>
+                        <div>
+                            <div class="fs-4 fw-bold" th:text="${entradasCount != null ? entradasCount : 0}">0</div>
+                            <div class="text-muted small">Entradas</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-2 bg-danger bg-opacity-10 text-danger rounded">
+                            <i class="bi bi-arrow-up-circle fs-4"></i>
+                        </div>
+                        <div>
+                            <div class="fs-4 fw-bold" th:text="${salidasCount != null ? salidasCount : 0}">0</div>
+                            <div class="text-muted small">Salidas</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-2 bg-warning bg-opacity-10 text-warning rounded">
+                            <i class="bi bi-sliders fs-4"></i>
+                        </div>
+                        <div>
+                            <div class="fs-4 fw-bold" th:text="${ajustesCount != null ? ajustesCount : 0}">0</div>
+                            <div class="text-muted small">Ajustes</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body py-3">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-5">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-search text-muted"></i>
+                            </span>
+                            <input type="text" id="buscador" class="form-control border-start-0"
+                                placeholder="Buscar por producto, código o documento origen..." />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <select id="filtroTipo" class="form-select form-select-sm">
+                            <option value="">Todos los tipos de movimiento</option>
+                            <option value="ENTRADA_COMPRA">Entrada por compra</option>
+                            <option value="ENTRADA_DEVOLUCION">Entrada por devolución</option>
+                            <option value="SALIDA_VENTA">Salida por venta</option>
+                            <option value="SALIDA_MERMA">Salida por merma</option>
+                            <option value="AJUSTE_POSITIVO">Ajuste positivo (+)</option>
+                            <option value="AJUSTE_NEGATIVO">Ajuste negativo (-)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 text-md-end">
+                        <button class="btn btn-outline-secondary btn-sm w-100 w-md-auto" onclick="limpiarFiltros()">
+                            <i class="bi bi-eraser me-1"></i>Limpiar Filtros
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="tablaKardex">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="ps-4">Fecha / Hora</th>
+                                <th>Tipo</th>
+                                <th>Producto</th>
+                                <th class="text-center">Cantidad</th>
+                                <th class="text-center">Stock Anterior</th>
+                                <th class="text-center">Stock Resultante</th>
+                                <th>Documento Origen</th>
+                                <th class="pe-4">Usuario</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="m : ${movimientos}"
+                                th:data-producto="${m.productoNombre != null ? #strings.toLowerCase(m.productoNombre) : ''}"
+                                th:data-codigo="${m.productoCodigo != null ? #strings.toLowerCase(m.productoCodigo) : ''}"
+                                th:data-tipo="${m.tipo}"
+                                th:data-doc="${m.documentoOrigen != null ? #strings.toLowerCase(m.documentoOrigen) : ''}">
+
+                                <td class="ps-4">
+                                    <span class="fw-semibold text-dark"
+                                        th:text="${#temporals.format(m.fechaHora,'dd/MM/yyyy')}"></span>
+                                    <small class="text-muted d-block font-monospace"
+                                        th:text="${#temporals.format(m.fechaHora,'HH:mm:ss')}"></small>
+                                </td>
+
+                                <td>
+                                    <span th:switch="${m.tipo.name()}">
+                                        <span th:case="'ENTRADA_COMPRA'"
+                                            class="badge bg-success-subtle text-success border border-success-subtle">
+                                            <i class="bi bi-arrow-down-left me-1"></i>Compra
+                                        </span>
+                                        <span th:case="'ENTRADA_DEVOLUCION'"
+                                            class="badge bg-info-subtle text-info border border-info-subtle">
+                                            <i class="bi bi-arrow-counterclockwise me-1"></i>Devolución
+                                        </span>
+                                        <span th:case="'SALIDA_VENTA'"
+                                            class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                            <i class="bi bi-arrow-up-right me-1"></i>Venta
+                                        </span>
+                                        <span th:case="'SALIDA_MERMA'"
+                                            class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                            <i class="bi bi-trash me-1"></i>Merma
+                                        </span>
+                                        <span th:case="'AJUSTE_POSITIVO'"
+                                            class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                                            <i class="bi bi-plus-circle me-1"></i>Ajuste (+)
+                                        </span>
+                                        <span th:case="'AJUSTE_NEGATIVO'"
+                                            class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                                            <i class="bi bi-dash-circle me-1"></i>Ajuste (-)
+                                        </span>
+                                        <span th:case="*" class="badge bg-secondary text-white"
+                                            th:text="${m.tipo}"></span>
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <div class="fw-semibold text-dark" th:text="${m.productoNombre}"></div>
+                                    <small class="text-muted font-monospace"
+                                        th:text="${m.productoCodigo ?: 'SIN COD'}"></small>
+                                </td>
+
+                                <td class="text-center fw-bold">
+                                    <span
+                                        th:text="${(m.tipo.name().startsWith('ENTRADA') or m.tipo.name() == 'AJUSTE_POSITIVO') ? '+' + m.cantidad : '-' + m.cantidad}"
+                                        th:class="${(m.tipo.name().startsWith('ENTRADA') or m.tipo.name() == 'AJUSTE_POSITIVO') ? 'text-success' : 'text-danger'}">
+                                    </span>
+                                </td>
+
+                                <td class="text-center text-muted font-monospace" th:text="${m.stockAnterior}">0</td>
+
+                                <td class="text-center fw-bold font-monospace" th:text="${m.stockResultante}"
+                                    th:classappend="${m.stockResultante == 0 ? 'text-danger bg-danger bg-opacity-10' : 
+                                                 (m.stockResultante <= 12 ? 'text-warning' : 'text-success')}">
+                                </td>
+
+                                <td>
+                                    <span th:if="${m.documentoOrigen != null}" class="badge bg-light text-dark border"
+                                        th:text="${m.documentoOrigen}"></span>
+                                    <span th:if="${m.documentoOrigen == null}" class="text-muted">—</span>
+                                    <small class="text-muted d-block text-truncate" style="max-width: 180px;"
+                                        th:if="${m.motivo != null}" th:text="${m.motivo}"></small>
+                                </td>
+
+                                <td class="pe-4 text-muted small" th:text="${m.usuarioNombre}">Admin</td>
+                            </tr>
+
+                            <tr id="filaSinResultados" style="display:none">
+                                <td colspan="8" class="text-center py-5 text-muted">
+                                    <i class="bi bi-search fs-2 d-block mb-2 text-warning"></i>
+                                    No se encontraron movimientos que coincidan con los criterios de búsqueda.
+                                </td>
+                            </tr>
+
+                            <tr th:if="${#lists.isEmpty(movimientos)}">
+                                <td colspan="8" class="text-center py-5 text-muted">
+                                    <i class="bi bi-journal-text fs-2 d-block mb-2"></i>
+                                    No se registran movimientos de stock en este rango de fechas.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </th:block>
+
+    <th:block th:fragment="scripts">
+        <script>
+            const buscador = document.getElementById('buscador');
+            const filtroTipo = document.getElementById('filtroTipo');
+            const filas = document.querySelectorAll('#tablaKardex tbody tr[data-producto]');
+            const filaSin = document.getElementById('filaSinResultados');
+
+            function filtrar() {
+                const q = buscador.value.toLowerCase().trim();
+                const tipo = filtroTipo.value;
+                let visible = 0;
+
+                filas.forEach(fila => {
+                    const matchQ = !q || fila.dataset.producto.includes(q)
+                        || fila.dataset.codigo.includes(q)
+                        || fila.dataset.doc.includes(q);
+                    const matchTipo = !tipo || fila.dataset.tipo === tipo;
+
+                    const mostrar = matchQ && matchTipo;
+                    fila.style.display = mostrar ? '' : 'none';
+                    if (mostrar) visible++;
+                });
+
+                filaSin.style.display = visible === 0 ? '' : 'none';
+            }
+
+            function limpiarFiltros() {
+                buscador.value = '';
+                filtroTipo.value = '';
+                filtrar();
+            }
+
+            buscador.addEventListener('input', filtrar);
+            filtroTipo.addEventListener('change', filtrar);
+        </script>
+    </th:block>
 </body>
+
 </html>

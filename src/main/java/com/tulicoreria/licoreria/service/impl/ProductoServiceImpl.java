@@ -86,7 +86,8 @@ public class ProductoServiceImpl implements ProductoService {
                 .gradoAlcohol(dto.getGradoAlcohol())
                 .precioCompra(dto.getPrecioCompra())
                 .precioVenta(dto.getPrecioVenta())
-                .stock(0)
+                // 🔥 Ahora toma dinámicamente el valor del formulario en vez de 0
+                .stock(dto.getStock() != null ? dto.getStock() : 0) 
                 .stockMinimo(dto.getStockMinimo())
                 .categoria(categoria)
                 .proveedor(proveedor)
@@ -115,6 +116,10 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setGradoAlcohol(dto.getGradoAlcohol());
         producto.setPrecioCompra(dto.getPrecioCompra());
         producto.setPrecioVenta(dto.getPrecioVenta());
+        // 🔥 Permite actualizar el valor del stock físico desde el formulario de edición
+        if (dto.getStock() != null) {
+            producto.setStock(dto.getStock());
+        }
         producto.setStockMinimo(dto.getStockMinimo());
         producto.setCategoria(categoria);
         producto.setProveedor(proveedor);

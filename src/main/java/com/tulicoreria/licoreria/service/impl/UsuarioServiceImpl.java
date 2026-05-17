@@ -1,13 +1,9 @@
 package com.tulicoreria.licoreria.service.impl;
 
-import com.tulicoreria.licoreria.dto.UsuarioRequestDTO;
-import com.tulicoreria.licoreria.dto.UsuarioResponseDTO;
-import com.tulicoreria.licoreria.model.Rol;
-import com.tulicoreria.licoreria.model.Usuario;
-import com.tulicoreria.licoreria.repository.RolRepository;
-import com.tulicoreria.licoreria.repository.UsuarioRepository;
-import com.tulicoreria.licoreria.service.UsuarioService;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,9 +13,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.tulicoreria.licoreria.dto.UsuarioRequestDTO;
+import com.tulicoreria.licoreria.dto.UsuarioResponseDTO;
+import com.tulicoreria.licoreria.model.Rol;
+import com.tulicoreria.licoreria.model.Usuario;
+import com.tulicoreria.licoreria.repository.RolRepository;
+import com.tulicoreria.licoreria.repository.UsuarioRepository;
+import com.tulicoreria.licoreria.service.UsuarioService;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -40,8 +42,11 @@ public class UsuarioServiceImpl implements UsuarioService, UserDetailsService {
             throw new UsernameNotFoundException("Usuario inactivo: " + username);
         }
 
+        // Mapeamos los roles directamente asegurando el formato limpio en mayúsculas.
+        // Dado que en tu Base de Datos ya vienen como "ROLE_ADMIN", "ROLE_ALMACEN",
+        // pasará el texto idéntico y limpio hacia el contexto de seguridad.
         List<SimpleGrantedAuthority> authorities = usuario.getRoles().stream()
-                .map(rol -> new SimpleGrantedAuthority(rol.getNombre()))
+                .map(rol -> new SimpleGrantedAuthority(rol.getNombre().toUpperCase().trim()))
                 .toList();
 
         return new User(usuario.getUsername(), usuario.getPassword(), authorities);
@@ -71,7 +76,7 @@ public class UsuarioServiceImpl implements UsuarioService, UserDetailsService {
         }
         Set<Rol> roles = dto.getRolIds().stream()
                 .map(rolId -> rolRepository.findById(rolId)
-                        .orElseThrow(() -> new RuntimeException("Rol no encontrado con id: " + rolId)))
+                .orElseThrow(() -> new RuntimeException("Rol no encontrado con id: " + rolId)))
                 .collect(Collectors.toSet());
 
         Usuario usuario = Usuario.builder()
