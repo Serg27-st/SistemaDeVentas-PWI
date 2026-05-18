@@ -5,9 +5,12 @@ import lombok.*;
 
 import java.math.BigDecimal;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 @Entity
 @Table(name = "productos")
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -28,6 +31,13 @@ public class Producto {
 
     @Column(length = 300)
     private String descripcion;
+
+    /**
+     * 🔄 CORREGIDO: Se eliminó el campo 'rutaImagen' duplicado. Aquí se guarda
+     * la ruta relativa exacta (Ej: "RON/uuid.jpg").
+     */
+    @Column(length = 255)
+    private String imagen;
 
     /**
      * Marca comercial: Jack Daniel's, Johnnie Walker, Pilsen, etc.
@@ -75,7 +85,8 @@ public class Producto {
     private boolean activo = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "categoria_id", nullable = false)
+    @JoinColumn(name = "categoria_id")
+    @JsonBackReference
     private Categoria categoria;
 
     @ManyToOne(fetch = FetchType.LAZY)

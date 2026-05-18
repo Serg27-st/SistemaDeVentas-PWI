@@ -21,7 +21,7 @@
                     Gestiona el acceso del personal al panel administrativo de la licorería.
                 </p>
             </div>
-            <a th:href="@{/usuarios/nuevo}" class="btn btn-primary btn-sm fw-semibold shadow-sm px-3"
+            <a th:href="@{/usuarios/nuevo}" class="btn btn-warning fw-semibold px-3"
                 sec:authorize="hasRole('ADMIN')" style="background-color: var(--accent-blue); border: none;">
                 <i class="bi bi-person-plus me-1"></i> Nuevo Usuario
             </a>

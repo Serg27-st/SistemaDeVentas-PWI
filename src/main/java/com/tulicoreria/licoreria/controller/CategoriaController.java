@@ -17,7 +17,7 @@ import com.tulicoreria.licoreria.service.CategoriaService;
 import lombok.RequiredArgsConstructor;
 
 @Controller
-@RequestMapping("/categories") // Nota: Si en tu app manejas "/categorias", déjalo como /categorias
+@RequestMapping("/categorias")
 @RequiredArgsConstructor
 public class CategoriaController {
 

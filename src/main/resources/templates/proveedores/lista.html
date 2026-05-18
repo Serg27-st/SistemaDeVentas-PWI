@@ -13,143 +13,117 @@
 <body>
     <main th:fragment="main-content">
 
-        <div class="d-flex align-items-center justify-content-between mb-4">
+        <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
             <div>
-                <h3 class="m-0 text-black">📦 Gestión de Proveedores</h3>
-                <p class="text-muted small m-0">Administra las empresas y contactos encargados de abastecer el
-                    inventario.</p>
+                <h4 class="page-title mb-1">Proveedores</h4>
+                <p class="text-muted mb-0 small">Administra las empresas y contactos encargados de abastecer el inventario.</p>
             </div>
-            <a th:href="@{/proveedores/nuevo}" class="btn btn-amber shadow-sm"
+            <a th:href="@{/proveedores/nuevo}" class="btn btn-warning fw-semibold"
                 sec:authorize="hasAnyAuthority('ROLE_ADMIN','ROLE_ALMACEN')">
                 <i class="bi bi-plus-lg me-1"></i> Nuevo Proveedor
             </a>
         </div>
-        <div class="mb-3 d-flex justify-content-start">
-            <div class="input-group" style="max-width: 350px;">
-                <span class="input-group-text bg-dark border-secondary text-muted"><i class="bi bi-search"></i></span>
-                <input type="text" id="buscadorProveedor" class="form-control form-control-dark"
-                    placeholder="Buscar por razón social o RUC...">
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body py-3">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-4">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white border-end-0 text-muted">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" id="buscadorProveedor" class="form-control border-start-0"
+                                placeholder="Buscar por razón social o RUC...">
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="card-dark p-0 shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
+
+        <div class="card border-0 shadow-sm overflow-hidden bg-white">
             <div class="table-responsive">
 
-                <table class="table table-dark-custom table-hover align-middle mb-0">
-                    <thead>
+                <table class="table table-hover align-middle mb-0" id="tablaProveedores">
+                    <thead style="background-color: #f8fafc; border-bottom: 1px solid var(--border-soft);">
                         <tr>
-                            <th class="ps-4">Razón Social</th>
-                            <th>RUC</th>
-                            <th>Teléfono</th>
-                            <th>Correo Electrónico</th>
-                            <th>Estado</th>
-                            <th sec:authorize="hasAnyAuthority('ROLE_ADMIN','ROLE_ALMACEN')" class="text-end pe-4">
-                                Acciones</th>
+                            <th class="ps-4 text-muted small fw-bold">Razón Social</th>
+                            <th class="text-muted small fw-bold">RUC</th>
+                            <th class="text-muted small fw-bold">Teléfono</th>
+                            <th class="text-muted small fw-bold">Correo Electrónico</th>
+                            <th class="text-muted small fw-bold">Estado</th>
+                            <th sec:authorize="hasAnyAuthority('ROLE_ADMIN','ROLE_ALMACEN')" class="text-center pe-4 text-muted small fw-bold" style="width: 180px;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr th:each="p : ${proveedores}">
-                            <td class="ps-4 text-white fw-medium" th:text="${p.razonSocial}">Distribuidora S.A.C.</td>
+                            <td class="ps-4" th:text="${p.razonSocial}">Distribuidora S.A.C.</td>
                             <td th:text="${p.ruc}">20123456789</td>
                             <td th:text="${p.telefono != null and p.telefono != '' ? p.telefono : '-'}">-</td>
                             <td>
-                                <span th:if="${p.correo != null and p.correo != ''}"
-                                    th:text="${p.correo}">correo@link.com</span>
+                                <span th:if="${p.correo != null and p.correo != ''}" th:text="${p.correo}">correo@link.com</span>
                                 <span th:unless="${p.correo != null and p.correo != ''}" class="text-muted">-</span>
                             </td>
+
                             <td>
-                                <span th:if="${p.activo}" class="badge bg-success-subtle text-success px-2.5 py-1.5"
-                                    style="font-size: 0.75rem;">
+                                <span th:if="${p.activo}" class="badge bg-success-subtle text-success px-2.5 py-1.5" style="font-size: 0.75rem;">
                                     <i class="bi bi-check-circle-fill me-1"></i>Activo
                                 </span>
-                                <span th:unless="${p.activo}" class="badge bg-danger-subtle text-danger px-2.5 py-1.5"
-                                    style="font-size: 0.75rem;">
+                                <span th:unless="${p.activo}" class="badge bg-danger-subtle text-danger px-2.5 py-1.5" style="font-size: 0.75rem;">
                                     <i class="bi bi-dash-circle-fill me-1"></i>Inactivo
                                 </span>
                             </td>
 
-                            <td sec:authorize="hasAnyAuthority('ROLE_ADMIN','ROLE_ALMACEN')" class="text-end pe-4">
-                                <a th:href="@{'/proveedores/editar/' + ${p.id}}" class="btn btn-outline-amber btn-sm"
-                                    title="Editar proveedor">
-                                    <i class="bi bi-pencil-square"></i>
-                                </a>
+                            <td sec:authorize="hasAnyAuthority('ROLE_ADMIN','ROLE_ALMACEN')" class="text-center pe-4">
+                                <div class="d-inline-flex gap-1 justify-content-center">
+                                    <a th:href="@{'/proveedores/editar/' + ${p.id}}" class="btn btn-sm btn-outline-primary" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
 
-                                <form th:if="${p.activo}" th:action="@{'/proveedores/desactivar/' + ${p.id}}"
-                                    method="post" style="display:inline-block;"
-                                    sec:authorize="hasAuthority('ROLE_ADMIN')">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm ms-1"
-                                        title="Desactivar proveedor"
-                                        onclick="return confirm('¿Estás seguro de que deseas desactivar este proveedor?')">
-                                        <i class="bi bi-trash3"></i>
-                                    </button>
-                                </form>
+                                    <form th:if="${p.activo}" th:action="@{'/proveedores/desactivar/' + ${p.id}}" method="post" class="d-inline" sec:authorize="hasAuthority('ROLE_ADMIN')">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Desactivar"
+                                            onclick="return confirm('¿Estás seguro de que deseas desactivar este proveedor?');">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
 
                         <tr th:if="${#lists.isEmpty(proveedores)}">
-                            <td colspan="6" class="text-center text-muted py-5">
-                                <i class="bi bi-archive text-secondary d-block mb-2" style="font-size: 2rem;"></i>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-archive fs-2 d-block mb-2 text-secondary"></i>
                                 Aún no se han registrado proveedores en el sistema.
                             </td>
                         </tr>
                     </tbody>
                 </table>
+
             </div>
         </div>
 
     </main>
+
     <th:block th:fragment="extra-scripts">
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-
-                // 🔍 1. Buscador en Tiempo Real (Razón Social y RUC)
                 const buscador = document.getElementById('buscadorProveedor');
                 if (buscador) {
                     buscador.addEventListener('keyup', function () {
                         const valorBusqueda = this.value.toLowerCase().trim();
-                        const filas = document.querySelectorAll('tbody tr:not(.text-center)');
+                        const filas = document.querySelectorAll('#tablaProveedores tbody tr');
 
                         filas.forEach(fila => {
-                            const razonSocial = fila.children[0].textContent.toLowerCase();
-                            const ruc = fila.children[1].textContent.toLowerCase();
-
-                            if (razonSocial.includes(valorBusqueda) || ruc.includes(valorBusqueda)) {
-                                fila.style.display = '';
-                            } else {
-                                fila.style.display = 'none';
-                            }
+                            const razonSocial = (fila.children[0]?.textContent || '').toLowerCase();
+                            const ruc = (fila.children[1]?.textContent || '').toLowerCase();
+                            const mostrar = !valorBusqueda || razonSocial.includes(valorBusqueda) || ruc.includes(valorBusqueda);
+                            fila.style.display = mostrar ? '' : 'none';
                         });
                     });
                 }
-
-                // ⚠️ 2. Control Seguro de Desactivación (Evita el bloqueo permanente)
-                const formulariosDesactivar = document.querySelectorAll('form[action*="/desactivar/"]');
-                formulariosDesactivar.forEach(form => {
-                    // Removemos el onclick directo del HTML para controlarlo de forma limpia aquí
-                    const boton = form.querySelector('button');
-                    if (boton) boton.removeAttribute('onclick');
-
-                    form.addEventListener('submit', function (e) {
-                        // Mensaje clásico integrado directamente en el flujo del Script
-                        const confirmado = confirm('¿Estás seguro de que deseas desactivar este proveedor?');
-                        if (!confirmado) {
-                            e.preventDefault(); // Cancela el envío si el usuario presiona "Cancelar"
-                        }
-                    });
-                });
-
-                // ⏰ 3. Auto-cerrar alertas flash tras 4 segundos
-                const alertas = document.querySelectorAll('.alert');
-                alertas.forEach(alerta => {
-                    setTimeout(() => {
-                        alerta.style.transition = 'opacity 0.5s ease';
-                        alerta.style.opacity = '0';
-                        setTimeout(() => alerta.remove(), 500);
-                    }, 4000);
-                });
-
             });
         </script>
     </th:block>
 </body>
 
 </html>
+

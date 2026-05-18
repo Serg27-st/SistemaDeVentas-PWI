@@ -1,5 +1,10 @@
 package com.tulicoreria.licoreria.service.impl;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.tulicoreria.licoreria.dto.ProductoRequestDTO;
 import com.tulicoreria.licoreria.dto.ProductoResponseDTO;
 import com.tulicoreria.licoreria.model.Categoria;
@@ -9,11 +14,8 @@ import com.tulicoreria.licoreria.repository.CategoriaRepository;
 import com.tulicoreria.licoreria.repository.ProductoRepository;
 import com.tulicoreria.licoreria.repository.ProveedorRepository;
 import com.tulicoreria.licoreria.service.ProductoService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +24,7 @@ public class ProductoServiceImpl implements ProductoService {
     private final ProductoRepository productoRepository;
     private final CategoriaRepository categoriaRepository;
     private final ProveedorRepository proveedorRepository;
+    private final ImagenService imagenService;
 
     @Override
     @Transactional(readOnly = true)
@@ -76,6 +79,11 @@ public class ProductoServiceImpl implements ProductoService {
         Proveedor proveedor = proveedorRepository.findById(dto.getProveedorId())
                 .orElseThrow(() -> new RuntimeException("Proveedor no encontrado"));
 
+        String imagenRuta = null;
+        if (dto.getImagenFile() != null && !dto.getImagenFile().isEmpty()) {
+            imagenRuta = imagenService.guardarImagenProducto(categoria.getNombre(), dto.getImagenFile());
+        }
+
         Producto producto = Producto.builder()
                 .nombre(dto.getNombre())
                 .codigo(dto.getCodigo())
@@ -86,9 +94,9 @@ public class ProductoServiceImpl implements ProductoService {
                 .gradoAlcohol(dto.getGradoAlcohol())
                 .precioCompra(dto.getPrecioCompra())
                 .precioVenta(dto.getPrecioVenta())
-                // 🔥 Ahora toma dinámicamente el valor del formulario en vez de 0
-                .stock(dto.getStock() != null ? dto.getStock() : 0) 
-                .stockMinimo(dto.getStockMinimo())
+                .stock(dto.getStock() != null ? dto.getStock() : 0)
+                .stockMinimo(dto.getStockMinimo() != null ? dto.getStockMinimo() : 0)
+                .imagen(imagenRuta)
                 .categoria(categoria)
                 .proveedor(proveedor)
                 .activo(true)
@@ -116,11 +124,19 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setGradoAlcohol(dto.getGradoAlcohol());
         producto.setPrecioCompra(dto.getPrecioCompra());
         producto.setPrecioVenta(dto.getPrecioVenta());
-        // 🔥 Permite actualizar el valor del stock físico desde el formulario de edición
+
+        if (dto.getImagenFile() != null && !dto.getImagenFile().isEmpty()) {
+            if (producto.getImagen() != null) {
+                imagenService.eliminarImagen(producto.getImagen());
+            }
+            String imagenRuta = imagenService.guardarImagenProducto(categoria.getNombre(), dto.getImagenFile());
+            producto.setImagen(imagenRuta);
+        }
+
         if (dto.getStock() != null) {
             producto.setStock(dto.getStock());
         }
-        producto.setStockMinimo(dto.getStockMinimo());
+        producto.setStockMinimo(dto.getStockMinimo() != null ? dto.getStockMinimo() : 0);
         producto.setCategoria(categoria);
         producto.setProveedor(proveedor);
 
@@ -137,31 +153,49 @@ public class ProductoServiceImpl implements ProductoService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Producto obtenerEntidad(Long id) {
         return productoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado con id: " + id));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ProductoResponseDTO toDTO(Producto p) {
+        int stockActual = p.getStock() != null ? p.getStock() : 0;
+        int stockMin = p.getStockMinimo() != null ? p.getStockMinimo() : 0;
+
         return ProductoResponseDTO.builder()
                 .id(p.getId())
                 .nombre(p.getNombre())
                 .codigo(p.getCodigo())
+                .descripcion(p.getDescripcion())
                 .marca(p.getMarca())
                 .paisOrigen(p.getPaisOrigen())
                 .volumenMl(p.getVolumenMl())
                 .gradoAlcohol(p.getGradoAlcohol())
                 .precioCompra(p.getPrecioCompra())
                 .precioVenta(p.getPrecioVenta())
-                .stock(p.getStock())
-                .stockMinimo(p.getStockMinimo())
+                .stock(stockActual)
+                .stockMinimo(stockMin)
                 .activo(p.isActivo())
-                .categoriaNombre(p.getCategoria().getNombre())
-                .proveedorRazonSocial(p.getProveedor() != null
-                        ? p.getProveedor().getRazonSocial() : "Sin proveedor")
-                .stockBajo(p.getStock() <= p.getStockMinimo())
-                .sinStock(p.getStock() == 0)
+                // 🔑 NUEVOS MAPEOS: Agregamos los identificadores requeridos para la edición
+                .categoriaId(p.getCategoria() != null ? p.getCategoria().getId() : null)
+                .proveedorId(p.getProveedor() != null ? p.getProveedor().getId() : null)
+                .categoriaNombre(p.getCategoria() != null ? p.getCategoria().getNombre() : "Sin Categoría")
+                .proveedorRazonSocial(p.getProveedor() != null ? p.getProveedor().getRazonSocial() : "Sin proveedor")
+                .urlImagen(imagenService.construirUrl(p.getImagen()))
+                .stockBajo(stockActual <= stockMin)
+                .sinStock(stockActual == 0)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void actualizarImagen(Long id, String ruta) {
+        Producto p = productoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+        p.setImagen(ruta);
+        productoRepository.save(p);
     }
 }

@@ -7,56 +7,86 @@
           currentPage='categorias',
           content=~{::main-content},
           extraHead=~{},
-          extraScripts=~{})}">
+          extraScripts=~{::extra-scripts})}">
 <head>
 </head>
 <body>
 <main th:fragment="main-content">
 
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <h3 class="m-0">Categorías</h3>
-        <a th:href="@{/categorias/nueva}" class="btn btn-amber" sec:authorize="hasRole('ADMIN')">
-            <i class="bi bi-plus-lg me-1"></i> Nueva Categoría
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+        <div>
+            <h4 class="page-title mb-1">Categorías</h4>
+            <p class="text-muted mb-0 small">Organiza y clasifica los licores y bebidas del catálogo.</p>
+        </div>
+        <a th:href="@{/categorias/nueva}" class="btn btn-warning fw-semibold">
+            <i class="bi bi-plus-lg me-1"></i>Nueva Categoría
         </a>
     </div>
 
-    <div class="card-dark">
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body py-3">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-4">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input type="text" id="buscadorCategoria" class="form-control border-start-0" placeholder="Buscar por nombre...">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm overflow-hidden bg-white">
         <div class="table-responsive">
-            <table class="table table-dark-custom table-hover mb-0">
-                <thead>
+            <table class="table table-hover align-middle mb-0" id="tablaCategorias">
+                <thead style="background-color: #f8fafc; border-bottom: 1px solid var(--border-soft);">
                 <tr>
-                    <th>Nombre</th>
-                    <th>Descripción</th>
-                    <th>Estado</th>
-                    <th class="text-end">Acciones</th>
+                    <th class="ps-4 text-muted small fw-bold">Nombre</th>
+                    <th class="text-muted small fw-bold">Descripción</th>
+                    <th class="text-center text-muted small fw-bold">Total</th>
+                    <th class="text-muted small fw-bold">Estado</th>
+                    <th sec:authorize="hasAuthority('ROLE_ADMIN')" class="text-center pe-4 text-muted small fw-bold" style="width: 160px;">Acciones</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="c : ${categorias}">
-                    <td th:text="${c.nombre}">Nombre</td>
-                    <td th:text="${c.descripcion != null ? c.descripcion : '-'}">-</td>
-                    <td>ACTIVO</td>
+                    <td class="ps-4">
+                        <span class="fw-semibold" style="color: var(--text-main)" th:text="${c.nombre}">Nombre</span>
+                    </td>
+                    <td class="text-muted" th:text="${c.descripcion != null and c.descripcion != '' ? c.descripcion : '-'}">-</td>
+                    <td class="text-center">
+                        <span class="badge bg-dark border border-secondary-subtle text-light px-2.5 py-1.5" th:text="${c.totalProductos}">0</span>
+                    </td>
+                    <td>
+                        <span th:if="${c.activo}" class="badge bg-success-subtle text-success px-2.5 py-1.5" style="font-size: 0.75rem;">
+                            <i class="bi bi-check-circle-fill me-1"></i>Activo
+                        </span>
+                        <span th:unless="${c.activo}" class="badge bg-danger-subtle text-danger px-2.5 py-1.5" style="font-size: 0.75rem;">
+                            <i class="bi bi-dash-circle-fill me-1"></i>Inactivo
+                        </span>
+                    </td>
+                    <td sec:authorize="hasAuthority('ROLE_ADMIN')" class="text-center pe-4">
+                        <div class="d-inline-flex gap-1 justify-content-center">
+                            <a th:href="@{'/categorias/editar/' + ${c.id}}" class="btn btn-sm btn-outline-primary" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
 
-                    <td class="text-end">
-                        <a th:href="@{'/categorias/editar/' + ${c.id}}"
-                           class="btn btn-outline-amber btn-sm"
-                           sec:authorize="hasRole('ADMIN')">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-
-                        <form th:action="@{'/categorias/desactivar/' + ${c.id}}" method="post"
-                              style="display:inline-block;"
-                              sec:authorize="hasRole('ADMIN')"
-                              onsubmit="return confirm('¿Desactivar esta categoría?')">
-                            <button type="submit" class="btn btn-outline-danger btn-sm ms-1">
-                                <i class="bi bi-x-circle"></i>
-                            </button>
-                        </form>
+                            <form th:if="${c.activo}" th:action="@{'/categorias/desactivar/' + ${c.id}}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Desactivar" onsubmit="return confirm('¿Estás seguro de que deseas desactivar esta categoría? Los productos asociados podrían dejar de mostrarse.');">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
 
                 <tr th:if="${#lists.isEmpty(categorias)}">
-                    <td colspan="4" class="text-center text-muted py-4">No hay categorías.</td>
+                    <td colspan="5" class="text-center py-5 text-muted">
+                        <i class="bi bi-box-seam fs-2 d-block mb-2 text-secondary"></i>
+                        No hay categorías registradas en el sistema.
+                    </td>
                 </tr>
                 </tbody>
             </table>
@@ -64,5 +94,26 @@
     </div>
 
 </main>
+
+<th:block th:fragment="extra-scripts">
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const buscador = document.getElementById('buscadorCategoria');
+            if (buscador) {
+                buscador.addEventListener('keyup', function () {
+                    const valorBusqueda = this.value.toLowerCase().trim();
+                    const filas = document.querySelectorAll('#tablaCategorias tbody tr');
+
+                    filas.forEach(fila => {
+                        const nombre = fila.children[0]?.textContent?.toLowerCase() || '';
+                        const mostrar = !valorBusqueda || nombre.includes(valorBusqueda);
+                        fila.style.display = mostrar ? '' : 'none';
+                    });
+                });
+            }
+        });
+    </script>
+</th:block>
 </body>
 </html>
+

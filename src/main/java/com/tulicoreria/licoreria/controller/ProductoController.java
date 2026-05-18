@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.tulicoreria.licoreria.dto.ProductoRequestDTO;
+import com.tulicoreria.licoreria.dto.ProductoResponseDTO;
 import com.tulicoreria.licoreria.service.CategoriaService;
 import com.tulicoreria.licoreria.service.ProductoService;
 import com.tulicoreria.licoreria.service.ProveedorService;
@@ -32,6 +33,7 @@ public class ProductoController {
     public String listar(Model model) {
         model.addAttribute("productos", productoService.listarTodos());
         model.addAttribute("stockBajo", productoService.listarConStockBajo());
+        model.addAttribute("categorias", categoriaService.listarActivas());
         return "productos/lista";
     }
 
@@ -44,10 +46,7 @@ public class ProductoController {
     @GetMapping("/nuevo")
     @PreAuthorize("hasAnyRole('ADMIN','ALMACEN')")
     public String nuevoForm(Model model) {
-        // Pasamos un DTO limpio y definimos la acción explícitamente
-        model.addAttribute("tituloAccion", "Nuevo Producto");
         model.addAttribute("producto", new ProductoRequestDTO());
-
         model.addAttribute("categorias", categoriaService.listarActivas());
         model.addAttribute("proveedores", proveedorService.listarActivos());
         return "productos/formulario";
@@ -55,12 +54,11 @@ public class ProductoController {
 
     @PostMapping("/nuevo")
     @PreAuthorize("hasAnyRole('ADMIN','ALMACEN')")
-    public String crear(@ModelAttribute ProductoRequestDTO dto,
-            RedirectAttributes flash) {
+    public String crear(@ModelAttribute ProductoRequestDTO dto, RedirectAttributes flash) {
         try {
             productoService.crear(dto);
             flash.addFlashAttribute("exito", "Producto registrado correctamente");
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             flash.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/productos";
@@ -69,13 +67,10 @@ public class ProductoController {
     @GetMapping("/editar/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','ALMACEN')")
     public String editarForm(@PathVariable Long id, Model model) {
-        // Buscamos el producto y lo convertimos a RequestDTO en la capa de servicio 
-        // (o si tu servicio ya devuelve un DTO que mapea con el formulario, asegúrate de pasarlo aquí)
-        Object productoData = productoService.buscarPorId(id);
+        ProductoResponseDTO response = productoService.buscarPorId(id);
+        ProductoRequestDTO requestDto = mapearARequestDTO(response);
 
-        model.addAttribute("tituloAccion", "Editar Producto");
-        model.addAttribute("producto", productoData);
-
+        model.addAttribute("producto", requestDto);
         model.addAttribute("categorias", categoriaService.listarActivas());
         model.addAttribute("proveedores", proveedorService.listarActivos());
         return "productos/formulario";
@@ -89,7 +84,7 @@ public class ProductoController {
         try {
             productoService.actualizar(id, dto);
             flash.addFlashAttribute("exito", "Producto actualizado correctamente");
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             flash.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/productos";
@@ -118,5 +113,33 @@ public class ProductoController {
         } catch (RuntimeException e) {
             return productoService.buscarPorNombre(q);
         }
+    }
+
+    // Mapeo utilitario interno para mantener limpio el endpoint de edición
+    private ProductoRequestDTO mapearARequestDTO(ProductoResponseDTO response) {
+        return ProductoRequestDTO.builder()
+                .id(response.getId())
+                .nombre(response.getNombre())
+                .codigo(response.getCodigo())
+                .descripcion(response.getDescripcion())
+                .marca(response.getMarca())
+                .paisOrigen(response.getPaisOrigen())
+                .volumenMl(response.getVolumenMl())
+                .gradoAlcohol(response.getGradoAlcohol())
+                .precioCompra(response.getPrecioCompra())
+                .precioVenta(response.getPrecioVenta())
+                .stock(response.getStock())
+                .stockMinimo(response.getStockMinimo())
+                .categoriaId(response.getCategoriaId())
+                .proveedorId(response.getProveedorId())
+                .imagen(extraerRutaRelativaImagen(response.getUrlImagen()))
+                .build();
+    }
+
+    private String extraerRutaRelativaImagen(String urlImagen) {
+        if (urlImagen == null || urlImagen.isBlank()) {
+            return null;
+        }
+        return urlImagen.startsWith("/images/") ? urlImagen.substring("/images/".length()) : urlImagen;
     }
 }

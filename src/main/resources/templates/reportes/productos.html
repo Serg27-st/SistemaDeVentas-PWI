@@ -126,7 +126,7 @@
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="producto-thumb-sm rounded shadow-sm border overflow-hidden"
                                         style="width: 42px; height: 42px; background: #fff;">
-                                        <img th:src="@{/images/productos/{id}.jpg(id=${prod.productoId})}"
+                                        <img th:src="@{/images/{imagen}(imagen=${prod.imagen})}"
                                             th:alt="${prod.nombre}"
                                             style="width: 100%; height: 100%; object-fit: contain;"
                                             onerror="this.src='/images/producto-default.png'" />
