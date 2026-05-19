@@ -184,15 +184,24 @@
                                 </div>
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">
-                                    Stock mínimo <span class="text-danger">*</span>
-                                </label>
-                                <input type="number" th:field="*{stockMinimo}" class="form-control" placeholder="5"
-                                    min="0" required />
-                                <small class="text-muted">
-                                    Recibirás alertas cuando el stock llegue a este valor.
-                                </small>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        Stock <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" th:field="*{stock}" class="form-control" placeholder="10"
+                                        min="0" required />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        Stock mínimo <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" th:field="*{stockMinimo}" class="form-control" placeholder="5"
+                                        min="0" required />
+                                    <small class="text-muted">
+                                        Recibirás alertas cuando el stock llegue a este valor.
+                                    </small>
+                                </div>
                             </div>
 
                             <div class="mb-0">

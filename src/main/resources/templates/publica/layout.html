@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${titulo} ?: 'Licorería'">Licorería</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
+    <!-- CSS personalizado -->
+    <link th:href="@{/css/publica.css}" rel="stylesheet"/>
+
+    <th:block th:replace="${estilosExtra}"></th:block>
+</head>
+<body>
+
+<!-- ── Navbar ─────────────────────────────────────────────────────────────── -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top" id="navbar-publica">
+    <div class="container">
+
+        <!-- Logo -->
+        <a class="navbar-brand d-flex align-items-center gap-2" th:href="@{/inicio}">
+            <img th:src="@{/images/logo.png}" alt="Logo" height="38"
+                 onerror="this.style.display='none'"/>
+            <span class="brand-name">LICORERÍA</span>
+        </a>
+
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navMenu">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/inicio}"
+                       th:classappend="${paginaActual == 'inicio'} ? 'active'">
+                        Inicio
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/catalogo}"
+                       th:classappend="${paginaActual == 'catalogo'} ? 'active'">
+                        Catálogo
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                        Categorías
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li th:each="cat : ${categorias}">
+                            <a class="dropdown-item"
+                               th:href="@{/catalogo(categoria=${cat.id})}"
+                               th:text="${cat.nombre}">Categoría</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/contacto}">Nosotros</a>
+                </li>
+            </ul>
+
+            <!-- Buscador -->
+            <form class="d-flex me-3" th:action="@{/catalogo}" method="get">
+                <div class="input-group input-group-sm">
+                    <input class="form-control search-input" type="search"
+                           name="q" placeholder="Buscar producto..."
+                           th:value="${busqueda}"/>
+                    <button class="btn btn-buscar" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Carrito -->
+            <a th:href="@{/carrito}" class="btn btn-carrito position-relative">
+                <i class="bi bi-cart3 fs-5"></i>
+                <span class="badge-carrito"
+                      th:text="${session.carrito != null ? session.carrito.size() : 0}">0</span>
+            </a>
+
+            <!-- Acceso admin -->
+            <a th:href="@{/login}" class="btn btn-outline-light btn-sm ms-2">
+                <i class="bi bi-person-circle me-1"></i>Admin
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- ── Contenido principal ────────────────────────────────────────────────── -->
+<main>
+    <th:block th:replace="${contenido}"></th:block>
+</main>
+
+<!-- ── Footer ────────────────────────────────────────────────────────────── -->
+<footer class="footer-publica mt-5">
+    <div class="container">
+        <div class="row g-4 py-5">
+            <div class="col-lg-4">
+                <h5 class="brand-name mb-3">LICORERÍA</h5>
+                <p class="text-muted small">
+                    Los mejores licores para cada ocasión. Variedad, calidad
+                    y los mejores precios del mercado.
+                </p>
+                <div class="d-flex gap-3 mt-3">
+                    <a href="#" class="text-muted fs-5"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="text-muted fs-5"><i class="bi bi-instagram"></i></a>
+                    <a href="#" class="text-muted fs-5"><i class="bi bi-whatsapp"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-2 col-6">
+                <h6 class="fw-semibold mb-3">Categorías</h6>
+                <ul class="list-unstyled small text-muted">
+                    <li th:each="cat : ${categorias}">
+                        <a th:href="@{/catalogo(categoria=${cat.id})}"
+                           th:text="${cat.nombre}" class="text-muted text-decoration-none">
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-lg-3 col-6">
+                <h6 class="fw-semibold mb-3">Información</h6>
+                <ul class="list-unstyled small text-muted">
+                    <li><a href="#" class="text-muted text-decoration-none">Sobre nosotros</a></li>
+                    <li><a href="#" class="text-muted text-decoration-none">Política de privacidad</a></li>
+                    <li><a href="#" class="text-muted text-decoration-none">Términos y condiciones</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-3">
+                <h6 class="fw-semibold mb-3">Contacto</h6>
+                <ul class="list-unstyled small text-muted">
+                    <li><i class="bi bi-telephone me-2"></i>+51 999 999 999</li>
+                    <li><i class="bi bi-envelope me-2"></i>info@licoreria.com</li>
+                    <li><i class="bi bi-geo-alt me-2"></i>Lima, Perú</li>
+                </ul>
+            </div>
+        </div>
+        <hr class="border-secondary"/>
+        <p class="text-center text-muted small py-3 mb-0">
+            &copy; 2026 Licorería. Todos los derechos reservados.
+            <span class="ms-2 text-warning">
+                <i class="bi bi-shield-check"></i> Venta solo para mayores de 18 años
+            </span>
+        </p>
+    </div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- JS personalizado -->
+<script th:src="@{/js/publica.js}"></script>
+<th:block th:replace="${scriptsExtra}"></th:block>
+</body>
+</html>
