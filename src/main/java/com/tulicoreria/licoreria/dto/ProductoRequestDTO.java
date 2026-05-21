@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.time.LocalDate;
+
 
 @Getter
 @Setter
@@ -38,6 +40,8 @@ public class ProductoRequestDTO {
     private BigDecimal precioVenta;
     private Integer stock;
     private Integer stockMinimo;
+// nuevo
+    private LocalDate fechaVencimiento;
 
     private Long categoriaId;
     private Long proveedorId;

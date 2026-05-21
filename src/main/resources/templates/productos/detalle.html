@@ -125,6 +125,20 @@
                             <span class="text-secondary fw-semibold small">Grado Alcohólico</span>
                             <span class="text-dark" th:text="${producto.gradoAlcohol != null ? producto.gradoAlcohol + '%' : '-'}">-</span>
                         </div>
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom"
+    style="border-color: #f1f5f9 !important;">
+
+    <span class="text-secondary fw-semibold small">
+        Fecha de Vencimiento
+    </span>
+
+    <span class="text-dark fw-medium"
+        th:text="${producto.fechaVencimiento != null 
+                    ? #temporals.format(producto.fechaVencimiento, 'dd/MM/yyyy') 
+                    : 'No registrada'}">
+        -
+    </span>
+</div>
 
                         <div class="d-flex justify-content-between align-items-center py-2 border-bottom"
                             style="border-color: #f1f5f9 !important;">

@@ -239,43 +239,73 @@
 
     <th:block th:fragment="scripts">
         <script>
-            const buscador = document.getElementById('buscador');
-            const filtroCategoria = document.getElementById('filtroCategoria');
-            const filtroStock = document.getElementById('filtroStock');
-            const filas = document.querySelectorAll('#tablaProductos tbody tr[data-nombre]');
-            const filaSinRes = document.getElementById('filaSinResultados');
+           document.addEventListener('DOMContentLoaded', function () {
 
-            function filtrar() {
-                const q = buscador.value.toLowerCase().trim();
-                const cat = filtroCategoria.value.toLowerCase();
-                const est = filtroStock.value;
-                let visible = 0;
+    const buscador = document.getElementById('buscador');
+    const filtroCategoria = document.getElementById('filtroCategoria');
+    const filtroStock = document.getElementById('filtroStock');
+    const filas = document.querySelectorAll('#tablaProductos tbody tr[data-nombre]');
+    const filaSinRes = document.getElementById('filaSinResultados');
 
-                filas.forEach(fila => {
-                    const matchQ = !q || fila.dataset.nombre.includes(q)
-                        || fila.dataset.marca.includes(q)
-                        || fila.dataset.codigo.includes(q);
-                    const matchCat = !cat || fila.dataset.categoria === cat;
-                    const matchEst = !est || fila.dataset.estado === est;
+    function filtrar() {
 
-                    const mostrar = matchQ && matchCat && matchEst;
-                    fila.style.display = mostrar ? '' : 'none';
-                    if (mostrar) visible++;
-                });
+        const q = (buscador.value || '').toLowerCase().trim();
+        const cat = (filtroCategoria.value || '').toLowerCase();
+        const est = filtroStock.value || '';
 
-                filaSinRes.style.display = visible === 0 ? '' : 'none';
+        let visibles = 0;
+
+        filas.forEach(fila => {
+
+            const nombre = fila.dataset.nombre || '';
+            const marca = fila.dataset.marca || '';
+            const codigo = fila.dataset.codigo || '';
+            const categoria = fila.dataset.categoria || '';
+            const estado = fila.dataset.estado || '';
+
+            const coincideBusqueda =
+                q === '' ||
+                nombre.includes(q) ||
+                marca.includes(q) ||
+                codigo.includes(q);
+
+            const coincideCategoria =
+                cat === '' ||
+                categoria === cat;
+
+            const coincideEstado =
+                est === '' ||
+                estado === est;
+
+            const mostrar =
+                coincideBusqueda &&
+                coincideCategoria &&
+                coincideEstado;
+
+            fila.style.display = mostrar ? '' : 'none';
+
+            if (mostrar) {
+                visibles++;
             }
+        });
 
-            function limpiarFiltros() {
-                buscador.value = '';
-                filtroCategoria.value = '';
-                filtroStock.value = '';
-                filtrar();
-            }
+        filaSinRes.style.display = visibles === 0 ? '' : 'none';
+    }
 
-            buscador.addEventListener('input', filtrar);
-            filtroCategoria.addEventListener('change', filtrar);
-            filtroStock.addEventListener('change', filtrar);
+    function limpiarFiltros() {
+        buscador.value = '';
+        filtroCategoria.value = '';
+        filtroStock.value = '';
+        filtrar();
+    }
+
+    buscador.addEventListener('keyup', filtrar);
+    filtroCategoria.addEventListener('change', filtrar);
+    filtroStock.addEventListener('change', filtrar);
+
+    window.limpiarFiltros = limpiarFiltros;
+
+});
         </script>
     </th:block>
 </body>

@@ -184,14 +184,57 @@
                                 </div>
                             </div>
 
+                            <div class="row g-3 mb-3">
+
+    <!-- STOCK -->
+    <div class="col-md-6">
+        <label class="form-label fw-semibold">
+            Stock <span class="text-danger">*</span>
+        </label>
+
+        <input type="number"
+               th:field="*{stock}"
+               class="form-control"
+               placeholder="20"
+               min="0"
+               required />
+
+        <small class="text-muted">
+            Cantidad actual disponible.
+        </small>
+    </div>
+
+    <!-- STOCK MÍNIMO -->
+    <div class="col-md-6">
+        <label class="form-label fw-semibold">
+            Stock mínimo <span class="text-danger">*</span>
+        </label>
+
+        <input type="number"
+               th:field="*{stockMinimo}"
+               class="form-control"
+               placeholder="5"
+               min="0"
+               required />
+
+        <small class="text-muted">
+            Se mostrará alerta cuando el stock llegue a este límite.
+        </small>
+    </div>
+
+</div>
+
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">
-                                    Stock mínimo <span class="text-danger">*</span>
+                                    Fecha de Vencimiento
                                 </label>
-                                <input type="number" th:field="*{stockMinimo}" class="form-control" placeholder="5"
-                                    min="0" required />
+
+                                <input type="date"
+                                    th:field="*{fechaVencimiento}"
+                                    class="form-control" />
+
                                 <small class="text-muted">
-                                    Recibirás alertas cuando el stock llegue a este valor.
+                                    Solo para productos perecibles o con caducidad.
                                 </small>
                             </div>
 
@@ -220,69 +263,75 @@
     </th:block>
 
     <th:block th:fragment="scripts">
-        <script th:inline="javascript">
-            // Datos de categorías para construir la ruta de preview
-            const categorias = {};
-            /*[# th:each="cat : ${categorias}"]*/
-            categorias[/*[[${cat.id}]]*/ 0] = /*[[${cat.nombre}]]*/ '';
-            /*[/]*/
-
-            // Preview físico de la imagen al seleccionar archivo
-            function previewImagen(input) {
-                const imgNueva = document.getElementById('imgNueva');
-                const imgPreview = document.getElementById('imgPreview');
-                const placeholder = document.getElementById('imgPlaceholder');
-                const infoArchivo = document.getElementById('archivoSeleccionado');
-                const nombreArchivo = document.getElementById('nombreArchivo');
-
-                if (input.files && input.files[0]) {
-                    const archivo = input.files[0];
-
-                    const reader = new FileReader();
-                    reader.onload = e => {
-                        imgNueva.src = e.target.result;
-                        imgNueva.classList.remove('d-none');
-
-                        if (imgPreview) imgPreview.style.display = 'none';
-                        if (placeholder) placeholder.style.display = 'none';
-                    };
-                    reader.readAsDataURL(archivo);
-
-                    nombreArchivo.textContent = archivo.name;
-                    infoArchivo.classList.remove('d-none');
-
-                    actualizarRutaPreview();
+    <script th:inline="javascript">
+        // Datos de categorías - SIN th:each, se construye automáticamente desde el select
+        var categorias = {};
+        
+        // Poblar el objeto desde las opciones del select
+        var selectCategoria = document.getElementById('selectCategoria');
+        if (selectCategoria) {
+            var opciones = selectCategoria.querySelectorAll('option');
+            opciones.forEach(function(opcion) {
+                if (opcion.value) {
+                    categorias[opcion.value] = opcion.textContent;
                 }
-            }
-
-            // Actualiza de manera visual el informativo de almacenamiento con el ID o "id_autogenerado"
-            function actualizarRutaPreview() {
-                const categoriaSelect = document.getElementById('selectCategoria');
-                const previewRuta = document.getElementById('previewRuta');
-                const productoId = /*[[${producto.id}]]*/ null;
-
-                const categoriaId = categoriaSelect.value;
-
-                if (!categoriaId) {
-                    previewRuta.textContent = '{CATEGORIA}/producto_{id}.ext';
-                    return;
-                }
-
-                const categoriaNombre = categorias[categoriaId] || '';
-                // Lo pasamos a mayúsculas y reemplazamos espacios por guiones bajos para reflejar el backend
-                const carpetaCategoria = categoriaNombre.trim().toUpperCase().replace(/\s+/g, '_');
-                const idTexto = productoId ? productoId : '{id_autogenerado}';
-
-                previewRuta.textContent = carpetaCategoria + '/producto_' + idTexto + '.jpg';
-            }
-
-            // Inicializar al cargar la página
-            document.addEventListener('DOMContentLoaded', () => {
-                actualizarRutaPreview();
-                document.getElementById('selectCategoria').addEventListener('change', actualizarRutaPreview);
             });
-        </script>
-    </th:block>
+        }
+
+        // Preview físico de la imagen
+        function previewImagen(input) {
+            var imgNueva = document.getElementById('imgNueva');
+            var imgPreview = document.getElementById('imgPreview');
+            var placeholder = document.getElementById('imgPlaceholder');
+            var infoArchivo = document.getElementById('archivoSeleccionado');
+            var nombreArchivo = document.getElementById('nombreArchivo');
+
+            if (input.files && input.files[0]) {
+                var archivo = input.files[0];
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    imgNueva.src = e.target.result;
+                    imgNueva.classList.remove('d-none');
+                    if (imgPreview) imgPreview.style.display = 'none';
+                    if (placeholder) placeholder.style.display = 'none';
+                };
+                reader.readAsDataURL(archivo);
+                nombreArchivo.textContent = archivo.name;
+                infoArchivo.classList.remove('d-none');
+                actualizarRutaPreview();
+            }
+        }
+
+        // Actualiza la ruta preview
+        function actualizarRutaPreview() {
+            var categoriaSelect = document.getElementById('selectCategoria');
+            var previewRuta = document.getElementById('previewRuta');
+            var productoId = /*[[${producto.id}]]*/ null;
+            var categoriaId = categoriaSelect ? categoriaSelect.value : '';
+
+            if (!categoriaId) {
+                previewRuta.textContent = 'CATEGORIA/producto_ID.jpg';
+                return;
+            }
+
+            var categoriaNombre = categorias[categoriaId] || '';
+            var carpetaCategoria = categoriaNombre.trim().toUpperCase().replace(/\s+/g, '_');
+            var idTexto = productoId ? productoId : 'id_autogenerado';
+
+            previewRuta.textContent = carpetaCategoria + '/producto_' + idTexto + '.jpg';
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            actualizarRutaPreview();
+            var selectCat = document.getElementById('selectCategoria');
+            if (selectCat) {
+                selectCat.addEventListener('change', actualizarRutaPreview);
+            }
+        });
+    </script>
+</th:block>
+
 </body>
 
 </html>

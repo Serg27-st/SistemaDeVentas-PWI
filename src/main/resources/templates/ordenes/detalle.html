@@ -25,11 +25,11 @@
                 <h6 class="mb-3">Resumen</h6>
                 <div class="d-flex justify-content-between py-1">
                     <span class="text-muted">Proveedor</span>
-                    <span th:text="${orden.proveedor != null ? orden.proveedor.razonSocial : '-'}"></span>
+                    <span th:text="${orden.proveedorRazonSocial}"></span>
                 </div>
                 <div class="d-flex justify-content-between py-1">
                     <span class="text-muted">Fecha</span>
-                    <span th:text="${orden.fecha} "></span>
+                    <span th:text="${#temporals.format(orden.fechaEmision,'dd/MM/yyyy HH:mm')}"></span>
                 </div>
                 <div class="d-flex justify-content-between py-1">
                     <span class="text-muted">Estado</span>
@@ -47,7 +47,7 @@
             <div class="card-dark h-100 p-3">
                 <h6 class="mb-3">Acciones</h6>
 
-                <form th:if="${orden.estado != null and orden.estado.name() == 'PENDIENTE'}" th:action="@{'/ordenes/' + ${orden.id} + '/recibir'}" method="post">
+                <form th:if="${orden.estado != null and orden.estado == 'PENDIENTE'}" th:action="@{'/ordenes/' + ${orden.id} + '/recibir'}" method="post">
                     <label class="form-label">Comprobante proveedor</label>
                     <input class="form-control form-control-dark" name="comprobanteProveedor" type="text" required/>
                     <button type="submit" class="btn btn-amber w-100 mt-3">
@@ -55,7 +55,7 @@
                     </button>
                 </form>
 
-                <div th:if="${orden.estado == null or orden.estado.name() != 'PENDIENTE'}" class="alert alert-secondary mb-0">
+                <div th:if="${orden.estado == null or orden.estado != 'PENDIENTE'}" class="alert alert-secondary mb-0">
                     <small>Esta orden no está pendiente.</small>
                 </div>
             </div>
@@ -76,7 +76,7 @@
                         </thead>
                         <tbody>
                         <tr th:each="d : ${orden.detalles}">
-                            <td th:text="${d.producto != null ? d.producto.nombre : '-'}"></td>
+                            <td th:text="${d.productoNombre}"></td>
                             <td th:text="${d.cantidadSolicitada}"></td>
                             <td th:text="${'S/ ' + d.precioUnitario}"></td>
                             <td th:text="${'S/ ' + d.subtotal}"></td>

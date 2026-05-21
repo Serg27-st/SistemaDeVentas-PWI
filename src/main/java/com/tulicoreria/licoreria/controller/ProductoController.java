@@ -130,6 +130,7 @@ public class ProductoController {
                 .precioVenta(response.getPrecioVenta())
                 .stock(response.getStock())
                 .stockMinimo(response.getStockMinimo())
+                .fechaVencimiento(response.getFechaVencimiento())
                 .categoriaId(response.getCategoriaId())
                 .proveedorId(response.getProveedorId())
                 .imagen(extraerRutaRelativaImagen(response.getUrlImagen()))
