@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:replace="~{publica/layout :: layout(
+          titulo=${producto.nombre + ' | Licorería'},
+          paginaActual='catalogo',
+          contenido=~{::main-content},
+          estilosExtra=~{},
+          scriptsExtra=~{::scripts})}">
+
+<head>
+    <title>Detalle</title>
+</head>
+
+<body>
+    <th:block th:fragment="main-content">
+
+        <div class="bg-light border-bottom py-2">
+            <div class="container">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0 small">
+                        <li class="breadcrumb-item">
+                            <a th:href="@{/inicio}" class="text-decoration-none">Inicio</a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a th:href="@{/catalogo}" class="text-decoration-none">Catálogo</a>
+                        </li>
+                        <li class="breadcrumb-item active" th:text="${producto.nombre}"></li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        <div class="container py-5">
+            <div class="row g-5">
+
+                <div class="col-lg-5">
+                    <div class="detalle-img-container rounded-3 overflow-hidden shadow">
+                        <img th:src="${producto.urlImagen != null and !producto.urlImagen.empty} ? @{${producto.urlImagen}} : @{/images/producto-default.png}"
+                            th:alt="${producto.nombre}" th:data-fallback="@{/images/producto-default.png}"
+                            onerror="this.src=this.getAttribute('data-fallback')" class="img-fluid w-100" />
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+
+                    <div class="d-flex gap-2 mb-2">
+                        <span class="badge bg-warning text-dark" th:text="${producto.categoriaNombre}"></span>
+                        <span class="badge bg-secondary" th:text="${producto.marca}"></span>
+                    </div>
+
+                    <h1 class="detalle-titulo" th:text="${producto.nombre}"></h1>
+
+                    <div class="d-flex flex-wrap gap-3 my-3">
+                        <div class="spec-badge">
+                            <i class="bi bi-droplet text-warning"></i>
+                            <span th:text="|${producto.gradoAlcohol}° alcohol|"></span>
+                        </div>
+                        <div class="spec-badge">
+                            <i class="bi bi-box text-warning"></i>
+                            <span th:text="|${producto.volumenMl} ml|"></span>
+                        </div>
+                        <div class="spec-badge" th:if="${producto.paisOrigen != null and !producto.paisOrigen.empty}">
+                            <i class="bi bi-geo-alt text-warning"></i>
+                            <span th:text="${producto.paisOrigen}"></span>
+                        </div>
+                    </div>
+
+                    <div class="precio-detalle my-4"
+                        th:text="'S/. ' + ${#numbers.formatDecimal(producto.precioVenta,1,2)}">
+                    </div>
+
+                    <p class="text-muted" th:text="${producto.descripcion}"></p>
+
+                    <div th:if="${!producto.sinStock}">
+                        <form th:action="@{/carrito/agregar}" method="post"
+                            class="d-flex gap-3 align-items-center mt-4">
+                            <input type="hidden" name="productoId" th:value="${producto.id}" />
+
+                            <div class="input-group cantidad-group" style="width:130px">
+                                <button type="button" class="btn btn-outline-secondary" onclick="cambiarCantidad(-1)">
+                                    <i class="bi bi-dash"></i>
+                                </button>
+                                <input type="number" id="cantidad" name="cantidad" class="form-control text-center"
+                                    value="1" min="1" th:max="${producto.stock}" />
+                                <button type="button" class="btn btn-outline-secondary" onclick="cambiarCantidad(1)">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                            </div>
+
+                            <button type="submit" class="btn btn-warning btn-lg px-4 fw-semibold flex-grow-1">
+                                <i class="bi bi-cart-plus me-2"></i>Agregar al carrito
+                            </button>
+                        </form>
+                        <small class="text-muted d-block mt-2">
+                            <i class="bi bi-check-circle text-success me-1"></i>
+                            Stock disponible: <span th:text="${producto.stock}"></span> unidades
+                        </small>
+                    </div>
+
+                    <div th:if="${producto.sinStock}" class="alert alert-danger mt-4">
+                        <i class="bi bi-x-circle me-2"></i>
+                        Este producto está temporalmente agotado.
+                    </div>
+
+                    <div class="row g-2 mt-4">
+                        <div class="col-4">
+                            <div class="text-center p-2 bg-light rounded">
+                                <i class="bi bi-truck text-warning d-block fs-4"></i>
+                                <small class="text-muted">Delivery rápido</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-center p-2 bg-light rounded">
+                                <i class="bi bi-shield-check text-warning d-block fs-4"></i>
+                                <small class="text-muted">Original garantizado</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-center p-2 bg-light rounded">
+                                <i class="bi bi-credit-card text-warning d-block fs-4"></i>
+                                <small class="text-muted">Pago seguro</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-5" th:if="${relacionados != null and !#lists.isEmpty(relacionados)}">
+                <h4 class="section-title mb-4">También te puede gustar</h4>
+                <div class="row g-3">
+                    <div th:each="rel : ${relacionados}" class="col-6 col-md-3">
+                        <div class="card card-producto border-0 shadow-sm h-100">
+                            <div class="card-img-container">
+                                <img th:src="${rel.urlImagen != null and !rel.urlImagen.empty} ? @{${rel.urlImagen}} : @{/images/producto-default.png}"
+                                    th:alt="${rel.nombre}" th:data-fallback="@{/images/producto-default.png}"
+                                    onerror="this.src=this.getAttribute('data-fallback')"
+                                    class="card-img-top producto-img" />
+                            </div>
+                            <div class="card-body p-3">
+                                <h6 class="card-title small fw-semibold" th:text="${rel.nombre}"></h6>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <span class="precio-producto small"
+                                        th:text="'S/. ' + ${#numbers.formatDecimal(rel.precioVenta,1,2)}">
+                                    </span>
+                                    <a th:href="@{/producto/{id}(id=${rel.id})}" class="btn btn-sm btn-warning">Ver</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </th:block>
+
+    <th:block th:fragment="scripts">
+        <script>
+            function cambiarCantidad(delta) {
+                const input = document.getElementById('cantidad');
+                const nuevo = parseInt(input.value) + delta;
+                const max = parseInt(input.max) || 99;
+                if (nuevo >= 1 && nuevo <= max) input.value = nuevo;
+            }
+        </script>
+    </th:block>
+</body>
+
+</html>

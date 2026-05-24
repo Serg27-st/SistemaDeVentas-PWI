@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:replace="~{publica/layout :: layout(
+          titulo='Tu carrito | Licorería',
+          paginaActual='carrito',
+          contenido=~{::main-content},
+          estilosExtra=~{},
+          scriptsExtra=~{::scripts})}">
+
+<head>
+    <title>Carrito</title>
+</head>
+
+<body>
+    <th:block th:fragment="main-content">
+
+        <div class="bg-light border-bottom py-2">
+            <div class="container">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0 small">
+                        <li class="breadcrumb-item">
+                            <a th:href="@{/inicio}" class="text-decoration-none">Inicio</a>
+                        </li>
+                        <li class="breadcrumb-item active">Tu carrito</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        <div class="container pt-4">
+            <div class="checkout-stepper d-flex justify-content-center gap-0 mb-5">
+                <div class="step active">
+                    <div class="step-circle">1</div>
+                    <span>Carrito</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step" th:classappend="${paso == 2 or paso == 3} ? 'active'">
+                    <div class="step-circle">2</div>
+                    <span>Datos</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step" th:classappend="${paso == 3} ? 'active'">
+                    <div class="step-circle">3</div>
+                    <span>Confirmación</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="container pb-5">
+
+            <div th:if="${#lists.isEmpty(items)}" class="text-center py-5">
+                <i class="bi bi-cart-x fs-1 text-muted"></i>
+                <h5 class="text-muted mt-3">Tu carrito está vacío</h5>
+                <p class="text-muted">Agrega productos desde nuestro catálogo</p>
+                <a th:href="@{/catalogo}" class="btn btn-warning px-4 mt-2">
+                    <i class="bi bi-grid me-2"></i>Ver catálogo
+                </a>
+            </div>
+
+            <div th:if="${items != null and !#lists.isEmpty(items)}" class="row g-4">
+
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h5 class="fw-bold mb-0">
+                                <i class="bi bi-cart3 me-2 text-warning"></i>
+                                Productos (<span th:text="${#lists.size(items)}"></span>)
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div th:each="item : ${items}" class="item-carrito p-3 border-bottom">
+                                <div class="row align-items-center g-3">
+
+                                    <div class="col-2">
+                                        <img th:src="${item.urlImagen != null and !item.urlImagen.empty} ? @{${item.urlImagen}} : @{/images/producto-default.png}"
+                                            th:alt="${item.nombre}" th:data-fallback="@{/images/producto-default.png}"
+                                            onerror="this.src=this.getAttribute('data-fallback')"
+                                            class="img-fluid rounded shadow-sm" />
+                                    </div>
+
+                                    <div class="col-4">
+                                        <h6 class="fw-semibold mb-0" th:text="${item.nombre}"></h6>
+                                        <small class="text-muted" th:text="${item.marca}"></small>
+                                    </div>
+
+                                    <div class="col-2 text-center">
+                                        <small class="text-muted d-block small">Unitario</small>
+                                        <span class="fw-semibold text-dark"
+                                            th:text="'S/. ' + ${#numbers.formatDecimal(item.precioUnitario,1,2)}">
+                                        </span>
+                                    </div>
+
+                                    <div class="col-2 text-center">
+                                        <form th:action="@{/carrito/actualizar}" method="post"
+                                            class="d-inline-flex align-items-center gap-1">
+                                            <input type="hidden" name="productoId" th:value="${item.productoId}" />
+
+                                            <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                                onclick="this.form.cantidad.value=Math.max(1, parseInt(this.form.cantidad.value)-1); this.form.submit();">
+                                                <i class="bi bi-dash"></i>
+                                            </button>
+
+                                            <input type="number" name="cantidad" th:value="${item.cantidad}"
+                                                class="form-control form-control-sm text-center p-0"
+                                                style="width:40px; height: 28px;" min="1"
+                                                onchange="if(this.value < 1) this.value=1; this.form.submit();" />
+
+                                            <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                                onclick="this.form.cantidad.value=parseInt(this.form.cantidad.value)+1; this.form.submit();">
+                                                <i class="bi bi-plus"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    <div class="col-2 text-end">
+                                        <span class="fw-bold text-dark d-block"
+                                            th:text="'S/. ' + ${#numbers.formatDecimal(item.subtotal,1,2)}">
+                                        </span>
+                                        <form th:action="@{/carrito/eliminar}" method="post" class="d-inline">
+                                            <input type="hidden" name="productoId" th:value="${item.productoId}" />
+                                            <button type="submit"
+                                                class="btn btn-sm btn-link text-danger p-0 mt-1 text-decoration-none">
+                                                <i class="bi bi-trash me-1"></i>Quitar
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-0 py-3">
+                            <a th:href="@{/catalogo}" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-arrow-left me-1"></i>Seguir comprando
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm sticky-top" style="top:80px">
+                        <div class="card-header bg-dark text-white border-0 py-3">
+                            <h6 class="fw-bold mb-0">
+                                <i class="bi bi-receipt me-2"></i>Resumen del pedido
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Subtotal</span>
+                                <span th:text="'S/. ' + ${#numbers.formatDecimal(subtotal,1,2)}"></span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">IGV (18%)</span>
+                                <span th:text="'S/. ' + ${#numbers.formatDecimal(igv,1,2)}"></span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Delivery</span>
+                                <span class="text-success fw-semibold">Gratis</span>
+                            </div>
+                            <hr />
+                            <div class="d-flex justify-content-between fw-bold fs-5">
+                                <span>Total</span>
+                                <span class="text-warning" th:text="'S/. ' + ${#numbers.formatDecimal(total,1,2)}">
+                                </span>
+                            </div>
+
+                            <div class="mt-4">
+                                <label class="form-label small fw-semibold text-muted">Método de pago</label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <input type="radio" class="btn-check" name="pago" id="pago-efectivo"
+                                            value="EFECTIVO" checked />
+                                        <label class="btn btn-outline-secondary btn-sm w-100 py-2" for="pago-efectivo">
+                                            <i class="bi bi-cash me-1"></i>Efectivo
+                                        </label>
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="radio" class="btn-check" name="pago" id="pago-yape" value="YAPE" />
+                                        <label class="btn btn-outline-secondary btn-sm w-100 py-2" for="pago-yape">
+                                            <i class="bi bi-phone me-1"></i>Yape/Plin
+                                        </label>
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="radio" class="btn-check" name="pago" id="pago-tarjeta"
+                                            value="TARJETA" />
+                                        <label class="btn btn-outline-secondary btn-sm w-100 py-2" for="pago-tarjeta">
+                                            <i class="bi bi-credit-card me-1"></i>Tarjeta
+                                        </label>
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="radio" class="btn-check" name="pago" id="pago-transferencia"
+                                            value="TRANSFERENCIA" />
+                                        <label class="btn btn-outline-secondary btn-sm w-100 py-2"
+                                            for="pago-transferencia">
+                                            <i class="bi bi-bank me-1"></i>Banco
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <form th:action="@{/carrito/confirmar}" method="post" class="mt-4">
+                                <input type="hidden" name="metodoPago" id="metodoPagoInput" value="EFECTIVO" />
+                                <button type="submit" class="btn btn-warning w-100 fw-semibold py-2">
+                                    <i class="bi bi-bag-check me-2"></i>Finalizar pedido
+                                </button>
+                            </form>
+
+                            <div class="text-center mt-3">
+                                <small class="text-muted small">
+                                    <i class="bi bi-shield-lock me-1"></i>Compra 100% segura
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </th:block>
+
+    <th:block th:fragment="scripts">
+        <script>
+            // Sincronización del radio button seleccionado con el input hidden del formulario final
+            document.querySelectorAll('input[name="pago"]').forEach(radio => {
+                radio.addEventListener('change', () => {
+                    const inputHidden = document.getElementById('metodoPagoInput');
+                    if (inputHidden) {
+                        inputHidden.value = radio.value;
+                    }
+                });
+            });
+        </script>
+    </th:block>
+</body>
+
+</html>

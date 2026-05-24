@@ -175,7 +175,7 @@ public class ReporteServiceImpl implements ReporteService {
 
     // ── Helper ───────────────────────────────────────────────────────────────
     private String nombreMes(int mes) {
-        return Month.of(mes).getDisplayName(TextStyle.FULL, new Locale("es", "PE"));
+        return Month.of(mes).getDisplayName(TextStyle.FULL, Locale.of("es", "PE"));
     }
 
     private BigDecimal toBigDecimal(Object[] arr, int idx) {

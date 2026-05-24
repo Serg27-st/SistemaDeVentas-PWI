@@ -40,12 +40,12 @@
 
                             <div class="imagen-preview-container mb-3">
                                 <img th:if="${producto.imagen != null}"
-                                    th:src="@{/images/{ruta}(ruta=${producto.imagen})}"
-                                    th:alt="${producto.nombre}" id="imgPreview" class="img-fluid rounded-3 w-100"
+                                    th:src="@{/images/{ruta}(ruta=${producto.imagen})}" th:alt="${producto.nombre}"
+                                    id="imgPreview" class="img-fluid rounded-3 w-100"
                                     style="height:220px; object-fit:cover" />
 
-                                <div th:if="${producto.imagen == null}" id="imgPlaceholder" class="imagen-placeholder rounded-3 d-flex flex-column
-                                    align-items-center justify-content-center"
+                                <div class="imagen-placeholder rounded-3 d-flex flex-column align-items-center justify-content-center"
+                                    th:if="${producto.imagen == null}" id="imgPlaceholder"
                                     style="height:220px; background:#f8f9fa; border:2px dashed #dee2e6">
                                     <i class="bi bi-image fs-1 text-muted"></i>
                                     <small class="text-muted mt-2">Sin imagen</small>
@@ -263,17 +263,43 @@
     </th:block>
 
     <th:block th:fragment="scripts">
-    <script th:inline="javascript">
-        // Datos de categorías - SIN th:each, se construye automáticamente desde el select
-        var categorias = {};
-        
-        // Poblar el objeto desde las opciones del select
-        var selectCategoria = document.getElementById('selectCategoria');
-        if (selectCategoria) {
-            var opciones = selectCategoria.querySelectorAll('option');
-            opciones.forEach(function(opcion) {
-                if (opcion.value) {
-                    categorias[opcion.value] = opcion.textContent;
+        <script th:inline="javascript">
+            // Corregido: Cargamos la lista de categorías directamente convirtiéndola a JSON nativo
+            const listaCategoriasBackend = /*[[${categorias}]]*/[];
+            const categorias = {};
+
+            // Construimos el mapa de JS iterando el array ya mapeado
+            if (listaCategoriasBackend) {
+                listaCategoriasBackend.forEach(cat => {
+                    categorias[cat.id] = cat.nombre;
+                });
+            }
+
+            // Preview físico de la imagen al seleccionar archivo
+            function previewImagen(input) {
+                const imgNueva = document.getElementById('imgNueva');
+                const imgPreview = document.getElementById('imgPreview');
+                const placeholder = document.getElementById('imgPlaceholder');
+                const infoArchivo = document.getElementById('archivoSeleccionado');
+                const nombreArchivo = document.getElementById('nombreArchivo');
+
+                if (input.files && input.files[0]) {
+                    const archivo = input.files[0];
+
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        imgNueva.src = e.target.result;
+                        imgNueva.classList.remove('d-none');
+
+                        if (imgPreview) imgPreview.style.display = 'none';
+                        if (placeholder) placeholder.style.display = 'none';
+                    };
+                    reader.readAsDataURL(archivo);
+
+                    nombreArchivo.textContent = archivo.name;
+                    infoArchivo.classList.remove('d-none');
+
+                    actualizarRutaPreview();
                 }
             });
         }
@@ -314,12 +340,22 @@
                 return;
             }
 
-            var categoriaNombre = categorias[categoriaId] || '';
-            var carpetaCategoria = categoriaNombre.trim().toUpperCase().replace(/\s+/g, '_');
-            var idTexto = productoId ? productoId : 'id_autogenerado';
+            // Actualiza de manera visual el informativo de almacenamiento
+            function actualizarRutaPreview() {
+                const categoriaSelect = document.getElementById('selectCategoria');
+                const previewRuta = document.getElementById('previewRuta');
+                const productoId = /*[[${producto.id}]]*/ null;
 
-            previewRuta.textContent = carpetaCategoria + '/producto_' + idTexto + '.jpg';
-        }
+                const categoriaId = categoriaSelect.value;
+
+                if (!categoriaId) {
+                    previewRuta.textContent = '{CATEGORIA}/producto_{id}.ext';
+                    return;
+                }
+
+                const categoriaNombre = categorias[categoriaId] || '';
+                const carpetaCategoria = categoriaNombre.trim().toUpperCase().replace(/\s+/g, '_');
+                const idTexto = productoId ? productoId : '{id_autogenerado}';
 
         // Inicializar
         document.addEventListener('DOMContentLoaded', function() {

@@ -1,96 +1,113 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
-      th:replace="~{admin/layout :: layout(
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+    th:replace="~{admin/layout :: layout(
           titulo='Detalle Orden',
           currentPage='ordenes',
           content=~{::main-content},
           extraHead=~{},
           extraScripts=~{})}">
+
 <head>
 </head>
+
 <body>
-<main th:fragment="main-content">
+    <main th:fragment="main-content">
 
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <h3 class="m-0" th:text="${'Orden ' + orden.numeroOrden}">Orden</h3>
-        <div class="d-flex gap-2">
-            <a th:href="@{/ordenes}" class="btn btn-outline-amber">Volver</a>
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h3 class="m-0" th:text="${'Orden ' + orden.numeroOrden}">Orden</h3>
+            <div class="d-flex gap-2">
+                <a th:href="@{/ordenes}" class="btn btn-outline-secondary">Volver</a>
+            </div>
         </div>
-    </div>
 
-    <div class="row g-3">
-        <div class="col-md-6">
-            <div class="card-dark h-100 p-3">
-                <h6 class="mb-3">Resumen</h6>
-                <div class="d-flex justify-content-between py-1">
-                    <span class="text-muted">Proveedor</span>
-                    <span th:text="${orden.proveedorRazonSocial}"></span>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm p-3">
+                    <h6 class="mb-3 fw-semibold">Resumen de la Orden</h6>
+                    <div class="d-flex justify-content-between py-1">
+                        <span class="text-muted">Proveedor</span>
+                        <span class="fw-semibold"
+                            th:text="${orden.proveedorRazonSocial != null ? orden.proveedorRazonSocial : '-'}"></span>
+                    </div>
+                    <div class="d-flex justify-content-between py-1">
+                        <span class="text-muted">RUC Proveedor</span>
+                        <span th:text="${orden.proveedorRuc != null ? orden.proveedorRuc : '-'}"></span>
+                    </div>
+                    <div class="d-flex justify-content-between py-1">
+                        <span class="text-muted">Fecha Emisión</span>
+                        <span
+                            th:text="${orden.fechaEmision != null ? #temporals.format(orden.fechaEmision, 'dd/MM/yyyy HH:mm') : '-'}"></span>
+                    </div>
+                    <div class="d-flex justify-content-between py-1">
+                        <span class="text-muted">Estado</span>
+                        <span class="badge bg-secondary" th:text="${orden.estado}"></span>
+                    </div>
+                    <div class="d-flex justify-content-between py-1" th:if="${orden.comprobanteProveedor != null}">
+                        <span class="text-muted">Comprobante</span>
+                        <span th:text="${orden.comprobanteProveedor}"></span>
+                    </div>
+                    <hr />
+                    <div class="d-flex justify-content-between">
+                        <strong>Total</strong>
+                        <strong th:text="${orden.total != null ? 'S/ ' + orden.total : 'S/ 0.00'}"></strong>
+                    </div>
                 </div>
-                <div class="d-flex justify-content-between py-1">
-                    <span class="text-muted">Fecha</span>
-                    <span th:text="${#temporals.format(orden.fechaEmision,'dd/MM/yyyy HH:mm')}"></span>
+            </div>
+
+            <div class="col-md-6" sec:authorize="hasAnyRole('ADMIN','ALMACEN')">
+                <div class="card border-0 shadow-sm p-3">
+                    <h6 class="mb-3 fw-semibold">Acciones</h6>
+
+                    <form th:if="${orden.estado != null and orden.estado == 'PENDIENTE'}"
+                        th:action="@{'/ordenes/' + ${orden.id} + '/recibir'}" method="post">
+                        <label class="form-label small fw-semibold">Comprobante de proveedor</label>
+                        <input class="form-control mb-2" name="comprobanteProveedor" type="text"
+                            placeholder="Ej: F001-12345" required />
+                        <button type="submit" class="btn btn-warning w-100 fw-semibold">
+                            <i class="bi bi-box-seam me-1"></i> Recibir mercadería
+                        </button>
+                    </form>
+
+                    <div th:if="${orden.estado == null or orden.estado != 'PENDIENTE'}"
+                        class="alert alert-light mb-0 border">
+                        <small class="text-muted">Esta orden ya se encuentra en estado: <strong
+                                th:text="${orden.estado}"></strong>.</small>
+                    </div>
                 </div>
-                <div class="d-flex justify-content-between py-1">
-                    <span class="text-muted">Estado</span>
-                    <span th:text="${orden.estado} "></span>
-                </div>
-                <hr/>
-                <div class="d-flex justify-content-between">
-                    <strong>Total</strong>
-                    <strong th:text="${orden.total != null ? 'S/ ' + orden.total : 'S/ 0.00'}"></strong>
+            </div>
+
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <h6 class="m-0 p-3 fw-semibold border-bottom">Productos Solicitados</h6>
+                    <div class="table-responsive px-3 pb-3">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio Unitario</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="d : ${orden.detalles}">
+                                    <td th:text="${d.productoNombre != null ? d.productoNombre : '-'}"></td>
+                                    <td th:text="${d.cantidadSolicitada}"></td>
+                                    <td th:text="${'S/ ' + d.precioUnitario}"></td>
+                                    <td th:text="${'S/ ' + d.subtotal}"></td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(orden.detalles)}">
+                                    <td colspan="4" class="text-center text-muted py-4">La orden no cuenta con productos
+                                        registrados.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-6" sec:authorize="hasAnyRole('ADMIN','ALMACEN')">
-            <div class="card-dark h-100 p-3">
-                <h6 class="mb-3">Acciones</h6>
-
-                <form th:if="${orden.estado != null and orden.estado == 'PENDIENTE'}" th:action="@{'/ordenes/' + ${orden.id} + '/recibir'}" method="post">
-                    <label class="form-label">Comprobante proveedor</label>
-                    <input class="form-control form-control-dark" name="comprobanteProveedor" type="text" required/>
-                    <button type="submit" class="btn btn-amber w-100 mt-3">
-                        <i class="bi bi-box-seam me-1"></i> Recibir mercadería
-                    </button>
-                </form>
-
-                <div th:if="${orden.estado == null or orden.estado != 'PENDIENTE'}" class="alert alert-secondary mb-0">
-                    <small>Esta orden no está pendiente.</small>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12">
-            <div class="card-dark">
-                <h6 class="m-0 p-3">Detalle</h6>
-                <div class="table-responsive px-3 pb-3">
-                    <table class="table table-dark-custom table-hover mb-0">
-                        <thead>
-                        <tr>
-                            <th>Producto</th>
-                            <th>Cantidad</th>
-                            <th>Precio</th>
-                            <th>Subtotal</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="d : ${orden.detalles}">
-                            <td th:text="${d.productoNombre}"></td>
-                            <td th:text="${d.cantidadSolicitada}"></td>
-                            <td th:text="${'S/ ' + d.precioUnitario}"></td>
-                            <td th:text="${'S/ ' + d.subtotal}"></td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(orden.detalles)}">
-                            <td colspan="4" class="text-center text-muted py-4">Sin detalles.</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-</main>
+    </main>
 </body>
+
 </html>

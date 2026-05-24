@@ -88,6 +88,8 @@ public class Producto {
     @Column(name = "fecha_vencimiento")
     private LocalDate fechaVencimiento;
 
+    @Builder.Default
+
     @Column(nullable = false)
     private boolean activo = true;
 
