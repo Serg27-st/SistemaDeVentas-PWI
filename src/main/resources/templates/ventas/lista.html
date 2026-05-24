@@ -43,7 +43,7 @@
                     </div>
                     <div>
                         <div class="stat-value"
-                            th:text="${ventas != null ? ventas.?[estado.name() == 'COMPLETADA'].size() : 0}">
+                            th:text="${ventas != null ? ventas.?[estado.toString() == 'COMPLETADA'].size() : 0}">
                             0
                         </div>
                         <div class="stat-label">Completadas</div>
@@ -58,7 +58,7 @@
                     </div>
                     <div>
                         <div class="stat-value"
-                            th:text="${ventas != null ? ventas.?[estado.name() == 'ANULADA'].size() : 0}">
+                            th:text="${ventas != null ? ventas.?[estado.toString() == 'ANULADA'].size() : 0}">
                             0
                         </div>
                         <div class="stat-label">Anuladas</div>
@@ -74,7 +74,7 @@
                     <div>
                         <div class="stat-value">
                             S/. <span
-                                th:text="${ventas != null && #lists.size(ventas) > 0 ? #numbers.formatDecimal(#aggregates.sum(ventas.?[estado.name() == 'COMPLETADA'].![total]), 1, 'COMMA', 2, 'POINT') : '0.00'}">
+                                th:text="${ventas != null && #lists.size(ventas) > 0 ? #numbers.formatDecimal(#aggregates.sum(ventas.?[estado.toString() == 'COMPLETADA'].![total]), 1, 'COMMA', 2, 'POINT') : '0.00'}">
                                 0.00
                             </span>
                         </div>
@@ -178,7 +178,8 @@
                                 </td>
 
                                 <td>
-                                    <span th:switch="${v.metodoPago.name()}"> <span th:case="'EFECTIVO'">
+                                    <span th:switch="${v.metodoPago}">
+                                        <span th:case="'EFECTIVO'">
                                             <i class="bi bi-cash text-success me-1"></i>Efectivo
                                         </span>
                                         <span th:case="'YAPE'">
@@ -201,7 +202,7 @@
                                 </td>
 
                                 <td class="text-center">
-                                    <span th:switch="${v.estado.name()}">
+                                    <span th:switch="${v.estado}">
                                         <span th:case="'COMPLETADA'" class="badge bg-success">Completada</span>
                                         <span th:case="'ANULADA'" class="badge bg-danger">Anulada</span>
                                         <span th:case="'PENDIENTE'" class="badge bg-warning text-dark">Pendiente</span>
@@ -218,7 +219,7 @@
                                             class="btn btn-sm btn-outline-primary" title="Imprimir" target="_blank">
                                             <i class="bi bi-printer"></i>
                                         </a>
-                                        <form th:if="${v.estado.name() == 'COMPLETADA'}"
+                                        <form th:if="${v.estado == 'COMPLETADA'}"
                                             th:action="@{/ventas/{id}/anular(id=${v.id})}" method="post"
                                             class="d-inline"
                                             onsubmit="return confirm('¿Anular esta venta? El stock será devuelto al inventario.')">

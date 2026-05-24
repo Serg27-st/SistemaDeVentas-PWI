@@ -54,9 +54,9 @@
         <div class="row g-3 mb-4"
             th:with="
          totalMovs=${movimientos != null ? #lists.size(movimientos) : 0},
-         entradasCount=${movimientos != null ? #aggregates.sum(movimientos.![tipo.name() == 'ENTRADA_COMPRA' or tipo.name() == 'ENTRADA_DEVOLUCION' ? 1 : 0]) : 0},
-         salidasCount=${movimientos != null ? #aggregates.sum(movimientos.![tipo.name() == 'SALIDA_VENTA' or tipo.name() == 'SALIDA_MERMA' ? 1 : 0]) : 0},
-         ajustesCount=${movimientos != null ? #aggregates.sum(movimientos.![tipo.name() == 'AJUSTE_POSITIVO' or tipo.name() == 'AJUSTE_NEGATIVO' ? 1 : 0]) : 0}">
+         entradasCount=${movimientos != null ? #aggregates.sum(movimientos.![tipo == 'ENTRADA_COMPRA' or tipo == 'ENTRADA_DEVOLUCION' ? 1 : 0]) : 0},
+         salidasCount=${movimientos != null ? #aggregates.sum(movimientos.![tipo == 'SALIDA_VENTA' or tipo == 'SALIDA_MERMA' ? 1 : 0]) : 0},
+         ajustesCount=${movimientos != null ? #aggregates.sum(movimientos.![tipo == 'AJUSTE_POSITIVO' or tipo == 'AJUSTE_NEGATIVO' ? 1 : 0]) : 0}">
 
             <div class="col-6 col-md-3">
                 <div class="card border-0 shadow-sm p-3">
@@ -175,7 +175,7 @@
                                 </td>
 
                                 <td>
-                                    <span th:switch="${m.tipo.name()}">
+                                    <span th:switch="${m.tipo}">
                                         <span th:case="'ENTRADA_COMPRA'"
                                             class="badge bg-success-subtle text-success border border-success-subtle">
                                             <i class="bi bi-arrow-down-left me-1"></i>Compra
@@ -213,8 +213,8 @@
 
                                 <td class="text-center fw-bold">
                                     <span
-                                        th:text="${(m.tipo.name().startsWith('ENTRADA') or m.tipo.name() == 'AJUSTE_POSITIVO') ? '+' + m.cantidad : '-' + m.cantidad}"
-                                        th:class="${(m.tipo.name().startsWith('ENTRADA') or m.tipo.name() == 'AJUSTE_POSITIVO') ? 'text-success' : 'text-danger'}">
+                                        th:text="${(m.tipo.startsWith('ENTRADA') or m.tipo == 'AJUSTE_POSITIVO') ? '+' + m.cantidad : '-' + m.cantidad}"
+                                        th:class="${(m.tipo.startsWith('ENTRADA') or m.tipo == 'AJUSTE_POSITIVO') ? 'text-success' : 'text-danger'}">
                                     </span>
                                 </td>
 
