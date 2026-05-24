@@ -5,7 +5,7 @@
           currentPage='clientes',
           content=~{::main-content},
           extraHead=~{},
-          extraScripts=~{})}">
+          extraScripts=~{::scripts})}">
 <head><title>Clientes</title></head>
 <body>
 <th:block th:fragment="main-content">
@@ -133,7 +133,7 @@
                     </thead>
                     <tbody>
                         <tr th:each="c : ${clientes}"
-                            th:data-nombre="${c.nombreCompleto != null ? #strings.toLowerCase(c.nombreCompleto) : ''}"
+                            th:data-nombre="${#strings.toLowerCase((c.nombre ?: '') + ' ' + (c.apellido ?: ''))}"
                             th:data-doc="${c.numeroDocumento != null ? #strings.toLowerCase(c.numeroDocumento) : ''}"
                             th:data-tipo="${c.tipoDocumento}"
                             th:data-edad="${c.mayorDeEdad ? 'mayor' : 'menor'}">
@@ -147,7 +147,7 @@
                                     </div>
                                     <div>
                                         <div class="fw-semibold"
-                                             th:text="${c.nombreCompleto}"></div>
+                                            th:text="${(c.nombre ?: '') + ' ' + (c.apellido ?: '')}"></div>
                                         <small class="text-muted"
                                                th:text="${c.correo ?: '—'}"></small>
                                     </div>
