@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.tulicoreria.licoreria.dto.DetalleVentaRequestDTO;
 import com.tulicoreria.licoreria.dto.DetalleVentaResponseDTO;
+import com.tulicoreria.licoreria.dto.ItemCarritoDTO;
 import com.tulicoreria.licoreria.dto.VentaRequestDTO;
 import com.tulicoreria.licoreria.dto.VentaResponseDTO;
 import com.tulicoreria.licoreria.model.Cliente;
@@ -163,6 +164,119 @@ public class VentaServiceImpl implements VentaService {
         }
 
         return toDTO(ventaGuardada);
+    }
+
+    @Override
+    @Transactional
+    public VentaResponseDTO registrarDesdeCarrito(List<ItemCarritoDTO> items, String metodoPago) {
+
+        if (items == null || items.isEmpty()) {
+            throw new RuntimeException("El carrito está vacío");
+        }
+
+        // Vendedor sistema que representa el canal web
+        Usuario vendedor = usuarioRepository.findByUsername("tienda_online")
+                .orElseThrow(() -> new RuntimeException(
+                    "Usuario sistema 'tienda_online' no encontrado. " +
+                    "Reinicia la aplicación para que sea creado automáticamente."));
+
+        List<DetalleVenta> detalles = new ArrayList<>();
+        BigDecimal subtotalVenta = BigDecimal.ZERO;
+
+        for (ItemCarritoDTO item : items) {
+            Producto producto = productoRepository.findById(item.getProductoId())
+                    .orElseThrow(() -> new RuntimeException(
+                        "Producto no encontrado: " + item.getProductoId()));
+
+            if (producto.getStock() < item.getCantidad()) {
+                throw new RuntimeException(
+                    "Stock insuficiente para \"" + producto.getNombre() + "\". " +
+                    "Disponible: " + producto.getStock() +
+                    ", solicitado: " + item.getCantidad());
+            }
+
+            BigDecimal subtotalDetalle = producto.getPrecioVenta()
+                    .multiply(BigDecimal.valueOf(item.getCantidad()))
+                    .setScale(2, RoundingMode.HALF_UP);
+
+            detalles.add(DetalleVenta.builder()
+                    .producto(producto)
+                    .cantidad(item.getCantidad())
+                    .precioUnitario(producto.getPrecioVenta())
+                    .descuentoPorcentaje(BigDecimal.ZERO)
+                    .subtotal(subtotalDetalle)
+                    .build());
+
+            subtotalVenta = subtotalVenta.add(subtotalDetalle);
+
+            // Descontar stock inmediatamente
+            producto.setStock(producto.getStock() - item.getCantidad());
+            productoRepository.save(producto);
+        }
+
+        BigDecimal igvVenta    = subtotalVenta.multiply(IGV).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalVenta  = subtotalVenta.add(igvVenta).setScale(2, RoundingMode.HALF_UP);
+        String     comprobante = generarNumeroComprobante(TipoComprobante.TICKET);
+
+        MetodoPago mp;
+        try {
+            mp = MetodoPago.valueOf(metodoPago.toUpperCase());
+        } catch (Exception e) {
+            mp = MetodoPago.EFECTIVO;
+        }
+
+        Venta venta = Venta.builder()
+                .numeroComprobante(comprobante)
+                .tipoComprobante(TipoComprobante.TICKET)
+                .fechaHora(LocalDateTime.now())
+                .subtotal(subtotalVenta)
+                .igv(igvVenta)
+                .total(totalVenta)
+                .estado(EstadoVenta.PENDIENTE)
+                .metodoPago(mp)
+                .cliente(null)
+                .vendedor(vendedor)
+                .observaciones("Pedido web — Tienda online")
+                .build();
+
+        for (DetalleVenta d : detalles) {
+            d.setVenta(venta);
+            venta.getDetalles().add(d);
+        }
+
+        Venta ventaGuardada = ventaRepository.save(venta);
+
+        // Registrar salidas en Kardex
+        for (DetalleVenta d : detalles) {
+            Producto p = d.getProducto();
+            kardexRepository.save(Kardex.builder()
+                    .tipo(Kardex.TipoMovimiento.SALIDA_VENTA)
+                    .producto(p)
+                    .cantidad(d.getCantidad())
+                    .stockAnterior(p.getStock() + d.getCantidad())
+                    .stockResultante(p.getStock())
+                    .fechaHora(LocalDateTime.now())
+                    .usuario(vendedor)
+                    .motivo("Venta web: " + comprobante)
+                    .venta(ventaGuardada)
+                    .build());
+        }
+
+        return toDTO(ventaGuardada);
+    }
+
+    @Override
+    @Transactional
+    public VentaResponseDTO completar(Long id) {
+        Venta venta = ventaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Venta no encontrada con id: " + id));
+
+        if (venta.getEstado() != EstadoVenta.PENDIENTE) {
+            throw new RuntimeException("Solo se pueden completar ventas en estado PENDIENTE");
+        }
+
+        venta.setEstado(EstadoVenta.COMPLETADA);
+        return toDTO(ventaRepository.save(venta));
     }
 
     @Override

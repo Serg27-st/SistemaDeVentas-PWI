@@ -2,8 +2,10 @@ package com.tulicoreria.licoreria.controller;
 
 import com.tulicoreria.licoreria.dto.ItemCarritoDTO;
 import com.tulicoreria.licoreria.dto.ProductoResponseDTO;
+import com.tulicoreria.licoreria.dto.VentaResponseDTO;
 import com.tulicoreria.licoreria.service.CategoriaService;
 import com.tulicoreria.licoreria.service.ProductoService;
+import com.tulicoreria.licoreria.service.VentaService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -21,6 +23,7 @@ public class PublicController {
 
     private final ProductoService productoService;
     private final CategoriaService categoriaService;
+    private final VentaService ventaService;
 
     private static final String CARRITO_KEY = "carrito";
     private static final BigDecimal IGV_RATE = new BigDecimal("0.18");
@@ -178,14 +181,29 @@ public class PublicController {
             @RequestParam String metodoPago,
             HttpSession session,
             RedirectAttributes flash) {
+
         Map<Long, ItemCarritoDTO> carrito = getCarrito(session);
         if (carrito.isEmpty()) {
             flash.addFlashAttribute("errorMensaje", "Tu carrito está vacío.");
             return "redirect:/carrito";
         }
-        session.removeAttribute(CARRITO_KEY);
-        flash.addFlashAttribute("pedidoConfirmado", true);
-        flash.addFlashAttribute("metodoPago", metodoPago);
+
+        try {
+            List<ItemCarritoDTO> items = new ArrayList<>(carrito.values());
+            VentaResponseDTO venta = ventaService.registrarDesdeCarrito(items, metodoPago);
+
+            session.removeAttribute(CARRITO_KEY);
+            flash.addFlashAttribute("pedidoConfirmado", true);
+            flash.addFlashAttribute("comprobante", venta.getNumeroComprobante());
+            flash.addFlashAttribute("ventaId", venta.getId());
+            flash.addFlashAttribute("totalVenta", venta.getTotal());
+            flash.addFlashAttribute("metodoPago", venta.getMetodoPago());
+            flash.addFlashAttribute("fechaVenta", venta.getFechaHora());
+        } catch (RuntimeException e) {
+            flash.addFlashAttribute("errorMensaje", e.getMessage());
+            return "redirect:/carrito";
+        }
+
         return "redirect:/carrito/confirmacion";
     }
 
