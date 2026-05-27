@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{publica/layout :: layout(
+        titulo='Pedido confirmado | Tu Licorería',
+        paginaActual='',
+        contenido=~{::main-content},
+        estilosExtra=~{::estilos},
+        scriptsExtra=~{::scripts})}">
+<head>
+  <title>Pedido confirmado</title>
+  <th:block th:fragment="estilos"></th:block>
+</head>
+<body>
+<th:block th:fragment="main-content">
+
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-7 col-lg-6">
+
+        <!-- Card confirmación -->
+        <div class="bg-white rounded-3 shadow-sm border text-center p-5">
+
+          <div class="confirm-icon-wrap">
+            <i class="bi bi-bag-check-fill"></i>
+          </div>
+
+          <h2 class="fw-bold mb-2" style="font-family:'Playfair Display',serif;color:#0d0d16;">
+            ¡Pedido recibido!
+          </h2>
+          <p class="text-muted mb-4" style="line-height:1.7;">
+            Gracias por tu compra. Nuestro equipo procesará tu pedido y te contactará a la brevedad para coordinar la entrega.
+          </p>
+
+          <!-- Método de pago seleccionado -->
+          <div th:if="${metodoPago != null}"
+               class="d-inline-flex align-items-center gap-2 bg-light border rounded-2 px-4 py-2 mb-4">
+            <i class="bi bi-credit-card" style="color:#c9a227;"></i>
+            <span class="fw-semibold small text-dark">
+              Pago: <span th:text="${metodoPago}">EFECTIVO</span>
+            </span>
+          </div>
+
+          <!-- Si no hay flash (acceso directo) -->
+          <div th:if="${pedidoConfirmado == null}"
+               class="alert alert-warning text-start small mb-4">
+            <i class="bi bi-info-circle me-1"></i>
+            Esta página es solo válida inmediatamente después de procesar un pedido.
+          </div>
+
+          <div class="d-flex flex-column gap-3">
+            <a th:href="@{/catalogo}" class="btn-hero-main justify-content-center text-decoration-none d-flex">
+              <i class="bi bi-grid-3x3-gap-fill"></i> Seguir comprando
+            </a>
+            <a th:href="@{/inicio}" class="btn-hero-outline justify-content-center text-decoration-none d-flex"
+               style="color:#374151;border-color:#d1d5db;">
+              <i class="bi bi-house"></i> Volver al inicio
+            </a>
+          </div>
+
+          <hr class="my-4 opacity-25"/>
+
+          <p class="text-muted small mb-0">
+            <i class="bi bi-whatsapp me-1 text-success"></i>
+            ¿Dudas? Escríbenos al <strong>+51 999 999 999</strong>
+          </p>
+        </div>
+
+        <!-- Nota legal -->
+        <p class="text-center text-muted mt-4 small">
+          <i class="bi bi-shield-check me-1" style="color:#c9a227;"></i>
+          Venta exclusiva para mayores de 18 años. Beber con responsabilidad.
+        </p>
+
+      </div>
+    </div>
+  </div>
+
+</th:block>
+<th:block th:fragment="scripts"></th:block>
+</body>
+</html>

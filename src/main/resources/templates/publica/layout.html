@@ -1,153 +1,168 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-    th:fragment="layout (titulo, paginaActual, contenido, estilosExtra, scriptsExtra)">
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:fragment="layout (titulo, paginaActual, contenido, estilosExtra, scriptsExtra)">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title th:text="${titulo} ?: 'Licorería'">Licorería</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title th:text="${titulo} ?: 'Licorería'">Licorería</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500&display=swap"
-        rel="stylesheet" />
-    <link th:href="@{/css/publica.css}" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <link th:href="@{/css/publica.css}" rel="stylesheet"/>
 
-    <th:block th:replace="${estilosExtra}"></th:block>
+  <th:block th:insert="${estilosExtra} ?: ~{}"></th:block>
 </head>
 
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top" id="navbar-publica">
-        <div class="container">
+  <!-- ── Navbar ─────────────────────────────── -->
+  <nav class="navbar navbar-expand-lg sticky-top" id="navbar-publica">
+    <div class="container">
 
-            <a class="navbar-brand d-flex align-items-center gap-2" th:href="@{/inicio}">
-                <img th:src="@{/images/logo.png}" alt="Logo" height="38" onerror="this.style.display='none'" />
-                <span class="brand-name">LICORERÍA</span>
-            </a>
+      <a class="navbar-brand d-flex align-items-center gap-2" th:href="@{/inicio}">
+        <img th:src="@{/images/logo.png}" alt="Logo" height="34" onerror="this.style.display='none'"/>
+        <span class="brand-name">TU LICORERÍA</span>
+      </a>
 
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
-                <span class="navbar-toggler-icon"></span>
+      <button class="navbar-toggler border-0 text-white" type="button"
+              data-bs-toggle="collapse" data-bs-target="#navMenu"
+              aria-expanded="false" aria-label="Menú">
+        <i class="bi bi-list fs-4"></i>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/inicio}"
+               th:classappend="${paginaActual == 'inicio'} ? ' active'">Inicio</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/catalogo}"
+               th:classappend="${paginaActual == 'catalogo'} ? ' active'">Catálogo</a>
+          </li>
+          <li class="nav-item dropdown" th:if="${categorias != null and !categorias.isEmpty()}">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Categorías</a>
+            <ul class="dropdown-menu dropdown-menu-dark border-0" style="background:#161622;">
+              <li th:each="cat : ${categorias}">
+                <a class="dropdown-item py-2" th:href="@{/catalogo(categoria=${cat.id})}"
+                   th:text="${cat.nombre}">Categoría</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+
+        <!-- Buscador -->
+        <form class="d-flex me-3 my-2 my-lg-0" th:action="@{/catalogo}" method="get">
+          <div class="input-group" style="width:220px;">
+            <input class="form-control search-input" type="search" name="q"
+                   placeholder="Buscar licor..." th:value="${busqueda}"/>
+            <button class="btn btn-buscar" type="submit">
+              <i class="bi bi-search"></i>
             </button>
+          </div>
+        </form>
 
-            <div class="collapse navbar-collapse" id="navMenu">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/inicio}"
-                            th:classappend="${paginaActual == 'inicio'} ? 'active'">
-                            Inicio
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/catalogo}"
-                            th:classappend="${paginaActual == 'catalogo'} ? 'active'">
-                            Catálogo
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown" th:if="${categorias != null and !categorias.isEmpty()}">
-                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                            Categorías
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-dark">
-                            <li th:each="cat : ${categorias}">
-                                <a class="dropdown-item" th:href="@{/catalogo(categoria=${cat.id})}"
-                                    th:text="${cat.nombre}">Categoría</a>
-                            </li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/contacto}"
-                            th:classappend="${paginaActual == 'contacto'} ? 'active'">Nosotros</a>
-                    </li>
-                </ul>
+        <!-- Carrito -->
+        <a th:href="@{/carrito}" class="btn-carrito me-3">
+          <i class="bi bi-cart3"></i>
+          <span class="badge-carrito"
+                th:text="${session.carrito != null} ? ${session.carrito.size()} : 0">0</span>
+        </a>
 
-                <form class="d-flex me-3" th:action="@{/catalogo}" method="get">
-                    <div class="input-group input-group-sm">
-                        <input class="form-control search-input" type="search" name="q" placeholder="Buscar producto..."
-                            th:value="${busqueda}" />
-                        <button class="btn btn-buscar" type="submit">
-                            <i class="bi bi-search"></i>
-                        </button>
-                    </div>
-                </form>
-
-                <a th:href="@{/carrito}" class="btn btn-carrito position-relative me-2">
-                    <i class="bi bi-cart3 fs-5"></i>
-                    <span class="badge-carrito"
-                        th:text="${session.carrito != null} ? ${session.carrito.size()} : 0">0</span>
-                </a>
-
-                <a th:href="@{/login}" class="btn btn-outline-light btn-sm">
-                    <i class="bi bi-person-circle me-1"></i>Admin
-                </a>
-            </div>
+        <!-- Admin -->
+        <div sec:authorize="isAuthenticated()" class="d-flex align-items-center gap-2">
+          <a th:href="@{/dashboard}" class="btn btn-sm btn-outline-warning fw-semibold">
+            <i class="bi bi-speedometer2 me-1"></i>Panel
+          </a>
         </div>
-    </nav>
-
-    <main>
-        <th:block th:replace="${contenido}"></th:block>
-    </main>
-
-    <footer class="footer-publica mt-5">
-        <div class="container">
-            <div class="row g-4 py-5">
-                <div class="col-lg-4">
-                    <h5 class="brand-name mb-3">LICORERÍA</h5>
-                    <p class="text-muted small">
-                        Los mejores licores para cada ocasión. Variedad, calidad
-                        y los mejores precios del mercado.
-                    </p>
-                    <div class="d-flex gap-3 mt-3">
-                        <a href="#" class="text-muted fs-5"><i class="bi bi-facebook"></i></a>
-                        <a href="#" class="text-muted fs-5"><i class="bi bi-instagram"></i></a>
-                        <a href="#" class="text-muted fs-5"><i class="bi bi-whatsapp"></i></a>
-                    </div>
-                </div>
-
-                <div class="col-lg-2 col-6">
-                    <h6 class="fw-semibold mb-3">Categorías</h6>
-                    <ul class="list-unstyled small text-muted">
-                        <li th:each="cat : ${categorias}">
-                            <a th:href="@{/catalogo(categoria=${cat.id})}" th:text="${cat.nombre}"
-                                class="text-muted text-decoration-none">
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="col-lg-3 col-6">
-                    <h6 class="fw-semibold mb-3">Información</h6>
-                    <ul class="list-unstyled small text-muted">
-                        <li><a href="#" class="text-muted text-decoration-none">Sobre nosotros</a></li>
-                        <li><a href="#" class="text-muted text-decoration-none">Política de privacidad</a></li>
-                        <li><a href="#" class="text-muted text-decoration-none">Términos y condiciones</a></li>
-                    </ul>
-                </div>
-
-                <div class="col-lg-3">
-                    <h6 class="fw-semibold mb-3">Contacto</h6>
-                    <ul class="list-unstyled small text-muted">
-                        <li><i class="bi bi-telephone me-2"></i>+51 999 999 999</li>
-                        <li><i class="bi bi-envelope me-2"></i>info@licoreria.com</li>
-                        <li><i class="bi bi-geo-alt me-2"></i>Lima, Perú</li>
-                    </ul>
-                </div>
-            </div>
-            <hr class="border-secondary" />
-            <p class="text-center text-muted small py-3 mb-0">
-                &copy; 2026 Licorería. Todos los derechos reservados.
-                <span class="ms-2 text-warning">
-                    <i class="bi bi-shield-check"></i> Venta solo para mayores de 18 años
-                </span>
-            </p>
+        <div sec:authorize="!isAuthenticated()">
+          <a th:href="@{/login}" class="btn btn-sm btn-outline-light">
+            <i class="bi bi-person-circle me-1"></i>Acceso admin
+          </a>
         </div>
-    </footer>
+      </div>
+    </div>
+  </nav>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script th:src="@{/js/publica.js}"></script>
+  <!-- ── Contenido ──────────────────────────── -->
+  <main>
+    <th:block th:insert="${contenido} ?: ~{}"></th:block>
+  </main>
 
-    <th:block th:replace="${scriptsExtra}"></th:block>
+  <!-- ── Toast carrito ──────────────────────── -->
+  <div id="toast-carrito" role="alert" aria-live="polite">
+    <span class="toast-icon"><i class="bi bi-bag-check-fill"></i></span>
+    <span class="toast-msg">Producto agregado al carrito</span>
+  </div>
+  <!-- Mensaje desde flash attribute -->
+  <span id="toast-message" style="display:none;"
+        th:if="${carritoExito != null}"
+        th:data-msg="${carritoExito}"></span>
+
+  <!-- ── Footer ─────────────────────────────── -->
+  <footer class="footer-publica mt-5">
+    <div class="container">
+      <div class="row g-4 py-5">
+
+        <div class="col-lg-4">
+          <span class="brand-name d-block mb-3">TU LICORERÍA</span>
+          <p class="text-muted small mb-3" style="max-width:280px;line-height:1.8;">
+            Los mejores licores para cada ocasión. Variedad, calidad y los mejores precios del mercado.
+          </p>
+          <div class="footer-social d-flex gap-2">
+            <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+            <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+            <a href="#" aria-label="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+            <a href="#" aria-label="TikTok"><i class="bi bi-tiktok"></i></a>
+          </div>
+        </div>
+
+        <div class="col-lg-2 col-6">
+          <h6 class="fw-semibold text-white mb-3">Categorías</h6>
+          <ul class="list-unstyled mb-0">
+            <li th:each="cat : ${categorias}">
+              <a th:href="@{/catalogo(categoria=${cat.id})}" th:text="${cat.nombre}">Cat</a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="col-lg-3 col-6">
+          <h6 class="fw-semibold text-white mb-3">Información</h6>
+          <ul class="list-unstyled mb-0">
+            <li><a href="#">Sobre nosotros</a></li>
+            <li><a href="#">Política de privacidad</a></li>
+            <li><a href="#">Términos y condiciones</a></li>
+            <li><a href="#">Preguntas frecuentes</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-3">
+          <h6 class="fw-semibold text-white mb-3">Contacto</h6>
+          <ul class="list-unstyled small mb-0" style="line-height:2;">
+            <li><i class="bi bi-telephone me-2" style="color:var(--gold, #c9a227);"></i>+51 999 999 999</li>
+            <li><i class="bi bi-envelope me-2" style="color:var(--gold, #c9a227);"></i>info@licoreria.com</li>
+            <li><i class="bi bi-geo-alt me-2" style="color:var(--gold, #c9a227);"></i>Lima, Perú</li>
+            <li><i class="bi bi-clock me-2" style="color:var(--gold, #c9a227);"></i>Lun–Dom 9am–10pm</li>
+          </ul>
+        </div>
+
+      </div>
+      <hr class="footer-divider"/>
+      <p class="text-center small py-3 mb-0" style="color:rgba(255,255,255,.4);">
+        &copy; 2026 Licorería. Todos los derechos reservados.
+        <span class="ms-3" style="color:#c9a227;">
+          <i class="bi bi-shield-check me-1"></i>Venta exclusiva para mayores de 18 años
+        </span>
+      </p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script th:src="@{/js/publica.js}"></script>
+  <th:block th:insert="${scriptsExtra} ?: ~{}"></th:block>
 </body>
-
 </html>

@@ -55,8 +55,10 @@
             th:with="
          totalMovs=${movimientos != null ? #lists.size(movimientos) : 0},
          entradasCount=${movimientos != null ? #aggregates.sum(movimientos.![tipo == 'ENTRADA_COMPRA' or tipo == 'ENTRADA_DEVOLUCION' ? 1 : 0]) : 0},
-         salidasCount=${movimientos != null ? #aggregates.sum(movimientos.![tipo == 'SALIDA_VENTA' or tipo == 'SALIDA_MERMA' ? 1 : 0]) : 0},
-         ajustesCount=${movimientos != null ? #aggregates.sum(movimientos.![tipo == 'AJUSTE_POSITIVO' or tipo == 'AJUSTE_NEGATIVO' ? 1 : 0]) : 0}">
+
+salidasCount=${movimientos != null ? #aggregates.sum(movimientos.![tipo == 'SALIDA_VENTA' or tipo == 'SALIDA_MERMA' ? 1 : 0]) : 0},
+
+ajustesCount=${movimientos != null ? #aggregates.sum(movimientos.![tipo == 'AJUSTE_POSITIVO' or tipo == 'AJUSTE_NEGATIVO' ? 1 : 0]) : 0}">
 
             <div class="col-6 col-md-3">
                 <div class="card border-0 shadow-sm p-3">

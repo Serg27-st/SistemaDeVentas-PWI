@@ -14,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+
 public class Categoria {
 
     @Id
@@ -26,7 +27,9 @@ public class Categoria {
     @Column(length = 300)
     private String descripcion;
 
+
     @Column(nullable = false)
+    @Builder.Default
     private boolean activo = true;
 
     // 🌟 CORREGIDO: Evita bucles infinitos en serialización y asegura la carga limpia

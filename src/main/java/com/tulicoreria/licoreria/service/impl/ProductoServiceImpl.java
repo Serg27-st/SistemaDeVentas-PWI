@@ -96,6 +96,7 @@ public class ProductoServiceImpl implements ProductoService {
                 .precioVenta(dto.getPrecioVenta())
                 .stock(dto.getStock() != null ? dto.getStock() : 0)
                 .stockMinimo(dto.getStockMinimo() != null ? dto.getStockMinimo() : 0)
+                .fechaVencimiento(dto.getFechaVencimiento())
                 .imagen(imagenRuta)
                 .categoria(categoria)
                 .proveedor(proveedor)
@@ -124,6 +125,7 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setGradoAlcohol(dto.getGradoAlcohol());
         producto.setPrecioCompra(dto.getPrecioCompra());
         producto.setPrecioVenta(dto.getPrecioVenta());
+        producto.setFechaVencimiento(dto.getFechaVencimiento());
 
         if (dto.getImagenFile() != null && !dto.getImagenFile().isEmpty()) {
             if (producto.getImagen() != null) {
@@ -178,6 +180,7 @@ public class ProductoServiceImpl implements ProductoService {
                 .precioVenta(p.getPrecioVenta())
                 .stock(stockActual)
                 .stockMinimo(stockMin)
+                .fechaVencimiento(p.getFechaVencimiento())
                 .activo(p.isActivo())
                 // 🔑 NUEVOS MAPEOS: Agregamos los identificadores requeridos para la edición
                 .categoriaId(p.getCategoria() != null ? p.getCategoria().getId() : null)

@@ -6,6 +6,7 @@ import lombok.*;
 import java.math.BigDecimal;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "productos")
@@ -80,6 +81,14 @@ public class Producto {
      */
     @Column(nullable = false)
     private Integer stockMinimo;
+
+    /**
+ * Fecha de vencimiento del producto
+ */
+    @Column(name = "fecha_vencimiento")
+    private LocalDate fechaVencimiento;
+
+    @Builder.Default
 
     @Column(nullable = false)
     private boolean activo = true;

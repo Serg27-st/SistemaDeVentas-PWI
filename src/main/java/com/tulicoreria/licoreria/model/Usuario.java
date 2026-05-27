@@ -11,7 +11,9 @@ import java.util.Set;
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+
 @Builder
+
 public class Usuario {
 
     @Id
@@ -30,6 +32,8 @@ public class Usuario {
     @Column(nullable = false, unique = true, length = 100)
     private String correo;
 
+
+    @Builder.Default
     @Column(nullable = false)
     private boolean activo = true;
 

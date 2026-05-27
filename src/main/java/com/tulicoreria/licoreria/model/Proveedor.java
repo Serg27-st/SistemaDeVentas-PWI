@@ -35,6 +35,8 @@ public class Proveedor {
 
     @Column(length = 80)
     private String contactoNombre;
+    
+    @Builder.Default
 
     @Column(nullable = false)
     private boolean activo = true;
