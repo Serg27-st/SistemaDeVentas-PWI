@@ -2,32 +2,66 @@
    TU LICORERÍA — Vista Pública v2
    ================================================================ */
 
-/* ── Design tokens ───────────────────────────────────────────── */
+/* ── Design tokens (Tu Licorería — Design System v3) ────────── */
 :root {
-  /* Colors */
-  --gold:          #c9a227;
-  --gold-light:    #e4bb3c;
-  --gold-dim:      rgba(201, 162, 39, 0.12);
-  --gold-glow:     rgba(201, 162, 39, 0.30);
-  --dark:          #0c0c15;
-  --dark-nav:      #0f0f1c;
-  --dark-card:     #16161f;
-  --dark-surface:  #1e1e2a;
-  --ink:           #1a1a2e;
+  /* ── PALETA OFICIAL ──────────────────────────────────────────
+     Única fuente de verdad para toda la interfaz pública.
+     ---------------------------------------------------------- */
+
+  /* Fondos / Superficies */
+  --color-nav-bg:      #1a2536;   /* Navbar y sidebars */
+  --color-admin-bg:    #111823;   /* Fondo Dashboard admin */
+  --color-surface:     #ffffff;   /* Tarjetas, formularios */
+  --color-bg-public:   #f3f4f6;   /* Fondo general de la tienda */
+
+  /* Marca / Acción primaria */
+  --color-gold:        #ffc107;   /* Botones CTA, precios oferta, acentos */
+  --color-gold-hover:  #e9b92e;   /* Hover sobre fondos oro */
+  --color-gold-dim:    rgba(255,193,7,0.12);   /* Fondos sutiles gold */
+  --color-gold-glow:   rgba(255,193,7,0.30);   /* Sombra gold */
+  --color-gold-text:   #1a2536;   /* Texto SOBRE fondo gold (contraste AAA) */
+
+  /* Tipografía */
+  --color-text-primary: #1f2937; /* Títulos, precios, contenido clave */
+  --color-text-muted:   #6b7280; /* Secundario, descripciones, tachados */
+  --color-text-light:   #9ca3af; /* Hints, metadata */
+
+  /* Bordes */
+  --color-border:      #e5e7eb;
+  --color-border-dark: rgba(255,255,255,0.08);
+
+  /* Badges de estado */
+  --badge-pending-bg:   #fff3cd;
+  --badge-pending-text: #92400e;
+  --badge-success-bg:   #d1fae5;
+  --badge-success-text: #065f46;
+  --badge-danger-bg:    #fee2e2;
+  --badge-danger-text:  #991b1b;
+
+  /* ── Aliases de compatibilidad (usados en CSS existente) ──── */
+  --gold:          var(--color-gold);
+  --gold-light:    var(--color-gold-hover);
+  --gold-dim:      var(--color-gold-dim);
+  --gold-glow:     var(--color-gold-glow);
+  --dark:          #111823;
+  --dark-nav:      var(--color-nav-bg);
+  --dark-card:     #1c2840;
+  --dark-surface:  #243044;
+  --ink:           var(--color-text-primary);
   --ink-soft:      #374151;
-  --muted:         #6b7280;
-  --muted-light:   #9ca3af;
-  --border:        #e5e7eb;
-  --border-dark:   rgba(255, 255, 255, 0.08);
-  --surface:       #f9f9fb;
-  --white:         #ffffff;
+  --muted:         var(--color-text-muted);
+  --muted-light:   var(--color-text-light);
+  --border:        var(--color-border);
+  --border-dark:   var(--color-border-dark);
+  --surface:       var(--color-bg-public);
+  --white:         var(--color-surface);
 
   /* Shadows */
   --shadow-sm:     0 2px 8px rgba(0,0,0,0.06);
   --shadow-md:     0 8px 24px rgba(0,0,0,0.09);
   --shadow-lg:     0 20px 50px rgba(0,0,0,0.13);
-  --shadow-gold:   0 8px 28px rgba(201, 162, 39, 0.30);
-  --shadow-card-hover: 0 24px 60px rgba(0,0,0,0.12), 0 0 0 1px rgba(201,162,39,0.08);
+  --shadow-gold:   0 8px 28px var(--color-gold-glow);
+  --shadow-card-hover: 0 20px 48px rgba(0,0,0,0.11), 0 0 0 1px rgba(255,193,7,0.10);
 
   /* Typography */
   --font-display:  'Playfair Display', Georgia, serif;
@@ -41,7 +75,7 @@
 
   /* Motion */
   --t-fast:        0.15s ease;
-  --t:             0.26s ease;
+  --t:             0.22s ease;
   --t-slow:        0.45s cubic-bezier(0.22, 1, 0.36, 1);
   --t-spring:      0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -560,13 +594,17 @@ img { display: block; max-width: 100%; }
 }
 .card-nombre {
   font-weight: 700;
-  color: var(--ink);
+  color: var(--color-text-primary);  /* #1f2937 — spec */
   font-size: 0.92rem;
-  white-space: nowrap;
+  /* ✅ UX FIX: 2-line clamp en lugar de truncar en 1 línea.
+     Evita que tarjetas con nombres largos rompan el grid. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.35;
+  min-height: 2.5em;  /* Reserva espacio para exactamente 2 líneas */
   margin-bottom: 3px;
-  line-height: 1.3;
 }
 .card-marca-vol {
   font-size: 0.73rem;
@@ -579,9 +617,181 @@ img { display: block; max-width: 100%; }
 .card-precio {
   font-size: 1.2rem;
   font-weight: 800;
-  color: var(--ink);
+  color: var(--color-text-primary);
   letter-spacing: -0.3px;
+  transition: color var(--t-fast);
 }
+
+/* Precio en oferta → Gold */
+.card-precio.precio-oferta {
+  color: var(--color-gold);
+}
+
+/* Precio original tachado */
+.card-precio-original {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+  display: block;
+  line-height: 1.2;
+}
+
+/* ================================================================
+   CARD QUICK-ADD OVERLAY (aparece en hover sobre la imagen)
+   UX: El usuario puede agregar sin entrar al detalle → +conversión
+   ================================================================ */
+.card-img-container { position: relative; overflow: hidden; }
+
+.card-quick-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 37, 54, 0.52);   /* --color-nav-bg con alpha */
+  backdrop-filter: blur(1.5px);
+  -webkit-backdrop-filter: blur(1.5px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--t);
+}
+
+.card-producto:hover .card-quick-overlay {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.btn-agregar-card {
+  background: var(--color-gold);          /* #ffc107 */
+  color: var(--color-gold-text);          /* #1a2536 — contraste AAA */
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 9px 22px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  letter-spacing: 0.2px;
+  box-shadow: 0 4px 18px rgba(255,193,7,0.45);
+  transform: translateY(10px);
+  transition: background var(--t-fast), transform var(--t), box-shadow var(--t-fast);
+  white-space: nowrap;
+}
+
+.card-producto:hover .btn-agregar-card {
+  transform: translateY(0);
+}
+
+.btn-agregar-card:hover {
+  background: var(--color-gold-hover);   /* #e9b92e */
+  box-shadow: 0 6px 22px rgba(255,193,7,0.55);
+}
+
+.btn-agregar-card:active {
+  transform: scale(0.96) translateY(0);
+  box-shadow: none;
+}
+
+/* ── Cartel "Agotado" sobre la imagen en overlay ── */
+.card-quick-overlay.agotado-overlay {
+  background: rgba(17,24,39,0.70);
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+}
+.card-producto:hover .card-quick-overlay.agotado-overlay {
+  opacity: 1;
+}
+.agotado-overlay-label {
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border: 1.5px solid rgba(255,255,255,0.35);
+  padding: 6px 20px;
+  border-radius: 50px;
+}
+
+/* ── Mobile: overlay siempre visible (touch devices no tienen hover) ── */
+@media (hover: none) {
+  .card-quick-overlay {
+    opacity: 1;
+    pointer-events: auto;
+    background: rgba(26,37,54,0.38);
+  }
+  .btn-agregar-card { transform: translateY(0); }
+}
+
+/* ================================================================
+   COMBOS — botón CTA alineado al gold primario
+   ================================================================ */
+.btn-combo-agregar {
+  background: var(--color-gold);
+  color: var(--color-gold-text);
+  border: none;
+  border-radius: 50px;
+  padding: 9px 0;
+  font-weight: 700;
+  font-size: 0.82rem;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+  transition: background var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
+  box-shadow: 0 3px 12px rgba(255,193,7,0.28);
+}
+.btn-combo-agregar:hover {
+  background: var(--color-gold-hover);
+  box-shadow: 0 6px 20px rgba(255,193,7,0.40);
+  transform: translateY(-1px);
+}
+.btn-combo-agregar:active { transform: scale(0.97); box-shadow: none; }
+
+/* ================================================================
+   BADGE DE AHORRO (Etiqueta "Ahorras S/. X")
+   ================================================================ */
+.badge-ahorro {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255,193,7,0.12);
+  border: 1px solid rgba(255,193,7,0.25);
+  color: #92620a;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 50px;
+  white-space: nowrap;
+}
+
+/* ================================================================
+   STRIP OFERTA — Barra superior de urgencia/promociones
+   ================================================================ */
+.promo-strip {
+  background: var(--color-gold);
+  color: var(--color-gold-text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  padding: 9px 0;
+  text-align: center;
+  position: relative;
+  z-index: 1031;
+}
+.promo-strip a {
+  color: var(--color-gold-text);
+  text-decoration: underline;
+  font-weight: 700;
+}
+.promo-strip a:hover { opacity: 0.8; }
 
 /* Ver detalle button */
 .btn-ver {
@@ -1105,9 +1315,410 @@ img { display: block; max-width: 100%; }
 }
 
 /* ================================================================
+   BOTÓN FLOTANTE DE WHATSAPP
+   ================================================================ */
+
+@keyframes wa-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37,211,102,.5); }
+  50%       { box-shadow: 0 0 0 14px rgba(37,211,102,0); }
+}
+@keyframes wa-enter {
+  from { transform: scale(0) rotate(-30deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0deg);  opacity: 1; }
+}
+
+.whatsapp-float {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 1055;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #25d366;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.65rem;
+  text-decoration: none;
+  box-shadow: 0 6px 24px rgba(37,211,102,.40);
+  animation: wa-enter .45s .8s both, wa-pulse 2.5s 1.3s infinite;
+  transition: transform .22s var(--t-spring, cubic-bezier(0.34,1.56,0.64,1)),
+              box-shadow .22s ease,
+              background .18s ease;
+}
+.whatsapp-float:hover {
+  background: #20b858;
+  color: #fff;
+  transform: scale(1.13);
+  box-shadow: 0 10px 32px rgba(37,211,102,.55);
+}
+.whatsapp-float:active {
+  transform: scale(0.96);
+}
+
+/* Tooltip al lado del botón */
+.whatsapp-float::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  right: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%) translateX(6px);
+  background: #1a1a2e;
+  color: #fff;
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .3px;
+  white-space: nowrap;
+  padding: 6px 12px;
+  border-radius: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s, transform .2s;
+}
+.whatsapp-float::after {
+  content: '';
+  position: absolute;
+  right: calc(100% + 4px);
+  top: 50%;
+  transform: translateY(-50%) translateX(6px);
+  border: 6px solid transparent;
+  border-left-color: #1a1a2e;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s, transform .2s;
+}
+.whatsapp-float:hover::before,
+.whatsapp-float:hover::after {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+@media (max-width: 767px) {
+  .whatsapp-float {
+    bottom: 20px;
+    right: 20px;
+    width: 52px;
+    height: 52px;
+    font-size: 1.45rem;
+  }
+}
+
+/* ================================================================
+   CATÁLOGO — Vista Lista
+   ================================================================ */
+.list-product-item {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  transition: box-shadow var(--t), border-color var(--t), transform var(--t-fast);
+  position: relative;
+}
+.list-product-item::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--color-gold);
+  border-radius: 3px 0 0 3px;
+  transform: scaleY(0);
+  transition: transform var(--t);
+}
+.list-product-item:hover {
+  box-shadow: var(--shadow-md);
+  border-color: rgba(255,193,7,.2);
+  transform: translateX(2px);
+}
+.list-product-item:hover::before { transform: scaleY(1); }
+.list-img-wrap {
+  width: 88px; height: 88px;
+  background: var(--color-bg-public);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.list-img-wrap img { width: 72px; height: 72px; object-fit: contain; }
+
+/* Grid/List toggle state */
+#productos-grid.vista-lista .col-6,
+#productos-grid.vista-lista .col-md-4 {
+  width: 100%;
+  max-width: 100%;
+  flex: 0 0 100%;
+}
+#productos-grid.vista-lista .card-producto { display: none; }
+#productos-grid.vista-lista .list-product-item { display: flex; }
+#productos-grid:not(.vista-lista) .list-product-item { display: none; }
+
+/* ================================================================
+   CATÁLOGO — Sidebar filtros mejorado
+   ================================================================ */
+.filtros-section-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.filtros-section-title i { color: var(--color-gold); }
+
+/* ================================================================
+   DETALLE DE PRODUCTO — Precio y specs
+   ================================================================ */
+.detalle-precio-principal {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+.detalle-precio-oferta { color: var(--color-gold); }
+.detalle-precio-tachado {
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+  font-weight: 500;
+}
+.detalle-badge-cat {
+  background: rgba(255,193,7,0.12);
+  color: #7a5100;
+  border: 1px solid rgba(255,193,7,0.25);
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 5px 14px;
+  border-radius: 50px;
+}
+.detalle-garantia-item {
+  text-align: center;
+  padding: 14px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-public);
+  border: 1px solid var(--color-border);
+  transition: border-color var(--t-fast), background var(--t-fast);
+}
+.detalle-garantia-item:hover {
+  border-color: rgba(255,193,7,0.3);
+  background: rgba(255,193,7,0.05);
+}
+.detalle-garantia-item i { color: var(--color-gold); font-size: 1.4rem; display: block; margin-bottom: 6px; }
+.detalle-garantia-item small { font-size: 0.74rem; color: var(--color-text-muted); font-weight: 600; }
+
+/* Promo banner en detalle */
+.detalle-promo-banner {
+  background: linear-gradient(135deg, rgba(255,193,7,0.10), rgba(255,193,7,0.05));
+  border: 1px solid rgba(255,193,7,0.25);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.detalle-promo-banner i { color: var(--color-gold); font-size: 1.25rem; flex-shrink: 0; }
+
+/* Stock indicator */
+.stock-bar { height: 4px; border-radius: 4px; background: var(--color-border); overflow: hidden; }
+.stock-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #22c55e, #4ade80); transition: width 0.5s ease; }
+.stock-bar-fill.low { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.stock-bar-fill.critical { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+/* ================================================================
+   CARRITO — mejorado
+   ================================================================ */
+.carrito-item-img {
+  width: 72px; height: 72px;
+  object-fit: contain;
+  background: var(--color-bg-public);
+  border-radius: var(--radius-sm);
+  padding: 6px;
+}
+.carrito-tabla-header {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  border-bottom: 2px solid var(--color-border);
+  padding-bottom: 10px;
+  margin-bottom: 0;
+}
+
+/* ================================================================
+   CHECKOUT — Formularios y pasos
+   ================================================================ */
+.checkout-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-sm);
+}
+.checkout-section-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.checkout-section-title i { color: var(--color-gold); font-size: 1.1rem; }
+.checkout-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 5px;
+}
+.checkout-input {
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  width: 100%;
+}
+.checkout-input:focus {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 3px rgba(255,193,7,0.15);
+  outline: none;
+}
+.checkout-input::placeholder { color: var(--color-text-light); }
+
+/* Método pago card */
+.metodo-pago-card {
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.25rem;
+  cursor: pointer;
+  transition: border-color var(--t-fast), background var(--t-fast), box-shadow var(--t-fast);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  user-select: none;
+}
+.metodo-pago-card:hover { border-color: rgba(255,193,7,0.4); background: rgba(255,193,7,0.03); }
+.metodo-pago-card.activo {
+  border-color: var(--color-gold);
+  background: rgba(255,193,7,0.06);
+  box-shadow: 0 0 0 3px rgba(255,193,7,0.12);
+}
+.metodo-pago-icon {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+.metodo-radio {
+  width: 20px; height: 20px;
+  border: 2px solid var(--color-border);
+  border-radius: 50%;
+  margin-left: auto;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color var(--t-fast);
+}
+.metodo-pago-card.activo .metodo-radio {
+  border-color: var(--color-gold);
+  background: var(--color-gold);
+}
+.metodo-pago-card.activo .metodo-radio::after {
+  content: '';
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--color-gold-text);
+}
+
+/* Panel de pago: slide down */
+.panel-metodo {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease, opacity 0.25s ease;
+  opacity: 0;
+}
+.panel-metodo.show { max-height: 400px; opacity: 1; }
+
+/* Resumen sticky en checkout */
+.resumen-checkout {
+  background: var(--color-nav-bg);
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: sticky;
+  top: 84px;
+}
+.resumen-checkout-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.resumen-checkout-header i { color: var(--color-gold); }
+.resumen-checkout-body { padding: 1.25rem; }
+.resumen-linea {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.65);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.resumen-linea .valor { color: rgba(255,255,255,0.9); font-weight: 600; }
+.resumen-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-top: 14px;
+  margin-top: 6px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+}
+.resumen-total .valor { color: var(--color-gold); font-size: 1.5rem; font-family: var(--font-display); }
+
+/* ================================================================
+   BADGE STATUS — Pedidos
+   ================================================================ */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 50px;
+  letter-spacing: 0.3px;
+}
+.status-badge i { font-size: 0.55rem; }
+.status-badge.pendiente  { background: var(--badge-pending-bg);  color: var(--badge-pending-text); }
+.status-badge.pagado     { background: var(--badge-success-bg);  color: var(--badge-success-text); }
+.status-badge.entregado  { background: var(--badge-success-bg);  color: var(--badge-success-text); }
+.status-badge.cancelado  { background: var(--badge-danger-bg);   color: var(--badge-danger-text);  }
+.status-badge.por-entregar { background: #dbeafe; color: #1e40af; }
+
+/* ================================================================
    PRINT
    ================================================================ */
 @media print {
-  #navbar-publica, .footer-publica, #toast-carrito { display: none !important; }
+  #navbar-publica, .footer-publica, #toast-carrito,
+  .whatsapp-float { display: none !important; }
   body { color: #000; }
 }

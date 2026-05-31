@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{publica/layout :: layout(
+        titulo='Datos de envío | Tu Licorería',
+        paginaActual='',
+        contenido=~{::main-content},
+        estilosExtra=~{::estilos},
+        scriptsExtra=~{::scripts})}">
+<head><title>Datos de envío</title>
+<th:block th:fragment="estilos">
+<style>
+  .campo-requerido { color: var(--color-gold); }
+  .distrito-costo {
+    display: none;
+    font-size: .78rem;
+    color: var(--color-text-muted);
+    margin-top: 4px;
+  }
+  .factura-section {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .3s ease, opacity .25s ease;
+    opacity: 0;
+  }
+  .factura-section.show { max-height: 200px; opacity: 1; }
+  .tipo-comprobante-btn {
+    flex: 1;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color var(--t-fast), background var(--t-fast);
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+  }
+  .tipo-comprobante-btn:hover { border-color: rgba(255,193,7,.4); }
+  .tipo-comprobante-btn.activo {
+    border-color: var(--color-gold);
+    background: rgba(255,193,7,.07);
+    color: var(--color-text-primary);
+  }
+  .tipo-comprobante-btn i { display: block; font-size: 1.4rem; margin-bottom: 4px; color: var(--color-gold); }
+</style>
+</th:block>
+</head>
+<body>
+<th:block th:fragment="main-content">
+
+  <!-- Stepper -->
+  <div class="container pt-4 pb-1">
+    <div class="d-flex align-items-center justify-content-center mx-auto" style="max-width:560px;">
+      <div class="step text-center done">
+        <div class="stepper-circle"><i class="bi bi-check-lg" style="font-size:.8rem;"></i></div>
+        <span class="small text-muted d-block">Carrito</span>
+      </div>
+      <div class="stepper-line"></div>
+      <div class="step text-center active">
+        <div class="stepper-circle">2</div>
+        <span class="small fw-bold d-block" style="color:var(--color-text-primary);">Datos</span>
+      </div>
+      <div class="stepper-line"></div>
+      <div class="step text-center">
+        <div class="stepper-circle">3</div>
+        <span class="small text-muted d-block">Pago</span>
+      </div>
+      <div class="stepper-line"></div>
+      <div class="step text-center">
+        <div class="stepper-circle">4</div>
+        <span class="small text-muted d-block">Listo</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="container py-4">
+
+    <div th:if="${errorMensaje}" class="alert d-flex gap-2 mb-3 py-2"
+         style="background:#fee2e2;border:1px solid #fca5a5;border-radius:var(--radius-sm);">
+      <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1" style="color:#dc2626;"></i>
+      <span style="color:#991b1b;" th:text="${errorMensaje}">Error</span>
+    </div>
+
+    <div class="row g-4 align-items-start">
+
+      <!-- ── Formulario de datos ── -->
+      <div class="col-lg-8">
+        <form th:action="@{'/checkout/' + ${pedido.id} + '/datos'}" method="post"
+              th:object="${dto}" id="datosForm" novalidate>
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+          <!-- 1. Identificación -->
+          <div class="checkout-card mb-3">
+            <h6 class="checkout-section-title">
+              <i class="bi bi-person-badge-fill"></i> Tu identificación
+            </h6>
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="checkout-label">Nombre <span class="campo-requerido">*</span></label>
+                <input type="text" th:field="*{nombre}" class="checkout-input form-control"
+                       placeholder="Juan" required autocomplete="given-name"/>
+              </div>
+              <div class="col-sm-6">
+                <label class="checkout-label">Apellido <span class="campo-requerido">*</span></label>
+                <input type="text" th:field="*{apellido}" class="checkout-input form-control"
+                       placeholder="Pérez" required autocomplete="family-name"/>
+              </div>
+              <div class="col-sm-6">
+                <label class="checkout-label">Correo electrónico <span class="campo-requerido">*</span></label>
+                <input type="email" th:field="*{email}" class="checkout-input form-control"
+                       placeholder="juan@correo.com" required autocomplete="email"/>
+                <div class="form-text">Recibirás la confirmación aquí.</div>
+              </div>
+              <div class="col-sm-6">
+                <label class="checkout-label">Teléfono / Celular <span class="campo-requerido">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text fw-bold"
+                        style="background:var(--color-bg-public);border-color:var(--color-border);">+51</span>
+                  <input type="tel" th:field="*{telefono}" class="checkout-input form-control"
+                         placeholder="987 654 321" required pattern="[0-9]{7,9}"
+                         autocomplete="tel-national"/>
+                </div>
+                <div class="form-text">El repartidor te llamará al llegar.</div>
+              </div>
+              <div class="col-sm-6">
+                <label class="checkout-label">DNI o CE <span class="campo-requerido">*</span></label>
+                <input type="text" th:field="*{dni}" class="checkout-input form-control"
+                       placeholder="12345678" required maxlength="12"
+                       autocomplete="off"/>
+                <div class="form-text">
+                  <i class="bi bi-shield-check me-1" style="color:#22c55e;"></i>
+                  Requerido para verificar mayoría de edad (18+).
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Dirección de entrega -->
+          <div class="checkout-card mb-3">
+            <h6 class="checkout-section-title">
+              <i class="bi bi-geo-alt-fill"></i> Dirección de entrega
+            </h6>
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="checkout-label">Calle y número <span class="campo-requerido">*</span></label>
+                <input type="text" th:field="*{direccion}" class="checkout-input form-control"
+                       placeholder="Av. Larco 1234" required autocomplete="street-address"/>
+              </div>
+              <div class="col-sm-5">
+                <label class="checkout-label">Dpto / Piso (opcional)</label>
+                <input type="text" th:field="*{departamento}" class="checkout-input form-control"
+                       placeholder="Dpto. 5B, Piso 3"/>
+              </div>
+              <div class="col-sm-7">
+                <label class="checkout-label">Distrito <span class="campo-requerido">*</span></label>
+                <select th:field="*{distrito}" class="form-select checkout-input"
+                        id="distritoSel" required onchange="actualizarCostoDistrito()">
+                  <option value="">— Selecciona tu distrito —</option>
+                  <option th:each="entry : ${tarifasEnvio}"
+                          th:value="${entry.key}"
+                          th:text="${entry.key}">Distrito</option>
+                </select>
+                <div class="distrito-costo" id="distritoCostoInfo">
+                  <i class="bi bi-truck me-1" style="color:var(--color-gold);"></i>
+                  <span id="distritoCostoTexto"></span>
+                </div>
+              </div>
+              <div class="col-12">
+                <label class="checkout-label">Referencia (para el repartidor)</label>
+                <input type="text" th:field="*{referencia}" class="checkout-input form-control"
+                       placeholder="Ej: Casa de color rojo, frente al parque…"/>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Tipo de comprobante -->
+          <div class="checkout-card mb-4">
+            <h6 class="checkout-section-title">
+              <i class="bi bi-receipt-cutoff"></i> Comprobante de pago
+            </h6>
+
+            <div class="d-flex gap-3 mb-3">
+              <div class="tipo-comprobante-btn activo" id="btnBoleta"
+                   onclick="selComprobante('BOLETA')">
+                <i class="bi bi-receipt"></i>
+                Boleta de venta
+              </div>
+              <div class="tipo-comprobante-btn" id="btnFactura"
+                   onclick="selComprobante('FACTURA')">
+                <i class="bi bi-file-earmark-text-fill"></i>
+                Factura
+              </div>
+            </div>
+            <input type="hidden" th:field="*{tipoComprobante}" id="tipoComprobanteInput" value="BOLETA"/>
+
+            <!-- Campos de factura (ocultos por defecto) -->
+            <div class="factura-section" id="facturaCampos">
+              <div class="row g-3 pt-2">
+                <div class="col-sm-4">
+                  <label class="checkout-label">RUC <span class="campo-requerido">*</span></label>
+                  <input type="text" th:field="*{ruc}" class="checkout-input form-control"
+                         placeholder="20123456789" maxlength="11"/>
+                </div>
+                <div class="col-sm-8">
+                  <label class="checkout-label">Razón Social <span class="campo-requerido">*</span></label>
+                  <input type="text" th:field="*{razonSocial}" class="checkout-input form-control"
+                         placeholder="Mi Empresa S.A.C."/>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit"
+                  class="btn-hero-main w-100 justify-content-center py-3">
+            <i class="bi bi-lock-fill me-1"></i>
+            Continuar al pago
+            <i class="bi bi-arrow-right ms-2"></i>
+          </button>
+
+          <p class="text-center mt-3 mb-0" style="font-size:.75rem;color:var(--color-text-light);">
+            <i class="bi bi-shield-lock-fill text-success me-1"></i>
+            Conexión segura SSL · Tus datos están protegidos
+          </p>
+        </form>
+      </div>
+
+      <!-- ── Resumen del pedido ── -->
+      <div class="col-lg-4">
+        <div class="resumen-checkout">
+          <div class="resumen-checkout-header">
+            <i class="bi bi-bag-fill"></i>
+            Resumen del pedido
+            <span class="ms-auto badge"
+                  style="background:rgba(255,255,255,.12);font-size:.72rem;"
+                  th:text="${#lists.size(pedido.items)} + ' ítems'">0</span>
+          </div>
+          <div class="resumen-checkout-body">
+
+            <!-- Ítems -->
+            <div th:each="item : ${pedido.items}" class="resumen-linea">
+              <span th:text="${item.cantidad} + '× ' + ${item.productoNombre}"
+                    style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%;">Item</span>
+              <span class="valor" th:text="'S/. ' + ${#numbers.formatDecimal(item.subtotal,1,2)}">S/. 0</span>
+            </div>
+
+            <div style="height:1px;background:rgba(255,255,255,.08);margin:12px 0;"></div>
+
+            <div class="resumen-linea">
+              <span>Subtotal</span>
+              <span class="valor" th:text="'S/. ' + ${#numbers.formatDecimal(pedido.subtotal,1,2)}">S/. 0</span>
+            </div>
+            <div class="resumen-linea">
+              <span>IGV (18%)</span>
+              <span class="valor" th:text="'S/. ' + ${#numbers.formatDecimal(pedido.igv,1,2)}">S/. 0</span>
+            </div>
+            <div class="resumen-linea" id="envioLinea">
+              <span><i class="bi bi-truck me-1" style="color:var(--color-gold);"></i>Envío</span>
+              <span class="valor" id="envioValor"
+                    th:text="${pedido.costoEnvio != null and pedido.costoEnvio > 0} ? 'S/. ' + ${#numbers.formatDecimal(pedido.costoEnvio,1,2)} : 'Por definir'">
+                Por definir
+              </span>
+            </div>
+
+            <div class="resumen-total">
+              <span>Total estimado</span>
+              <span class="valor" id="totalValor"
+                    th:text="'S/. ' + ${#numbers.formatDecimal(pedido.total,1,2)}">S/. 0</span>
+            </div>
+
+            <!-- Volver al carrito -->
+            <a th:href="@{/carrito}"
+               class="d-flex align-items-center justify-content-center gap-1 mt-3"
+               style="font-size:.78rem;color:rgba(255,255,255,.4);text-decoration:none;">
+              <i class="bi bi-arrow-left"></i> Editar carrito
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</th:block>
+<th:block th:fragment="scripts">
+<script th:inline="javascript">
+  const tarifas = {};
+  /*[# th:each="entry : ${tarifasEnvio}"]*/
+  tarifas[/*[[${entry.key}]]*/ ''] = /*[[${entry.value}]]*/ 0;
+  /*[/]*/
+  const subtotalPedido = parseFloat(/*[[${pedido.subtotal}]]*/ '0');
+  const igvPedido      = parseFloat(/*[[${pedido.igv}]]*/ '0');
+
+  function actualizarCostoDistrito() {
+    const sel    = document.getElementById('distritoSel');
+    const info   = document.getElementById('distritoCostoInfo');
+    const texto  = document.getElementById('distritoCostoTexto');
+    const totalEl= document.getElementById('totalValor');
+    const envioEl= document.getElementById('envioValor');
+    if (!sel || !sel.value) { if(info) info.style.display='none'; return; }
+
+    const costo = parseFloat(tarifas[sel.value] || 0);
+    const total = (subtotalPedido + igvPedido + costo).toFixed(2);
+
+    if (texto)  texto.textContent = costo === 0 ? 'Recojo en tienda — Gratis' : 'Delivery: S/. ' + costo.toFixed(2);
+    if (info)   info.style.display = '';
+    if (envioEl) envioEl.textContent = costo === 0 ? 'Gratis' : 'S/. ' + costo.toFixed(2);
+    if (totalEl) totalEl.textContent = 'S/. ' + total;
+  }
+
+  function selComprobante(tipo) {
+    const esFact = tipo === 'FACTURA';
+    document.getElementById('tipoComprobanteInput').value = tipo;
+    document.getElementById('btnBoleta').classList.toggle('activo', !esFact);
+    document.getElementById('btnFactura').classList.toggle('activo', esFact);
+    const campos = document.getElementById('facturaCampos');
+    campos.classList.toggle('show', esFact);
+  }
+
+  // Validación bootstrap
+  document.getElementById('datosForm').addEventListener('submit', function(e) {
+    if (!this.checkValidity()) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.classList.add('was-validated');
+    }
+  });
+
+  // Init
+  document.addEventListener('DOMContentLoaded', () => {
+    actualizarCostoDistrito();
+    const tc = /*[[${dto.tipoComprobante}]]*/ 'BOLETA';
+    if (tc === 'FACTURA') selComprobante('FACTURA');
+  });
+</script>
+</th:block>
+</body>
+</html>

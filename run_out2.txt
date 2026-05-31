@@ -1,0 +1,169 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ---------------------< com.tulicoreria:licoreria >----------------------
+[INFO] Building  0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:4.0.5:run (default-cli) > test-compile @ licoreria >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ licoreria ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 76 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ licoreria ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 100 source files with javac [debug parameters release 21] to target\classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ licoreria ---
+[INFO] skip non existing resourceDirectory C:\Users\Sergio\Documents\doc sergio\UTP CURSOS\web integradoe\licoreria\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ licoreria ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 1 source file with javac [debug parameters release 21] to target\test-classes
+[INFO] 
+[INFO] <<< spring-boot:4.0.5:run (default-cli) < test-compile @ licoreria <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:4.0.5:run (default-cli) @ licoreria ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.5)
+
+2026-05-29T15:42:53.281-05:00  INFO 6152 --- [licoreria] [           main] c.t.licoreria.LicoreriaApplication       : Starting LicoreriaApplication using Java 25.0.1 with PID 6152 (C:\Users\Sergio\Documents\doc sergio\UTP CURSOS\web integradoe\licoreria\target\classes started by Sergio in C:\Users\Sergio\Documents\doc sergio\UTP CURSOS\web integradoe\licoreria)
+2026-05-29T15:42:53.285-05:00  INFO 6152 --- [licoreria] [           main] c.t.licoreria.LicoreriaApplication       : No active profile set, falling back to 1 default profile: "default"
+2026-05-29T15:42:54.811-05:00  INFO 6152 --- [licoreria] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-05-29T15:42:54.982-05:00  INFO 6152 --- [licoreria] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 155 ms. Found 13 JPA repository interfaces.
+2026-05-29T15:42:56.466-05:00  INFO 6152 --- [licoreria] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8081 (http)
+2026-05-29T15:42:56.515-05:00  INFO 6152 --- [licoreria] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-05-29T15:42:56.517-05:00  INFO 6152 --- [licoreria] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.20]
+2026-05-29T15:42:56.783-05:00  INFO 6152 --- [licoreria] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 3402 ms
+2026-05-29T15:42:57.378-05:00  INFO 6152 --- [licoreria] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-05-29T15:42:57.487-05:00  INFO 6152 --- [licoreria] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.7.Final
+2026-05-29T15:42:58.786-05:00  INFO 6152 --- [licoreria] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-05-29T15:42:58.878-05:00  INFO 6152 --- [licoreria] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-05-29T15:42:59.940-05:00  INFO 6152 --- [licoreria] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@5aa334c
+2026-05-29T15:42:59.949-05:00  INFO 6152 --- [licoreria] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-05-29T15:43:00.255-05:00  INFO 6152 --- [licoreria] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:3306/licoreria_db]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.44
+	Default catalog/schema: licoreria_db/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-05-29T15:43:04.508-05:00  INFO 6152 --- [licoreria] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+Hibernate: 
+    alter table clientes 
+       modify column tipo_documento enum ('CE','DNI','PASAPORTE') not null
+Hibernate: 
+    alter table kardex 
+       modify column tipo enum ('AJUSTE_NEGATIVO','AJUSTE_POSITIVO','ENTRADA_COMPRA','ENTRADA_DEVOLUCION','SALIDA_MERMA','SALIDA_VENTA') not null
+Hibernate: 
+    alter table ordenes_compra 
+       modify column estado enum ('ANULADA','PARCIAL','PENDIENTE','RECIBIDA') not null
+Hibernate: 
+    alter table ventas 
+       modify column estado enum ('ANULADA','COMPLETADA','PENDIENTE') not null
+Hibernate: 
+    alter table ventas 
+       modify column metodo_pago enum ('EFECTIVO','PLIN','TARJETA','TRANSFERENCIA','YAPE') not null
+Hibernate: 
+    alter table ventas 
+       modify column tipo_comprobante enum ('BOLETA','FACTURA','TICKET') not null
+2026-05-29T15:43:06.252-05:00  INFO 6152 --- [licoreria] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-05-29T15:43:06.624-05:00  INFO 6152 --- [licoreria] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-05-29T15:43:12.118-05:00  WARN 6152 --- [licoreria] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-05-29T15:43:12.508-05:00  INFO 6152 --- [licoreria] [           main] eAuthenticationProviderManagerConfigurer : Found 2 AuthenticationProvider beans, with names [authenticationProvider, clienteAuthProvider]. Global Authentication Manager will not be configured with AuthenticationProviders. Consider publishing a single AuthenticationProvider bean, or wiring your Providers directly using the DSL.
+2026-05-29T15:43:12.524-05:00  WARN 6152 --- [licoreria] [           main] r$InitializeUserDetailsManagerConfigurer : Found 2 UserDetailsService beans, with names [clienteWebUserDetailsService, usuarioServiceImpl]. Global Authentication Manager will not use a UserDetailsService for username/password login. Consider publishing a single UserDetailsService bean.
+2026-05-29T15:43:14.834-05:00  INFO 6152 --- [licoreria] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8081 (http) with context path '/'
+2026-05-29T15:43:14.849-05:00  INFO 6152 --- [licoreria] [           main] c.t.licoreria.LicoreriaApplication       : Started LicoreriaApplication in 22.262 seconds (process running for 23.005)
+2026-05-29T15:43:14.992-05:00  INFO 6152 --- [licoreria] [nio-8081-exec-2] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-05-29T15:43:14.992-05:00  INFO 6152 --- [licoreria] [nio-8081-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-05-29T15:43:14.995-05:00  INFO 6152 --- [licoreria] [nio-8081-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+Hibernate: 
+    select
+        r1_0.id 
+    from
+        roles r1_0 
+    where
+        r1_0.nombre=? 
+    limit
+        ?
+Hibernate: 
+    select
+        r1_0.id 
+    from
+        roles r1_0 
+    where
+        r1_0.nombre=? 
+    limit
+        ?
+Hibernate: 
+    select
+        r1_0.id 
+    from
+        roles r1_0 
+    where
+        r1_0.nombre=? 
+    limit
+        ?
+Hibernate: 
+    select
+        r1_0.id 
+    from
+        roles r1_0 
+    where
+        r1_0.nombre=? 
+    limit
+        ?
+Hibernate: 
+    insert 
+    into
+        roles
+        (descripcion, nombre) 
+    values
+        (?, ?)
+2026-05-29T15:43:15.329-05:00  INFO 6152 --- [licoreria] [           main] c.t.licoreria.security.DataInitializer   : ✅ Roles cargados correctamente
+Hibernate: 
+    select
+        u1_0.id 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=? 
+    limit
+        ?
+Hibernate: 
+    select
+        u1_0.id 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=? 
+    limit
+        ?
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  04:43 min
+[INFO] Finished at: 2026-05-29T15:47:14-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:4.0.5:run (default-cli) on project licoreria: Process terminated with exit code: -1 -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException

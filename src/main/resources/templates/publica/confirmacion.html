@@ -80,7 +80,27 @@
                     <i th:case="*"              class="bi bi-cash text-success"></i>
                   </span>
                   <span th:text="${metodoPago}">EFECTIVO</span>
+                  <!-- Badge de pago confirmado si fue por tarjeta Culqi -->
+                  <span th:if="${pagoConTarjeta}"
+                        class="badge bg-success-subtle text-success border border-success-subtle ms-1"
+                        style="font-size:.65rem;">
+                    <i class="bi bi-shield-check me-1"></i>Cobro confirmado
+                  </span>
                 </span>
+              </div>
+
+              <!-- Envío -->
+              <div th:if="${distritoEnvio != null and !distritoEnvio.empty}"
+                   class="d-flex justify-content-between small mb-2">
+                <span class="text-muted"><i class="bi bi-geo-alt me-1"></i>Zona de entrega</span>
+                <span class="fw-semibold" th:text="${distritoEnvio}">—</span>
+              </div>
+              <div th:if="${costoEnvio != null}"
+                   class="d-flex justify-content-between small mb-2">
+                <span class="text-muted">Costo de envío</span>
+                <span th:if="${costoEnvio == 0}" class="fw-semibold text-success">Gratis (recojo)</span>
+                <span th:unless="${costoEnvio == 0}" class="fw-semibold"
+                      th:text="'S/. ' + ${#numbers.formatDecimal(costoEnvio,1,2)}">S/. 0.00</span>
               </div>
 
               <hr class="my-3 opacity-25"/>

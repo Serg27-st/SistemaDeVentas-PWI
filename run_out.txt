@@ -1,0 +1,214 @@
+[INFO] Scanning for projects...
+Downloading from central: https://repo.maven.apache.org/maven2/org/flywaydb/maven-metadata.xml
+Downloading from central: https://repo.maven.apache.org/maven2/io/github/git-commit-id/maven-metadata.xml
+Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/boot/maven-metadata.xml
+Downloading from central: https://repo.maven.apache.org/maven2/org/cyclonedx/maven-metadata.xml
+Downloading from central: https://repo.maven.apache.org/maven2/org/jooq/maven-metadata.xml
+Downloading from central: https://repo.maven.apache.org/maven2/org/liquibase/maven-metadata.xml
+Downloading from central: https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/maven-metadata.xml
+Downloading from central: https://repo.maven.apache.org/maven2/org/graalvm/buildtools/maven-metadata.xml
+Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/mojo/maven-metadata.xml
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-metadata.xml
+[WARNING] Could not transfer metadata org.springframework.boot/maven-metadata.xml from/to central (https://repo.maven.apache.org/maven2): (certificate_unknown) PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+[WARNING] Could not transfer metadata org.cyclonedx/maven-metadata.xml from/to central (https://repo.maven.apache.org/maven2): (certificate_unknown) PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+[WARNING] Could not transfer metadata org.flywaydb/maven-metadata.xml from/to central (https://repo.maven.apache.org/maven2): (certificate_unknown) PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+[WARNING] Could not transfer metadata io.github.git-commit-id/maven-metadata.xml from/to central (https://repo.maven.apache.org/maven2): (certificate_unknown) PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+[WARNING] Could not transfer metadata org.jooq/maven-metadata.xml from/to central (https://repo.maven.apache.org/maven2): (certificate_unknown) PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+[WARNING] Could not transfer metadata org.jetbrains.kotlin/maven-metadata.xml from/to central (https://repo.maven.apache.org/maven2): (certificate_unknown) PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+[WARNING] Could not transfer metadata org.liquibase/maven-metadata.xml from/to central (https://repo.maven.apache.org/maven2): (certificate_unknown) PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+[WARNING] Could not transfer metadata org.graalvm.buildtools/maven-metadata.xml from/to central (https://repo.maven.apache.org/maven2): (certificate_unknown) PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+[WARNING] Could not transfer metadata org.apache.maven.plugins/maven-metadata.xml from/to central (https://repo.maven.apache.org/maven2): (certificate_unknown) PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+[WARNING] Could not transfer metadata org.codehaus.mojo/maven-metadata.xml from/to central (https://repo.maven.apache.org/maven2): (certificate_unknown) PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+[INFO] 
+[INFO] ---------------------< com.tulicoreria:licoreria >----------------------
+[INFO] Building  0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[WARNING] org.springframework.boot/maven-metadata.xml failed to transfer from https://repo.maven.apache.org/maven2 during a previous attempt. This failure was cached in the local repository and resolution will not be reattempted until the update interval of central has elapsed or updates are forced. Original error: Could not transfer metadata org.springframework.boot/maven-metadata.xml from/to central (https://repo.maven.apache.org/maven2): (certificate_unknown) PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+[WARNING] org.cyclonedx/maven-metadata.xml failed to transfer from https://repo.maven.apache.org/maven2 during a previous attempt. This failure was cached in the local repository and resolution will not be reattempted until the update interval of central has elapsed or updates are forced. Original error: Could not transfer metadata org.cyclonedx/maven-metadata.xml from/to central (https://repo.maven.apache.org/maven2): (certificate_unknown) PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+[WARNING] org.flywaydb/maven-metadata.xml failed to transfer from https://repo.maven.apache.org/maven2 during a previous attempt. This failure was cached in the local repository and resolution will not be reattempted until the update interval of central has elapsed or updates are forced. Original error: Could not transfer metadata org.flywaydb/maven-metadata.xml from/to central (https://repo.maven.apache.org/maven2): (certificate_unknown) PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+[WARNING] io.github.git-commit-id/maven-metadata.xml failed to transfer from https://repo.maven.apache.org/maven2 during a previous attempt. This failure was cached in the local repository and resolution will not be reattempted until the update interval of central has elapsed or updates are forced. Original error: Could not transfer metadata io.github.git-commit-id/maven-metadata.xml from/to central (https://repo.maven.apache.org/maven2): (certificate_unknown) PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+[WARNING] org.jooq/maven-metadata.xml failed to transfer from https://repo.maven.apache.org/maven2 during a previous attempt. This failure was cached in the local repository and resolution will not be reattempted until the update interval of central has elapsed or updates are forced. Original error: Could not transfer metadata org.jooq/maven-metadata.xml from/to central (https://repo.maven.apache.org/maven2): (certificate_unknown) PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+[WARNING] org.jetbrains.kotlin/maven-metadata.xml failed to transfer from https://repo.maven.apache.org/maven2 during a previous attempt. This failure was cached in the local repository and resolution will not be reattempted until the update interval of central has elapsed or updates are forced. Original error: Could not transfer metadata org.jetbrains.kotlin/maven-metadata.xml from/to central (https://repo.maven.apache.org/maven2): (certificate_unknown) PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+[WARNING] org.liquibase/maven-metadata.xml failed to transfer from https://repo.maven.apache.org/maven2 during a previous attempt. This failure was cached in the local repository and resolution will not be reattempted until the update interval of central has elapsed or updates are forced. Original error: Could not transfer metadata org.liquibase/maven-metadata.xml from/to central (https://repo.maven.apache.org/maven2): (certificate_unknown) PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+[WARNING] org.graalvm.buildtools/maven-metadata.xml failed to transfer from https://repo.maven.apache.org/maven2 during a previous attempt. This failure was cached in the local repository and resolution will not be reattempted until the update interval of central has elapsed or updates are forced. Original error: Could not transfer metadata org.graalvm.buildtools/maven-metadata.xml from/to central (https://repo.maven.apache.org/maven2): (certificate_unknown) PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+[WARNING] org.apache.maven.plugins/maven-metadata.xml failed to transfer from https://repo.maven.apache.org/maven2 during a previous attempt. This failure was cached in the local repository and resolution will not be reattempted until the update interval of central has elapsed or updates are forced. Original error: Could not transfer metadata org.apache.maven.plugins/maven-metadata.xml from/to central (https://repo.maven.apache.org/maven2): (certificate_unknown) PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+[WARNING] org.codehaus.mojo/maven-metadata.xml failed to transfer from https://repo.maven.apache.org/maven2 during a previous attempt. This failure was cached in the local repository and resolution will not be reattempted until the update interval of central has elapsed or updates are forced. Original error: Could not transfer metadata org.codehaus.mojo/maven-metadata.xml from/to central (https://repo.maven.apache.org/maven2): (certificate_unknown) PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+[INFO] 
+[INFO] >>> spring-boot:4.0.5:run (default-cli) > test-compile @ licoreria >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ licoreria ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 76 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ licoreria ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 100 source files with javac [debug parameters release 21] to target\classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ licoreria ---
+[INFO] skip non existing resourceDirectory C:\Users\Sergio\Documents\doc sergio\UTP CURSOS\web integradoe\licoreria\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ licoreria ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 1 source file with javac [debug parameters release 21] to target\test-classes
+[INFO] 
+[INFO] <<< spring-boot:4.0.5:run (default-cli) < test-compile @ licoreria <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:4.0.5:run (default-cli) @ licoreria ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.5)
+
+2026-05-29T15:36:46.601-05:00  INFO 12816 --- [licoreria] [           main] c.t.licoreria.LicoreriaApplication       : Starting LicoreriaApplication using Java 25.0.1 with PID 12816 (C:\Users\Sergio\Documents\doc sergio\UTP CURSOS\web integradoe\licoreria\target\classes started by Sergio in C:\Users\Sergio\Documents\doc sergio\UTP CURSOS\web integradoe\licoreria)
+2026-05-29T15:36:46.628-05:00  INFO 12816 --- [licoreria] [           main] c.t.licoreria.LicoreriaApplication       : No active profile set, falling back to 1 default profile: "default"
+2026-05-29T15:36:49.780-05:00  INFO 12816 --- [licoreria] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-05-29T15:36:50.142-05:00  INFO 12816 --- [licoreria] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 328 ms. Found 13 JPA repository interfaces.
+2026-05-29T15:36:52.105-05:00  INFO 12816 --- [licoreria] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8081 (http)
+2026-05-29T15:36:52.150-05:00  INFO 12816 --- [licoreria] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-05-29T15:36:52.151-05:00  INFO 12816 --- [licoreria] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.20]
+2026-05-29T15:36:52.386-05:00  INFO 12816 --- [licoreria] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 5556 ms
+2026-05-29T15:36:52.907-05:00  INFO 12816 --- [licoreria] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-05-29T15:36:53.034-05:00  INFO 12816 --- [licoreria] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.7.Final
+2026-05-29T15:36:54.041-05:00  INFO 12816 --- [licoreria] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-05-29T15:36:54.110-05:00  INFO 12816 --- [licoreria] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-05-29T15:36:55.042-05:00  INFO 12816 --- [licoreria] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@2ee1b017
+2026-05-29T15:36:55.047-05:00  INFO 12816 --- [licoreria] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-05-29T15:36:55.423-05:00  INFO 12816 --- [licoreria] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:3306/licoreria_db]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.44
+	Default catalog/schema: licoreria_db/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-05-29T15:36:57.848-05:00  INFO 12816 --- [licoreria] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+Hibernate: 
+    alter table clientes 
+       modify column tipo_documento enum ('CE','DNI','PASAPORTE') not null
+Hibernate: 
+    create table clientes_web (
+        id bigint not null auto_increment,
+        activo bit not null,
+        apellido varchar(100) not null,
+        email varchar(150) not null,
+        fecha_nacimiento date,
+        fecha_registro datetime(6) not null,
+        nombre varchar(100) not null,
+        password varchar(255) not null,
+        telefono varchar(20),
+        cliente_id bigint,
+        primary key (id)
+    ) engine=InnoDB
+Hibernate: 
+    create table direcciones_envio (
+        id bigint not null auto_increment,
+        alias varchar(50) not null,
+        direccion_completa varchar(300) not null,
+        distrito varchar(100),
+        es_default bit not null,
+        referencia varchar(150),
+        cliente_web_id bigint not null,
+        primary key (id)
+    ) engine=InnoDB
+Hibernate: 
+    alter table kardex 
+       modify column tipo enum ('AJUSTE_NEGATIVO','AJUSTE_POSITIVO','ENTRADA_COMPRA','ENTRADA_DEVOLUCION','SALIDA_MERMA','SALIDA_VENTA') not null
+Hibernate: 
+    alter table ordenes_compra 
+       modify column estado enum ('ANULADA','PARCIAL','PENDIENTE','RECIBIDA') not null
+Hibernate: 
+    create table reclamaciones (
+        id bigint not null auto_increment,
+        apellido varchar(100) not null,
+        descripcion varchar(2000) not null,
+        email varchar(150) not null,
+        estado enum ('ATENDIDO','PENDIENTE') not null,
+        fecha_registro datetime(6) not null,
+        nombre varchar(100) not null,
+        producto_afectado varchar(200),
+        telefono varchar(20),
+        tipo_reclamo enum ('QUEJA','RECLAMO') not null,
+        primary key (id)
+    ) engine=InnoDB
+Hibernate: 
+    alter table ventas 
+       modify column estado enum ('ANULADA','COMPLETADA','PENDIENTE') not null
+Hibernate: 
+    alter table ventas 
+       modify column metodo_pago enum ('EFECTIVO','PLIN','TARJETA','TRANSFERENCIA','YAPE') not null
+Hibernate: 
+    alter table ventas 
+       modify column tipo_comprobante enum ('BOLETA','FACTURA','TICKET') not null
+Hibernate: 
+    alter table clientes_web 
+       drop index UK22g6t20cq747910dsycsdk0vc
+Hibernate: 
+    alter table clientes_web 
+       add constraint UK22g6t20cq747910dsycsdk0vc unique (email)
+Hibernate: 
+    alter table clientes_web 
+       drop index UKbymelxedduh9jlcbior8j5sjc
+Hibernate: 
+    alter table clientes_web 
+       add constraint UKbymelxedduh9jlcbior8j5sjc unique (cliente_id)
+Hibernate: 
+    alter table clientes_web 
+       add constraint FKer7poxwji9e051e6bw81hebtm 
+       foreign key (cliente_id) 
+       references clientes (id)
+Hibernate: 
+    alter table direcciones_envio 
+       add constraint FKewl33j97su8owinrvak5hrc8a 
+       foreign key (cliente_web_id) 
+       references clientes_web (id)
+2026-05-29T15:36:58.797-05:00  INFO 12816 --- [licoreria] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-05-29T15:36:59.017-05:00  INFO 12816 --- [licoreria] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-05-29T15:37:02.617-05:00  WARN 12816 --- [licoreria] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-05-29T15:37:02.868-05:00  INFO 12816 --- [licoreria] [           main] eAuthenticationProviderManagerConfigurer : Found 2 AuthenticationProvider beans, with names [authenticationProvider, clienteAuthProvider]. Global Authentication Manager will not be configured with AuthenticationProviders. Consider publishing a single AuthenticationProvider bean, or wiring your Providers directly using the DSL.
+2026-05-29T15:37:02.869-05:00  WARN 12816 --- [licoreria] [           main] r$InitializeUserDetailsManagerConfigurer : Found 2 UserDetailsService beans, with names [clienteWebUserDetailsService, usuarioServiceImpl]. Global Authentication Manager will not use a UserDetailsService for username/password login. Consider publishing a single UserDetailsService bean.
+2026-05-29T15:37:04.231-05:00  WARN 12816 --- [licoreria] [           main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'
+2026-05-29T15:37:04.235-05:00  INFO 12816 --- [licoreria] [           main] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-05-29T15:37:04.239-05:00  INFO 12816 --- [licoreria] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-05-29T15:37:04.253-05:00  INFO 12816 --- [licoreria] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2026-05-29T15:37:04.272-05:00  INFO 12816 --- [licoreria] [           main] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-05-29T15:37:04.299-05:00 ERROR 12816 --- [licoreria] [           main] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8081 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8081 or configure this application to listen on another port.
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  48.644 s
+[INFO] Finished at: 2026-05-29T15:37:04-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:4.0.5:run (default-cli) on project licoreria: Process terminated with exit code: 1 -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException

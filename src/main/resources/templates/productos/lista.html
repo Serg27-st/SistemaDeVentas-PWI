@@ -239,73 +239,54 @@
 
     <th:block th:fragment="scripts">
         <script>
-           document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function () {
+            const buscador       = document.getElementById('buscador');
+            const filtroCategoria= document.getElementById('filtroCategoria');
+            const filtroStock    = document.getElementById('filtroStock');
+            const filas          = document.querySelectorAll('#tablaProductos tbody tr[data-nombre]');
+            const filaSinRes     = document.getElementById('filaSinResultados');
 
-    const buscador = document.getElementById('buscador');
-    const filtroCategoria = document.getElementById('filtroCategoria');
-    const filtroStock = document.getElementById('filtroStock');
-    const filas = document.querySelectorAll('#tablaProductos tbody tr[data-nombre]');
-    const filaSinRes = document.getElementById('filaSinResultados');
+            // Badge de búsqueda fuzzy
+            if (window.adminFuzzy) window.adminFuzzy.addFuzzyBadge('buscador');
 
-    function filtrar() {
+            function filtrar() {
+                const q   = (buscador.value || '').trim();
+                const cat = (filtroCategoria.value || '').toLowerCase();
+                const est = filtroStock.value || '';
+                let visibles = 0;
 
-        const q = (buscador.value || '').toLowerCase().trim();
-        const cat = (filtroCategoria.value || '').toLowerCase();
-        const est = filtroStock.value || '';
+                filas.forEach(function (fila) {
+                    const nombre    = fila.dataset.nombre    || '';
+                    const marca     = fila.dataset.marca     || '';
+                    const codigo    = fila.dataset.codigo    || '';
+                    const categoria = fila.dataset.categoria || '';
+                    const estado    = fila.dataset.estado    || '';
 
-        let visibles = 0;
+                    // ✦ Búsqueda fuzzy en nombre, marca y código
+                    const okTexto = !q || (window.adminFuzzy
+                        ? window.adminFuzzy.matches(q, nombre, marca, codigo)
+                        : (nombre.includes(q.toLowerCase()) || marca.includes(q.toLowerCase()) || codigo.includes(q.toLowerCase())));
 
-        filas.forEach(fila => {
+                    const okCat   = !cat || categoria === cat;
+                    const okEst   = !est || estado    === est;
 
-            const nombre = fila.dataset.nombre || '';
-            const marca = fila.dataset.marca || '';
-            const codigo = fila.dataset.codigo || '';
-            const categoria = fila.dataset.categoria || '';
-            const estado = fila.dataset.estado || '';
+                    const mostrar = okTexto && okCat && okEst;
+                    fila.style.display = mostrar ? '' : 'none';
+                    if (mostrar) visibles++;
+                });
 
-            const coincideBusqueda =
-                q === '' ||
-                nombre.includes(q) ||
-                marca.includes(q) ||
-                codigo.includes(q);
-
-            const coincideCategoria =
-                cat === '' ||
-                categoria === cat;
-
-            const coincideEstado =
-                est === '' ||
-                estado === est;
-
-            const mostrar =
-                coincideBusqueda &&
-                coincideCategoria &&
-                coincideEstado;
-
-            fila.style.display = mostrar ? '' : 'none';
-
-            if (mostrar) {
-                visibles++;
+                filaSinRes.style.display = visibles === 0 ? '' : 'none';
             }
+
+            window.limpiarFiltros = function () {
+                buscador.value = filtroCategoria.value = filtroStock.value = '';
+                filtrar();
+            };
+
+            buscador.addEventListener('input', filtrar);
+            filtroCategoria.addEventListener('change', filtrar);
+            filtroStock.addEventListener('change', filtrar);
         });
-
-        filaSinRes.style.display = visibles === 0 ? '' : 'none';
-    }
-
-    function limpiarFiltros() {
-        buscador.value = '';
-        filtroCategoria.value = '';
-        filtroStock.value = '';
-        filtrar();
-    }
-
-    buscador.addEventListener('keyup', filtrar);
-    filtroCategoria.addEventListener('change', filtrar);
-    filtroStock.addEventListener('change', filtrar);
-
-    window.limpiarFiltros = limpiarFiltros;
-
-});
         </script>
     </th:block>
 </body>

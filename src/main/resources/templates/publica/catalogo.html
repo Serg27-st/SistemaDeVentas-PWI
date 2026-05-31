@@ -8,7 +8,44 @@
         scriptsExtra=~{::scripts})}">
 <head>
   <title>Catálogo</title>
-  <th:block th:fragment="estilos"></th:block>
+  <th:block th:fragment="estilos">
+    <style>
+      /* Scrollbar horizontal oculta en pills */
+      .cat-pills-scroll { scrollbar-width: none; }
+      .cat-pills-scroll::-webkit-scrollbar { display: none; }
+
+      /* Resultado header */
+      .resultados-header {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        padding: 12px 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.25rem;
+      }
+      /* Botón vista activo */
+      .btn-vista.activo {
+        background: var(--color-gold);
+        color: var(--color-gold-text);
+        border-color: var(--color-gold);
+      }
+      /* Tag de búsqueda activa */
+      .busqueda-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255,193,7,0.10);
+        border: 1px solid rgba(255,193,7,0.25);
+        color: #7a5100;
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 50px;
+      }
+    </style>
+  </th:block>
 </head>
 <body>
 <th:block th:fragment="main-content">
@@ -19,16 +56,17 @@
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-0 small">
           <li class="breadcrumb-item"><a th:href="@{/inicio}">Inicio</a></li>
-          <li class="breadcrumb-item active">Catálogo</li>
+          <li class="breadcrumb-item active"
+              th:text="${categoriaActual != null ? categoriaActual : 'Catálogo'}">Catálogo</li>
         </ol>
       </nav>
     </div>
   </div>
 
-  <!-- Categorías pills (barra rápida) -->
+  <!-- Barra de categorías (scroll horizontal, sin scrollbar) -->
   <div class="bg-white border-bottom py-3">
     <div class="container">
-      <div class="d-flex gap-2 overflow-auto pb-1" style="scrollbar-width:none;">
+      <div class="d-flex gap-2 cat-pills-scroll overflow-auto pb-1">
         <a th:href="@{/catalogo}"
            th:classappend="${categoriaId == null} ? ' active'"
            class="cat-pill flex-shrink-0">
@@ -46,97 +84,135 @@
   <div class="container py-4">
     <div class="row g-4">
 
-      <!-- ── Sidebar filtros ─────────────────── -->
+      <!-- ── Sidebar filtros ─────────────────────────── -->
       <div class="col-lg-3 d-none d-lg-block">
-        <div class="sidebar-filtros p-4 sticky-top" style="top:84px;z-index:4;">
+        <aside class="sidebar-filtros p-4 sticky-top" style="top:84px;z-index:4;" aria-label="Filtros">
 
-          <h6 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
-            <i class="bi bi-funnel-fill text-warning"></i> Filtrar
-          </h6>
-          <hr class="opacity-25 my-3"/>
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h6 class="fw-bold mb-0 d-flex align-items-center gap-2"
+                style="color:var(--color-text-primary);">
+              <i class="bi bi-sliders" style="color:var(--color-gold);"></i> Filtros
+            </h6>
+            <a th:href="@{/catalogo}" class="text-muted text-decoration-none"
+               style="font-size:.75rem;">Limpiar</a>
+          </div>
 
-          <form th:action="@{/catalogo}" method="get">
+          <hr class="my-0 mb-4" style="border-color:var(--color-border);"/>
+
+          <form th:action="@{/catalogo}" method="get" id="filtrosForm">
 
             <!-- Búsqueda -->
             <div class="mb-4">
-              <label class="form-label small fw-bold text-uppercase text-secondary"
-                     style="font-size:.72rem;letter-spacing:1px;">Búsqueda</label>
-              <input type="search" name="q" class="form-control form-control-sm"
-                     placeholder="Whisky, Ron, Pisco..." th:value="${busqueda}"/>
+              <p class="filtros-section-title">
+                <i class="bi bi-search"></i> Buscar
+              </p>
+              <div class="input-group input-group-sm">
+                <input type="search" name="q" class="form-control"
+                       placeholder="Whisky, Ron, Pisco…"
+                       th:value="${busqueda}"
+                       style="border-right:none;"/>
+                <button type="submit" class="input-group-text"
+                        style="background:var(--color-gold);border-color:var(--color-gold);color:var(--color-gold-text);">
+                  <i class="bi bi-search"></i>
+                </button>
+              </div>
             </div>
 
             <!-- Categorías -->
             <div class="mb-4">
-              <label class="form-label small fw-bold text-uppercase text-secondary"
-                     style="font-size:.72rem;letter-spacing:1px;">Categoría</label>
-              <div style="max-height:220px;overflow-y:auto;" class="pe-1">
+              <p class="filtros-section-title">
+                <i class="bi bi-tags-fill"></i> Categoría
+              </p>
+              <div style="max-height:200px;overflow-y:auto;" class="pe-1">
                 <div class="form-check mb-2">
                   <input class="form-check-input" type="radio" name="categoria"
                          value="" id="cat-todas"
-                         th:checked="${categoriaId == null or categoriaId == ''}"/>
-                  <label class="form-check-label small fw-semibold" for="cat-todas">Todas las variedades</label>
+                         th:checked="${categoriaId == null}"/>
+                  <label class="form-check-label small fw-semibold" for="cat-todas"
+                         style="color:var(--color-text-primary);">Todas las variedades</label>
                 </div>
                 <div th:each="cat : ${categorias}" class="form-check mb-2">
                   <input class="form-check-input" type="radio" name="categoria"
                          th:value="${cat.id}" th:id="'cat-'+${cat.id}"
                          th:checked="${cat.id == categoriaId}"/>
-                  <label class="form-check-label small text-muted"
-                         th:for="'cat-'+${cat.id}" th:text="${cat.nombre}">Cat</label>
+                  <label class="form-check-label small" th:for="'cat-'+${cat.id}"
+                         th:text="${cat.nombre}"
+                         style="color:var(--color-text-muted);">Cat</label>
                 </div>
               </div>
             </div>
 
             <!-- Ordenar -->
             <div class="mb-4">
-              <label class="form-label small fw-bold text-uppercase text-secondary"
-                     style="font-size:.72rem;letter-spacing:1px;">Ordenar</label>
-              <select name="orden" class="form-select form-select-sm">
-                <option value="nombre"      th:selected="${orden == 'nombre'}">Nombre (A–Z)</option>
-                <option value="precio_asc"  th:selected="${orden == 'precio_asc'}">Precio: menor a mayor</option>
-                <option value="precio_desc" th:selected="${orden == 'precio_desc'}">Precio: mayor a menor</option>
-              </select>
+              <p class="filtros-section-title">
+                <i class="bi bi-sort-down"></i> Ordenar por
+              </p>
+              <div class="d-grid gap-2">
+                <label th:each="op : ${ {'nombre','precio_asc','precio_desc'} }"
+                       th:for="'ord-'+${op}"
+                       class="form-check-label small d-flex align-items-center gap-2 p-2 rounded-2 cursor-pointer"
+                       style="cursor:pointer;transition:background .15s;"
+                       onmouseover="this.style.background='rgba(255,193,7,0.07)'"
+                       onmouseout="this.style.background=''">
+                  <input class="form-check-input m-0" type="radio" name="orden"
+                         th:value="${op}" th:id="'ord-'+${op}"
+                         th:checked="${orden == op}"/>
+                  <span th:text="${op == 'nombre' ? 'Nombre (A–Z)' : op == 'precio_asc' ? 'Precio: menor a mayor' : 'Precio: mayor a menor'}"
+                        style="color:var(--color-text-muted);">Opción</span>
+                </label>
+              </div>
             </div>
 
-            <button type="submit" class="btn-filtrar mb-2">
-              <i class="bi bi-sliders me-1"></i> Aplicar filtros
+            <button type="submit" class="btn-filtrar">
+              <i class="bi bi-check2 me-1"></i> Aplicar filtros
             </button>
-            <a th:href="@{/catalogo}" class="btn btn-outline-secondary btn-sm w-100 py-2">
-              Limpiar filtros
-            </a>
           </form>
-        </div>
+        </aside>
       </div>
 
-      <!-- ── Grid de productos ───────────────── -->
+      <!-- ── Grid / Lista de productos ──────────── -->
       <div class="col-lg-9">
 
         <!-- Header resultados -->
-        <div class="d-flex justify-content-between align-items-center bg-white border rounded-3 p-3 mb-4 shadow-sm">
+        <div class="resultados-header shadow-sm">
           <div>
-            <h5 class="fw-bold mb-0"
-                th:text="${categoriaActual != null ? categoriaActual : 'Todos los productos'}">
+            <span class="fw-bold" style="color:var(--color-text-primary);font-size:.95rem;"
+                  th:text="${categoriaActual != null ? categoriaActual : 'Todos los productos'}">
               Productos
-            </h5>
-            <small class="text-muted"
-                   th:text="${#lists.size(productos)} + ' licores disponibles'">0 productos</small>
+            </span>
+            <!-- Tag búsqueda activa -->
+            <span th:if="${busqueda != null and !busqueda.empty}"
+                  class="busqueda-tag ms-2">
+              <i class="bi bi-search"></i>
+              «<span th:text="${busqueda}"></span>»
+            </span>
+            <div class="text-muted mt-1" style="font-size:.8rem;">
+              <i class="bi bi-box-seam me-1" style="color:var(--color-gold);"></i>
+              <span th:text="${#lists.size(productos)}">0</span> licores disponibles
+            </div>
           </div>
           <div class="d-flex align-items-center gap-2">
             <!-- Orden mobile -->
             <form th:action="@{/catalogo}" method="get" class="d-lg-none">
               <input type="hidden" name="q"         th:value="${busqueda}"/>
               <input type="hidden" name="categoria" th:value="${categoriaId}"/>
-              <select name="orden" class="form-select form-select-sm" onchange="this.form.submit()">
+              <select name="orden" class="form-select form-select-sm"
+                      style="font-size:.8rem;" onchange="this.form.submit()">
                 <option value="nombre"      th:selected="${orden == 'nombre'}">A–Z</option>
                 <option value="precio_asc"  th:selected="${orden == 'precio_asc'}">$ ↑</option>
                 <option value="precio_desc" th:selected="${orden == 'precio_desc'}">$ ↓</option>
               </select>
             </form>
             <!-- Vista toggle -->
-            <div class="btn-group btn-group-sm">
-              <button class="btn btn-outline-secondary active shadow-none" id="btn-grid" title="Cuadrícula">
+            <div class="btn-group btn-group-sm" role="group" aria-label="Vista">
+              <button class="btn btn-outline-secondary btn-vista activo shadow-none"
+                      id="btn-grid" title="Vista cuadrícula"
+                      onclick="setVista('grid')">
                 <i class="bi bi-grid-3x3-gap-fill"></i>
               </button>
-              <button class="btn btn-outline-secondary shadow-none" id="btn-list" title="Lista">
+              <button class="btn btn-outline-secondary btn-vista shadow-none"
+                      id="btn-list" title="Vista lista"
+                      onclick="setVista('lista')">
                 <i class="bi bi-list-ul"></i>
               </button>
             </div>
@@ -145,16 +221,19 @@
 
         <!-- Filtro mobile desplegable -->
         <div class="d-lg-none mb-3">
-          <button class="btn btn-outline-secondary btn-sm w-100" type="button"
-                  data-bs-toggle="collapse" data-bs-target="#filtrosMobile">
-            <i class="bi bi-funnel me-1"></i> Filtrar productos
+          <button class="btn btn-sm w-100 fw-semibold" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#filtrosMobile"
+                  style="background:var(--color-bg-public);border:1px solid var(--color-border);color:var(--color-text-primary);">
+            <i class="bi bi-sliders me-1" style="color:var(--color-gold);"></i>
+            Filtrar productos
+            <i class="bi bi-chevron-down ms-1" style="font-size:.75rem;"></i>
           </button>
           <div class="collapse mt-2" id="filtrosMobile">
             <div class="sidebar-filtros p-3">
               <form th:action="@{/catalogo}" method="get">
                 <div class="mb-3">
                   <input type="search" name="q" class="form-control form-control-sm"
-                         placeholder="Buscar..." th:value="${busqueda}"/>
+                         placeholder="Buscar licor…" th:value="${busqueda}"/>
                 </div>
                 <div class="mb-3">
                   <select name="categoria" class="form-select form-select-sm">
@@ -163,62 +242,210 @@
                             th:text="${cat.nombre}" th:selected="${cat.id == categoriaId}">Cat</option>
                   </select>
                 </div>
-                <button type="submit" class="btn-filtrar">Aplicar</button>
+                <div class="mb-3">
+                  <select name="orden" class="form-select form-select-sm">
+                    <option value="nombre"      th:selected="${orden == 'nombre'}">Nombre A–Z</option>
+                    <option value="precio_asc"  th:selected="${orden == 'precio_asc'}">Precio ↑</option>
+                    <option value="precio_desc" th:selected="${orden == 'precio_desc'}">Precio ↓</option>
+                  </select>
+                </div>
+                <button type="submit" class="btn-filtrar">
+                  <i class="bi bi-check2 me-1"></i> Aplicar
+                </button>
               </form>
             </div>
           </div>
         </div>
 
-        <!-- Productos -->
+        <!-- ══ Grid de productos ══ -->
         <div class="row g-3" id="productos-grid">
-          <div th:each="p : ${productos}" class="col-6 col-md-4">
-            <div class="card-producto h-100 shadow-sm d-flex flex-column">
 
-              <span th:if="${p.sinStock}"   class="producto-badge badge-agotado">Agotado</span>
-              <span th:if="${p.stockBajo and !p.sinStock}" class="producto-badge badge-ultimas">Últimas</span>
+          <th:block th:each="p : ${productos}">
 
-              <div class="card-img-container" style="height:200px;">
-                <img th:src="${p.urlImagen != null and !p.urlImagen.empty} ? @{${p.urlImagen}} : @{/images/producto-default.png}"
-                     th:alt="${p.nombre}"
-                     th:data-fallback="@{/images/producto-default.png}"
-                     onerror="this.src=this.getAttribute('data-fallback')"
-                     class="producto-img img-fluid p-3"
-                     style="max-height:200px;"/>
-              </div>
+            <!-- ── Vista Grid (card) ── -->
+            <div class="col-6 col-md-4">
+              <div class="card-producto h-100 shadow-sm d-flex flex-column">
 
-              <div class="p-3 d-flex flex-column flex-grow-1 bg-white">
-                <span class="card-cat-label" th:text="${p.categoriaNombre}">Cat</span>
-                <h6 class="card-nombre mb-1" th:text="${p.nombre}">Nombre</h6>
-                <p class="card-marca-vol mb-3"
-                   th:text="|${p.marca} · ${p.volumenMl}ml · ${p.gradoAlcohol}° Alch.|">Info</p>
+                <!-- Badges estado -->
+                <span th:if="${p.sinStock}"
+                      class="producto-badge badge-agotado">Agotado</span>
+                <span th:if="${p.stockBajo and !p.sinStock}"
+                      class="producto-badge badge-ultimas">Últimas</span>
+                <!-- Badge promo -->
+                <span th:if="${p.tienePromocion and p.etiquetaPromo != null and p.tipoPromocion == 'DESCUENTO_DIRECTO'}"
+                      class="producto-badge"
+                      th:text="${p.etiquetaPromo}"
+                      style="background:var(--color-gold);color:var(--color-gold-text);font-weight:800;right:10px;left:auto;top:10px;">
+                </span>
+                <span th:if="${p.tienePromocion and p.etiquetaPromo != null and p.tipoPromocion == 'VOLUMEN'}"
+                      class="producto-badge"
+                      th:text="${p.etiquetaPromo}"
+                      style="background:#2563eb;color:#fff;font-weight:800;right:10px;left:auto;top:10px;">
+                </span>
 
-                <div class="mt-auto d-flex justify-content-between align-items-center">
-                  <span class="card-precio"
-                        th:text="'S/. ' + ${#numbers.formatDecimal(p.precioVenta,1,2)}">S/. 0.00</span>
-                  <a th:href="@{/producto/{id}(id=${p.id})}" class="btn-ver">Ver detalle</a>
+                <!-- Imagen + overlay Quick-Add -->
+                <div class="card-img-container" style="height:190px;">
+                  <img th:src="${p.urlImagen != null and !p.urlImagen.empty} ? @{${p.urlImagen}} : @{/images/producto-default.png}"
+                       th:alt="${p.nombre}"
+                       th:data-fallback="@{/images/producto-default.png}"
+                       onerror="this.src=this.getAttribute('data-fallback')"
+                       class="producto-img img-fluid p-3"
+                       style="max-height:190px;"/>
+
+                  <div th:if="${!p.sinStock}" class="card-quick-overlay">
+                    <form th:action="@{/carrito/agregar}" method="post">
+                      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                      <input type="hidden" name="productoId" th:value="${p.id}"/>
+                      <input type="hidden" name="cantidad" value="1"/>
+                      <button type="submit" class="btn-agregar-card">
+                        <i class="bi bi-cart-plus"></i> Agregar
+                      </button>
+                    </form>
+                  </div>
+                  <div th:if="${p.sinStock}" class="card-quick-overlay agotado-overlay">
+                    <span class="agotado-overlay-label">Sin stock</span>
+                  </div>
                 </div>
-              </div>
 
+                <!-- Cuerpo -->
+                <div class="card-inner-body">
+                  <span class="card-cat-label" th:text="${p.categoriaNombre}">Cat</span>
+                  <h6 class="card-nombre" th:text="${p.nombre}">Nombre</h6>
+                  <p class="card-marca-vol mb-0"
+                     th:text="|${p.marca} · ${p.volumenMl} ml · ${p.gradoAlcohol}° Alch.|">Info</p>
+
+                  <div class="mt-auto pt-3 d-flex justify-content-between align-items-end">
+                    <div>
+                      <del th:if="${p.precioOriginal != null}"
+                           class="card-precio-original"
+                           th:text="'S/. ' + ${#numbers.formatDecimal(p.precioOriginal,1,2)}"></del>
+                      <span th:class="${p.precioOriginal != null} ? 'card-precio precio-oferta' : 'card-precio'"
+                            th:text="'S/. ' + ${#numbers.formatDecimal(p.precioVenta,1,2)}">S/. 0</span>
+                    </div>
+                    <a th:href="@{/producto/{id}(id=${p.id})}" class="btn-ver">Ver</a>
+                  </div>
+                </div>
+
+              </div>
             </div>
-          </div>
+
+            <!-- ── Vista Lista (item) ── -->
+            <div class="col-12 list-col" style="display:none;">
+              <div class="list-product-item">
+
+                <!-- Imagen -->
+                <div class="list-img-wrap">
+                  <img th:src="${p.urlImagen != null and !p.urlImagen.empty} ? @{${p.urlImagen}} : @{/images/producto-default.png}"
+                       th:alt="${p.nombre}"
+                       th:data-fallback="@{/images/producto-default.png}"
+                       onerror="this.src=this.getAttribute('data-fallback')"/>
+                </div>
+
+                <!-- Info -->
+                <div class="flex-grow-1 min-w-0">
+                  <span class="card-cat-label" th:text="${p.categoriaNombre}">Cat</span>
+                  <h6 class="fw-bold mb-1 text-truncate"
+                      th:text="${p.nombre}"
+                      style="color:var(--color-text-primary);font-size:.93rem;">Nombre</h6>
+                  <p class="mb-1" style="font-size:.78rem;color:var(--color-text-muted);"
+                     th:text="|${p.marca} · ${p.volumenMl} ml · ${p.gradoAlcohol}° Alch.|"></p>
+                  <!-- Promo badge -->
+                  <span th:if="${p.tienePromocion and p.etiquetaPromo != null}"
+                        class="badge rounded-pill px-2"
+                        style="font-size:.68rem;background:rgba(255,193,7,0.15);color:#7a5100;"
+                        th:text="${p.etiquetaPromo}"></span>
+                </div>
+
+                <!-- Precio + CTA -->
+                <div class="text-end flex-shrink-0">
+                  <del th:if="${p.precioOriginal != null}"
+                       style="font-size:.76rem;color:var(--color-text-muted);"
+                       th:text="'S/. ' + ${#numbers.formatDecimal(p.precioOriginal,1,2)}"></del>
+                  <div th:class="${p.precioOriginal != null} ? 'card-precio precio-oferta' : 'card-precio'"
+                       th:text="'S/. ' + ${#numbers.formatDecimal(p.precioVenta,1,2)}"
+                       style="font-size:1.1rem;"></div>
+
+                  <div class="d-flex gap-2 mt-2 justify-content-end">
+                    <form th:if="${!p.sinStock}" th:action="@{/carrito/agregar}" method="post">
+                      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                      <input type="hidden" name="productoId" th:value="${p.id}"/>
+                      <input type="hidden" name="cantidad" value="1"/>
+                      <button type="submit" class="btn-agregar-card"
+                              style="padding:6px 14px;font-size:.76rem;">
+                        <i class="bi bi-cart-plus"></i>
+                      </button>
+                    </form>
+                    <a th:href="@{/producto/{id}(id=${p.id})}" class="btn-ver" style="padding:6px 14px;">
+                      Ver
+                    </a>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </th:block>
 
           <!-- Empty state -->
           <div th:if="${#lists.isEmpty(productos)}"
-               class="col-12 text-center py-5 bg-white rounded-3 shadow-sm">
-            <i class="bi bi-search-heart fs-1 text-muted d-block mb-3 opacity-50"></i>
-            <h5 class="text-secondary fw-semibold">No se encontraron licores</h5>
-            <p class="text-muted small px-3">Prueba modificar los filtros o buscar con otra palabra clave.</p>
-            <a th:href="@{/catalogo}" class="btn-filtrar mt-3 d-inline-block" style="width:auto;padding:10px 28px;">
-              Restablecer catálogo
+               class="col-12 text-center py-5 bg-white rounded-3 border shadow-sm">
+            <i class="bi bi-search-heart d-block mb-3"
+               style="font-size:3.5rem;color:var(--color-gold);opacity:.35;"></i>
+            <h5 class="fw-bold" style="color:var(--color-text-primary);">No encontramos licores</h5>
+            <p class="mb-4" style="color:var(--color-text-muted);font-size:.88rem;">
+              Prueba con otra palabra clave o limpia los filtros.
+            </p>
+            <a th:href="@{/catalogo}" class="btn-filtrar d-inline-block"
+               style="width:auto;padding:10px 28px;">
+              <i class="bi bi-arrow-counterclockwise me-1"></i> Restablecer catálogo
             </a>
           </div>
+
         </div>
+        <!-- /productos-grid -->
 
       </div>
     </div>
   </div>
 
 </th:block>
-<th:block th:fragment="scripts"></th:block>
+
+<th:block th:fragment="scripts">
+<script>
+  function setVista(tipo) {
+    const grid = document.getElementById('productos-grid');
+    const btnGrid = document.getElementById('btn-grid');
+    const btnList = document.getElementById('btn-list');
+
+    if (tipo === 'lista') {
+      // Mostrar cols de lista, ocultar cols de grid
+      grid.querySelectorAll('.col-6, .col-md-4').forEach(el => el.style.display = 'none');
+      grid.querySelectorAll('.list-col').forEach(el => el.style.display = '');
+      btnList.classList.add('activo');
+      btnGrid.classList.remove('activo');
+    } else {
+      grid.querySelectorAll('.col-6, .col-md-4').forEach(el => el.style.display = '');
+      grid.querySelectorAll('.list-col').forEach(el => el.style.display = 'none');
+      btnGrid.classList.add('activo');
+      btnList.classList.remove('activo');
+    }
+    try { localStorage.setItem('catalogo_vista', tipo); } catch(e) {}
+  }
+
+  // Recordar preferencia de vista
+  document.addEventListener('DOMContentLoaded', () => {
+    const guardada = localStorage.getItem('catalogo_vista') || 'grid';
+    if (guardada === 'lista') setVista('lista');
+
+    // Auto-submit al cambiar categoría radio
+    document.querySelectorAll('#filtrosForm input[name="categoria"]').forEach(r => {
+      r.addEventListener('change', () => document.getElementById('filtrosForm').submit());
+    });
+    document.querySelectorAll('#filtrosForm input[name="orden"]').forEach(r => {
+      r.addEventListener('change', () => document.getElementById('filtrosForm').submit());
+    });
+  });
+</script>
+</th:block>
 </body>
 </html>

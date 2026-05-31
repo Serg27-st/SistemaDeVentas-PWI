@@ -3,11 +3,19 @@ package com.tulicoreria.licoreria.controller;
 import com.tulicoreria.licoreria.dto.ItemCarritoDTO;
 import com.tulicoreria.licoreria.dto.ProductoResponseDTO;
 import com.tulicoreria.licoreria.dto.VentaResponseDTO;
+import com.tulicoreria.licoreria.service.BusquedaService;
+import com.tulicoreria.licoreria.util.FuzzySearchUtil;
+import com.tulicoreria.licoreria.model.ClienteWeb;
 import com.tulicoreria.licoreria.service.CategoriaService;
+import com.tulicoreria.licoreria.service.ClienteWebService;
+import com.tulicoreria.licoreria.service.CulqiService;
+import com.tulicoreria.licoreria.service.EnvioService;
 import com.tulicoreria.licoreria.service.ProductoService;
+import com.tulicoreria.licoreria.service.PromocionService;
 import com.tulicoreria.licoreria.service.VentaService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -15,7 +23,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Locale;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Controller
 @RequiredArgsConstructor
@@ -24,9 +34,21 @@ public class PublicController {
     private final ProductoService productoService;
     private final CategoriaService categoriaService;
     private final VentaService ventaService;
+    private final ClienteWebService clienteWebService;
+    private final BusquedaService busquedaService;
+    private final PromocionService promocionService;
+    private final CulqiService culqiService;
+    private final EnvioService envioService;
 
-    private static final String CARRITO_KEY = "carrito";
-    private static final BigDecimal IGV_RATE = new BigDecimal("0.18");
+    @org.springframework.beans.factory.annotation.Value("${culqi.public-key:pk_test_REEMPLAZA_CON_TU_CLAVE_PUBLICA}")
+    private String culqiPublicKey;
+
+    @org.springframework.beans.factory.annotation.Value("${app.carrito.pedido-minimo:50.00}")
+    private BigDecimal pedidoMinimo;
+
+    private static final String CARRITO_KEY   = "carrito";
+    private static final String COMBOS_KEY    = "combosCarrito";
+    private static final BigDecimal IGV_RATE  = new BigDecimal("0.18");
 
     @ModelAttribute
     public void commonAttributes(Model model) {
@@ -40,6 +62,8 @@ public class PublicController {
                 .limit(8)
                 .toList();
         model.addAttribute("productosDestacados", destacados);
+        model.addAttribute("combosDestacados", promocionService.findCombosActivos().stream()
+                .limit(4).toList());
         return "publica/inicio";
     }
 
@@ -53,11 +77,14 @@ public class PublicController {
         List<ProductoResponseDTO> productos = productoService.listarTodos();
 
         if (q != null && !q.isBlank()) {
-            String term = q.toLowerCase(Locale.ROOT);
+            // Búsqueda fuzzy multicriterio con tolerancia a errores tipográficos
+            busquedaService.registrarBusqueda(q);
+            final String term = q.trim();
             productos = productos.stream()
-                    .filter(p -> p.getNombre().toLowerCase().contains(term)
-                            || (p.getMarca() != null && p.getMarca().toLowerCase().contains(term))
-                            || (p.getDescripcion() != null && p.getDescripcion().toLowerCase().contains(term)))
+                    .filter(p -> FuzzySearchUtil.scoreProducto(p, term) >= FuzzySearchUtil.THRESHOLD)
+                    .sorted((a, b) -> Double.compare(
+                            FuzzySearchUtil.scoreProducto(b, term),
+                            FuzzySearchUtil.scoreProducto(a, term)))
                     .toList();
         }
 
@@ -104,20 +131,69 @@ public class PublicController {
 
     @GetMapping("/carrito")
     public String verCarrito(HttpSession session, Model model) {
-        Map<Long, ItemCarritoDTO> carrito = getCarrito(session);
-        List<ItemCarritoDTO> items = new ArrayList<>(carrito.values());
+        // Aplicar descuentos de volumen a los ítems del carrito
+        List<ItemCarritoDTO> items = getCarrito(session).values().stream()
+                .map(orig -> {
+                    ItemCarritoDTO copia = ItemCarritoDTO.builder()
+                            .productoId(orig.getProductoId())
+                            .nombre(orig.getNombre())
+                            .marca(orig.getMarca())
+                            .urlImagen(orig.getUrlImagen())
+                            .precioUnitario(orig.getPrecioUnitario())
+                            .cantidad(orig.getCantidad())
+                            .build();
+                    promocionService.aplicarDescuentoVolumen(copia);
+                    return copia;
+                }).toList();
 
-        BigDecimal subtotal = items.stream()
+        // Expandir combos en ítems visuales
+        Map<Long, Integer> combosCarrito = getCombosCarrito(session);
+        List<ItemCarritoDTO> comboItems  = promocionService.expandirCombos(combosCarrito);
+
+        List<ItemCarritoDTO> todosLosItems = Stream.concat(items.stream(), comboItems.stream()).toList();
+
+        BigDecimal subtotal = todosLosItems.stream()
                 .map(ItemCarritoDTO::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal igv = subtotal.multiply(IGV_RATE).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal descuentoTotal = todosLosItems.stream()
+                .filter(i -> i.getDescuentoAplicado() != null)
+                .map(ItemCarritoDTO::getDescuentoAplicado)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal igv   = subtotal.multiply(IGV_RATE).setScale(2, RoundingMode.HALF_UP);
         BigDecimal total = subtotal.add(igv);
 
-        model.addAttribute("items", items);
+        model.addAttribute("items", todosLosItems);
         model.addAttribute("subtotal", subtotal);
+        model.addAttribute("descuentoTotal", descuentoTotal);
         model.addAttribute("igv", igv);
         model.addAttribute("total", total);
+        model.addAttribute("tarifasEnvio", envioService.getTarifas());
+        model.addAttribute("culqiPublicKey", culqiPublicKey);
+        model.addAttribute("pedidoMinimo", pedidoMinimo);
         return "publica/carrito";
+    }
+
+    // ── Combos ────────────────────────────────────────────────────────────────
+
+    @PostMapping("/carrito/agregar-combo")
+    public String agregarCombo(@RequestParam Long comboId,
+                               @RequestParam(defaultValue = "1") int cantidad,
+                               HttpSession session,
+                               RedirectAttributes flash) {
+        try {
+            Map<Long, Integer> combos = getCombosCarrito(session);
+            combos.merge(comboId, cantidad, Integer::sum);
+            flash.addFlashAttribute("carritoExito", "Pack agregado al carrito.");
+        } catch (Exception e) {
+            flash.addFlashAttribute("errorMensaje", "No se pudo agregar el pack.");
+        }
+        return "redirect:/combos";
+    }
+
+    @PostMapping("/carrito/eliminar-combo")
+    public String eliminarCombo(@RequestParam Long promocionId, HttpSession session) {
+        getCombosCarrito(session).remove(promocionId);
+        return "redirect:/carrito";
     }
 
     @PostMapping("/carrito/agregar")
@@ -179,7 +255,11 @@ public class PublicController {
     @PostMapping("/carrito/confirmar")
     public String confirmarPedido(
             @RequestParam String metodoPago,
+            @RequestParam(required = false, defaultValue = "") String distritoEnvio,
+            @RequestParam(required = false, defaultValue = "") String culqiToken,
+            @RequestParam(required = false, defaultValue = "") String emailCliente,
             HttpSession session,
+            Authentication authentication,
             RedirectAttributes flash) {
 
         Map<Long, ItemCarritoDTO> carrito = getCarrito(session);
@@ -190,15 +270,69 @@ public class PublicController {
 
         try {
             List<ItemCarritoDTO> items = new ArrayList<>(carrito.values());
-            VentaResponseDTO venta = ventaService.registrarDesdeCarrito(items, metodoPago);
+
+            // Resolver cliente registrado
+            Long clienteId = null;
+            String emailFinal = emailCliente;
+            if (authentication != null && authentication.isAuthenticated()) {
+                boolean esCliente = authentication.getAuthorities().stream()
+                        .anyMatch(a -> a.getAuthority().equals("ROLE_CLIENTE"));
+                if (esCliente) {
+                    try {
+                        ClienteWeb cw = clienteWebService.findByEmail(authentication.getName());
+                        if (cw.getCliente() != null) clienteId = cw.getCliente().getId();
+                        if (emailFinal.isBlank()) emailFinal = authentication.getName();
+                    } catch (Exception ignored) {}
+                }
+            }
+
+            // Enriquecer con descuentos de volumen
+            List<ItemCarritoDTO> itemsConDescuento = items.stream().map(orig -> {
+                ItemCarritoDTO copia = ItemCarritoDTO.builder()
+                        .productoId(orig.getProductoId()).nombre(orig.getNombre())
+                        .marca(orig.getMarca()).urlImagen(orig.getUrlImagen())
+                        .precioUnitario(orig.getPrecioUnitario()).cantidad(orig.getCantidad())
+                        .build();
+                promocionService.aplicarDescuentoVolumen(copia);
+                return copia;
+            }).collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+
+            // Expandir combos y unirlos
+            Map<Long, Integer> combosCarrito = getCombosCarrito(session);
+            itemsConDescuento.addAll(promocionService.expandirCombos(combosCarrito));
+
+            // Calcular costo de envío
+            BigDecimal costoEnvio = envioService.getCosto(distritoEnvio);
+
+            // Total para cobro con Culqi
+            BigDecimal subtotalItems = itemsConDescuento.stream()
+                    .map(ItemCarritoDTO::getSubtotal)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal igv   = subtotalItems.multiply(IGV_RATE).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal totalConEnvio = subtotalItems.add(igv).add(costoEnvio)
+                    .setScale(2, RoundingMode.HALF_UP);
+
+            // Si hay token Culqi, procesar cargo ANTES de crear la orden
+            String culqiChargeId = null;
+            if (!culqiToken.isBlank()) {
+                String email = emailFinal.isBlank() ? "cliente@tulicoreria.com" : emailFinal;
+                culqiChargeId = culqiService.cobrar(culqiToken, totalConEnvio, email, "Pedido Licorería");
+            }
+
+            VentaResponseDTO venta = ventaService.registrarDesdeCarrito(
+                    itemsConDescuento, metodoPago, clienteId, costoEnvio, distritoEnvio, culqiChargeId);
 
             session.removeAttribute(CARRITO_KEY);
+            session.removeAttribute(COMBOS_KEY);
             flash.addFlashAttribute("pedidoConfirmado", true);
             flash.addFlashAttribute("comprobante", venta.getNumeroComprobante());
             flash.addFlashAttribute("ventaId", venta.getId());
             flash.addFlashAttribute("totalVenta", venta.getTotal());
+            flash.addFlashAttribute("costoEnvio", venta.getCostoEnvio());
+            flash.addFlashAttribute("distritoEnvio", venta.getDistritoEnvio());
             flash.addFlashAttribute("metodoPago", venta.getMetodoPago());
             flash.addFlashAttribute("fechaVenta", venta.getFechaHora());
+            flash.addFlashAttribute("pagoConTarjeta", culqiChargeId != null);
         } catch (RuntimeException e) {
             flash.addFlashAttribute("errorMensaje", e.getMessage());
             return "redirect:/carrito";
@@ -215,10 +349,14 @@ public class PublicController {
     @SuppressWarnings("unchecked")
     private Map<Long, ItemCarritoDTO> getCarrito(HttpSession session) {
         Map<Long, ItemCarritoDTO> c = (Map<Long, ItemCarritoDTO>) session.getAttribute(CARRITO_KEY);
-        if (c == null) {
-            c = new LinkedHashMap<>();
-            session.setAttribute(CARRITO_KEY, c);
-        }
+        if (c == null) { c = new LinkedHashMap<>(); session.setAttribute(CARRITO_KEY, c); }
+        return c;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<Long, Integer> getCombosCarrito(HttpSession session) {
+        Map<Long, Integer> c = (Map<Long, Integer>) session.getAttribute(COMBOS_KEY);
+        if (c == null) { c = new LinkedHashMap<>(); session.setAttribute(COMBOS_KEY, c); }
         return c;
     }
 }

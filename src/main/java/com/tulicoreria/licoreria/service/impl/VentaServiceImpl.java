@@ -169,6 +169,19 @@ public class VentaServiceImpl implements VentaService {
     @Override
     @Transactional
     public VentaResponseDTO registrarDesdeCarrito(List<ItemCarritoDTO> items, String metodoPago) {
+        return registrarDesdeCarrito(items, metodoPago, null, BigDecimal.ZERO, null, null);
+    }
+
+    @Override
+    @Transactional
+    public VentaResponseDTO registrarDesdeCarrito(List<ItemCarritoDTO> items, String metodoPago, Long clienteId) {
+        return registrarDesdeCarrito(items, metodoPago, clienteId, BigDecimal.ZERO, null, null);
+    }
+
+    @Override
+    @Transactional
+    public VentaResponseDTO registrarDesdeCarrito(List<ItemCarritoDTO> items, String metodoPago, Long clienteId,
+                                                   BigDecimal costoEnvio, String distritoEnvio, String culqiChargeId) {
 
         if (items == null || items.isEmpty()) {
             throw new RuntimeException("El carrito está vacío");
@@ -179,6 +192,12 @@ public class VentaServiceImpl implements VentaService {
                 .orElseThrow(() -> new RuntimeException(
                     "Usuario sistema 'tienda_online' no encontrado. " +
                     "Reinicia la aplicación para que sea creado automáticamente."));
+
+        // Resolver cliente registrado (puede ser null para compras anónimas)
+        Cliente cliente = null;
+        if (clienteId != null) {
+            cliente = clienteRepository.findById(clienteId).orElse(null);
+        }
 
         List<DetalleVenta> detalles = new ArrayList<>();
         BigDecimal subtotalVenta = BigDecimal.ZERO;
@@ -195,15 +214,23 @@ public class VentaServiceImpl implements VentaService {
                     ", solicitado: " + item.getCantidad());
             }
 
-            BigDecimal subtotalDetalle = producto.getPrecioVenta()
-                    .multiply(BigDecimal.valueOf(item.getCantidad()))
-                    .setScale(2, RoundingMode.HALF_UP);
+            // getSubtotal() ya descuenta promos de volumen / combo
+            BigDecimal subtotalDetalle = item.getSubtotal().setScale(2, RoundingMode.HALF_UP);
+
+            // Calcular % de descuento efectivo para registrar en el detalle
+            BigDecimal bruto = item.getPrecioUnitario()
+                    .multiply(BigDecimal.valueOf(item.getCantidad()));
+            BigDecimal descuentoPct = bruto.compareTo(BigDecimal.ZERO) > 0
+                    ? bruto.subtract(subtotalDetalle)
+                           .divide(bruto, 4, RoundingMode.HALF_UP)
+                           .multiply(BigDecimal.valueOf(100))
+                    : BigDecimal.ZERO;
 
             detalles.add(DetalleVenta.builder()
                     .producto(producto)
                     .cantidad(item.getCantidad())
-                    .precioUnitario(producto.getPrecioVenta())
-                    .descuentoPorcentaje(BigDecimal.ZERO)
+                    .precioUnitario(item.getPrecioUnitario())
+                    .descuentoPorcentaje(descuentoPct)
                     .subtotal(subtotalDetalle)
                     .build());
 
@@ -214,8 +241,9 @@ public class VentaServiceImpl implements VentaService {
             productoRepository.save(producto);
         }
 
+        BigDecimal envio       = (costoEnvio != null) ? costoEnvio : BigDecimal.ZERO;
         BigDecimal igvVenta    = subtotalVenta.multiply(IGV).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal totalVenta  = subtotalVenta.add(igvVenta).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalVenta  = subtotalVenta.add(igvVenta).add(envio).setScale(2, RoundingMode.HALF_UP);
         String     comprobante = generarNumeroComprobante(TipoComprobante.TICKET);
 
         MetodoPago mp;
@@ -225,18 +253,31 @@ public class VentaServiceImpl implements VentaService {
             mp = MetodoPago.EFECTIVO;
         }
 
+        // Pedido pagado con tarjeta → COMPLETADA; otros métodos → PENDIENTE
+        EstadoVenta estado = (culqiChargeId != null && !culqiChargeId.isBlank())
+                ? EstadoVenta.COMPLETADA : EstadoVenta.PENDIENTE;
+
+        String obs = (cliente != null
+                ? "Pedido web — " + cliente.getNombre() + " " + cliente.getApellido()
+                : "Pedido web — Tienda online")
+                + (distritoEnvio != null && !distritoEnvio.isBlank() ? " | Envío: " + distritoEnvio : "")
+                + (culqiChargeId != null && !culqiChargeId.isBlank() ? " | Culqi: " + culqiChargeId : "");
+
         Venta venta = Venta.builder()
                 .numeroComprobante(comprobante)
                 .tipoComprobante(TipoComprobante.TICKET)
                 .fechaHora(LocalDateTime.now())
                 .subtotal(subtotalVenta)
                 .igv(igvVenta)
+                .costoEnvio(envio)
                 .total(totalVenta)
-                .estado(EstadoVenta.PENDIENTE)
+                .estado(estado)
                 .metodoPago(mp)
-                .cliente(null)
+                .cliente(cliente)
                 .vendedor(vendedor)
-                .observaciones("Pedido web — Tienda online")
+                .distritoEnvio(distritoEnvio)
+                .culqiChargeId(culqiChargeId)
+                .observaciones(obs)
                 .build();
 
         for (DetalleVenta d : detalles) {
@@ -378,7 +419,9 @@ public class VentaServiceImpl implements VentaService {
                 .vendedorNombre(v.getVendedor().getNombreCompleto())
                 .subtotal(v.getSubtotal())
                 .igv(v.getIgv())
+                .costoEnvio(v.getCostoEnvio())
                 .total(v.getTotal())
+                .distritoEnvio(v.getDistritoEnvio())
                 .observaciones(v.getObservaciones())
                 .detalles(detallesDTO)
                 .build();

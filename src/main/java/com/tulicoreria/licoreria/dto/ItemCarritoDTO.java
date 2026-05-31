@@ -25,7 +25,16 @@ public class ItemCarritoDTO implements Serializable {
     private BigDecimal precioUnitario;
     private int cantidad;
 
+    /** Descuento monetario aplicado (volumen, combo, etc.). Null = sin descuento. */
+    private BigDecimal descuentoAplicado;
+    /** Etiqueta corta de la promo: "2×1 — 1 gratis", "Pack Chilcanero", etc. */
+    private String etiquetaPromo;
+
     public BigDecimal getSubtotal() {
-        return precioUnitario.multiply(BigDecimal.valueOf(cantidad));
+        BigDecimal bruto = precioUnitario.multiply(BigDecimal.valueOf(cantidad));
+        if (descuentoAplicado != null && descuentoAplicado.compareTo(BigDecimal.ZERO) > 0) {
+            return bruto.subtract(descuentoAplicado).max(BigDecimal.ZERO);
+        }
+        return bruto;
     }
 }

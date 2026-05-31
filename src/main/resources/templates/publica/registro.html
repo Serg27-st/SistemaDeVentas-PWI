@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{publica/layout :: layout(
+        titulo='Crear cuenta | Tu Licorería',
+        paginaActual='',
+        contenido=~{::main-content},
+        estilosExtra=~{::estilos},
+        scriptsExtra=~{::scripts})}">
+<head>
+  <title>Registro</title>
+  <th:block th:fragment="estilos">
+    <style>
+      .registro-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 32px rgba(0,0,0,.08);
+      }
+      .registro-header {
+        background: linear-gradient(135deg, #0d0d16 0%, #1a1a2e 100%);
+        border-radius: 16px 16px 0 0;
+        padding: 2rem;
+        text-align: center;
+      }
+      .form-label { font-weight: 600; font-size: .875rem; color: #374151; }
+      .form-control:focus { border-color: #c9a227; box-shadow: 0 0 0 .2rem rgba(201,162,39,.15); }
+      .btn-registrar {
+        background: linear-gradient(135deg, #c9a227, #e8b93a);
+        border: none;
+        color: #0d0d16;
+        font-weight: 700;
+        padding: .75rem 2rem;
+        border-radius: 8px;
+        width: 100%;
+        font-size: 1rem;
+        transition: opacity .2s;
+      }
+      .btn-registrar:hover { opacity: .88; }
+    </style>
+  </th:block>
+</head>
+<body>
+<th:block th:fragment="main-content">
+
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6">
+
+        <div class="registro-card">
+
+          <!-- Header -->
+          <div class="registro-header">
+            <div class="mb-2" style="font-size:2.2rem;">🥃</div>
+            <h4 class="fw-bold text-white mb-1" style="font-family:'Playfair Display',serif;">
+              Crear cuenta
+            </h4>
+            <p class="mb-0" style="color:rgba(255,255,255,.6);font-size:.875rem;">
+              Accede a tu historial de pedidos y más beneficios
+            </p>
+          </div>
+
+          <div class="p-4 p-md-5">
+
+            <!-- Alerta error -->
+            <div th:if="${errorRegistro}" class="alert alert-danger d-flex gap-2 align-items-start mb-4">
+              <i class="bi bi-exclamation-circle-fill mt-1"></i>
+              <span th:text="${errorRegistro}">Error</span>
+            </div>
+
+            <!-- Formulario -->
+            <form th:action="@{/registro}" method="post" th:object="${dto}">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+              <div class="row g-3">
+
+                <div class="col-sm-6">
+                  <label class="form-label">Nombre *</label>
+                  <input type="text" name="nombre" class="form-control"
+                         th:value="${dto?.nombre}" placeholder="Tu nombre" required autofocus/>
+                </div>
+
+                <div class="col-sm-6">
+                  <label class="form-label">Apellido *</label>
+                  <input type="text" name="apellido" class="form-control"
+                         th:value="${dto?.apellido}" placeholder="Tu apellido" required/>
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label">Correo electrónico *</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                    <input type="email" name="email" class="form-control"
+                           th:value="${dto?.email}" placeholder="correo@ejemplo.com" required/>
+                  </div>
+                  <div class="form-text">Este correo será tu usuario para ingresar.</div>
+                </div>
+
+                <div class="col-sm-6">
+                  <label class="form-label">Contraseña *</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                    <input type="password" name="password" id="pass1" class="form-control"
+                           placeholder="Mín. 6 caracteres" minlength="6" required/>
+                    <button type="button" class="btn btn-outline-secondary" onclick="togglePass('pass1','ico1')">
+                      <i id="ico1" class="bi bi-eye"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="col-sm-6">
+                  <label class="form-label">Confirmar contraseña *</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                    <input type="password" name="confirmarPassword" id="pass2" class="form-control"
+                           placeholder="Repite la contraseña" minlength="6" required/>
+                    <button type="button" class="btn btn-outline-secondary" onclick="togglePass('pass2','ico2')">
+                      <i id="ico2" class="bi bi-eye"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="col-sm-6">
+                  <label class="form-label">Teléfono</label>
+                  <input type="tel" name="telefono" class="form-control"
+                         th:value="${dto?.telefono}" placeholder="+51 999 999 999"/>
+                </div>
+
+                <div class="col-sm-6">
+                  <label class="form-label">Fecha de nacimiento</label>
+                  <input type="date" name="fechaNacimiento" class="form-control"
+                         th:value="${dto?.fechaNacimiento}"/>
+                  <div class="form-text">Requerida para verificar mayoría de edad.</div>
+                </div>
+
+                <div class="col-12 mt-2">
+                  <button type="submit" class="btn-registrar">
+                    <i class="bi bi-person-plus me-2"></i>Crear mi cuenta
+                  </button>
+                </div>
+
+              </div>
+            </form>
+
+            <hr class="my-4 opacity-25"/>
+
+            <p class="text-center small text-muted mb-0">
+              ¿Ya tienes cuenta?
+              <a th:href="@{/login}" style="color:#c9a227;font-weight:600;">Inicia sesión aquí</a>
+            </p>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</th:block>
+<th:block th:fragment="scripts">
+  <script>
+    function togglePass(inputId, iconId) {
+      const i = document.getElementById(inputId);
+      const ic = document.getElementById(iconId);
+      i.type = i.type === 'password' ? 'text' : 'password';
+      ic.className = i.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+    }
+  </script>
+</th:block>
+</body>
+</html>

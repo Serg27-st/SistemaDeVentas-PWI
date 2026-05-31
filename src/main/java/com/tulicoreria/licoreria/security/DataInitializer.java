@@ -35,6 +35,7 @@ public class DataInitializer implements CommandLineRunner {
         crearRolSiNoExiste("ROLE_ADMIN",    "Administrador — acceso total al sistema");
         crearRolSiNoExiste("ROLE_VENDEDOR", "Vendedor — acceso a ventas y clientes");
         crearRolSiNoExiste("ROLE_ALMACEN",  "Almacén — acceso a inventario y compras");
+        crearRolSiNoExiste("ROLE_CLIENTE",  "Cliente web — acceso a Mi Cuenta en la tienda pública");
         log.info("✅ Roles cargados correctamente");
     }
 

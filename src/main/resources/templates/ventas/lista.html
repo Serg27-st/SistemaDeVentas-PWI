@@ -293,45 +293,55 @@
 
     <th:block th:fragment="scripts">
         <script>
-            const buscador    = document.getElementById('buscador');
-            const filtroEst   = document.getElementById('filtroEstado');
-            const filtroTipo  = document.getElementById('filtroTipo');
-            const filtroPago  = document.getElementById('filtroPago');
-            const filtroOrigen= document.getElementById('filtroOrigen');
-            const filas       = document.querySelectorAll('#tablaVentas tbody tr[data-comprobante]');
-            const filaSinRes  = document.getElementById('filaSinResultados');
+            document.addEventListener('DOMContentLoaded', function () {
+                const buscador    = document.getElementById('buscador');
+                const filtroEst   = document.getElementById('filtroEstado');
+                const filtroTipo  = document.getElementById('filtroTipo');
+                const filtroPago  = document.getElementById('filtroPago');
+                const filtroOrigen= document.getElementById('filtroOrigen');
+                const filas       = document.querySelectorAll('#tablaVentas tbody tr[data-comprobante]');
+                const filaSinRes  = document.getElementById('filaSinResultados');
 
-            function filtrar() {
-                const q      = buscador.value.toLowerCase().trim();
-                const est    = filtroEst.value;
-                const tipo   = filtroTipo.value;
-                const pago   = filtroPago.value;
-                const origen = filtroOrigen.value;
-                let visible  = 0;
+                if (window.adminFuzzy) window.adminFuzzy.addFuzzyBadge('buscador');
 
-                filas.forEach(fila => {
-                    const ok = (!q      || fila.dataset.comprobante.includes(q) || fila.dataset.cliente.includes(q))
-                            && (!est    || fila.dataset.estado  === est)
-                            && (!tipo   || fila.dataset.tipo    === tipo)
-                            && (!pago   || fila.dataset.pago    === pago)
-                            && (!origen || fila.dataset.origen  === origen);
+                function filtrar() {
+                    const q      = (buscador.value || '').trim();
+                    const est    = filtroEst.value;
+                    const tipo   = filtroTipo.value;
+                    const pago   = filtroPago.value;
+                    const origen = filtroOrigen.value;
+                    let visible  = 0;
 
-                    fila.style.display = ok ? '' : 'none';
-                    if (ok) visible++;
+                    filas.forEach(function (fila) {
+                        // ✦ Fuzzy en comprobante y nombre de cliente
+                        const okTexto = !q || (window.adminFuzzy
+                            ? window.adminFuzzy.matches(q, fila.dataset.comprobante, fila.dataset.cliente)
+                            : (fila.dataset.comprobante.includes(q.toLowerCase()) || fila.dataset.cliente.includes(q.toLowerCase())));
+
+                        const ok = okTexto
+                                && (!est    || fila.dataset.estado  === est)
+                                && (!tipo   || fila.dataset.tipo    === tipo)
+                                && (!pago   || fila.dataset.pago    === pago)
+                                && (!origen || fila.dataset.origen  === origen);
+
+                        fila.style.display = ok ? '' : 'none';
+                        if (ok) visible++;
+                    });
+
+                    filaSinRes.style.display = visible === 0 ? '' : 'none';
+                }
+
+                window.limpiarFiltros = function () {
+                    buscador.value = filtroEst.value = filtroTipo.value =
+                        filtroPago.value = filtroOrigen.value = '';
+                    filtrar();
+                };
+
+                buscador.addEventListener('input', filtrar);
+                [filtroEst, filtroTipo, filtroPago, filtroOrigen].forEach(function (s) {
+                    s.addEventListener('change', filtrar);
                 });
-
-                filaSinRes.style.display = visible === 0 ? '' : 'none';
-            }
-
-            function limpiarFiltros() {
-                buscador.value = filtroEst.value = filtroTipo.value =
-                    filtroPago.value = filtroOrigen.value = '';
-                filtrar();
-            }
-
-            buscador.addEventListener('input', filtrar);
-            [filtroEst, filtroTipo, filtroPago, filtroOrigen].forEach(s =>
-                s.addEventListener('change', filtrar));
+            });
         </script>
     </th:block>
 </body>

@@ -22,18 +22,29 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
     private final UsuarioServiceImpl usuarioServiceImpl;
-    // Spring inyectará automáticamente el Bean que definimos en PasswordConfig
+    private final ClienteWebUserDetailsService clienteWebUserDetailsService;
+    private final CustomAuthSuccessHandler customAuthSuccessHandler;
     private final PasswordEncoder passwordEncoder;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+            .authenticationProvider(authenticationProvider())
+            .authenticationProvider(clienteAuthProvider())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/vendor/**").permitAll()
                 .requestMatchers("/login", "/error").permitAll()
+                .requestMatchers("/registro", "/registro/**").permitAll()
                 .requestMatchers("/inicio", "/catalogo", "/producto/**").permitAll()
+                .requestMatchers("/api/**").permitAll()
                 .requestMatchers("/carrito", "/carrito/**").permitAll()
-                .requestMatchers("/dashboard").authenticated()
+                .requestMatchers("/combos", "/combos/**").permitAll()
+                .requestMatchers("/checkout", "/checkout/**").permitAll()
+                .requestMatchers("/promociones/**").hasRole("ADMIN")
+                .requestMatchers("/reclamaciones", "/reclamaciones/").permitAll()
+                .requestMatchers("/reclamaciones/admin", "/reclamaciones/*/atender").hasRole("ADMIN")
+                .requestMatchers("/mi-cuenta", "/mi-cuenta/**").hasRole("CLIENTE")
+                .requestMatchers("/dashboard").hasAnyRole("ADMIN", "VENDEDOR", "ALMACEN")
                 .requestMatchers("/ventas/**").hasAnyRole("ADMIN", "VENDEDOR")
                 .requestMatchers("/productos/**").hasAnyRole("ADMIN", "ALMACEN")
                 .requestMatchers("/categorias/**").hasRole("ADMIN")
@@ -48,7 +59,7 @@ public class SecurityConfig {
             .formLogin(form -> form
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
-                .defaultSuccessUrl("/dashboard", true)
+                .successHandler(customAuthSuccessHandler)
                 .failureUrl("/login?error=true")
                 .usernameParameter("username")
                 .passwordParameter("password")
@@ -56,7 +67,7 @@ public class SecurityConfig {
             )
             .logout(logout -> logout
                 .logoutUrl("/logout")
-                .logoutSuccessUrl("/login?logout=true")
+                .logoutSuccessUrl("/inicio?logout=true")
                 .invalidateHttpSession(true)
                 .deleteCookies("JSESSIONID")
                 .permitAll()
@@ -68,18 +79,19 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ── CONFIGURACIÓN CORREGIDA ──────────────────────────────────────────────
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(usuarioServiceImpl);
+        provider.setPasswordEncoder(this.passwordEncoder);
+        return provider;
+    }
 
-@Bean
-public DaoAuthenticationProvider authenticationProvider() {
-    // 1. Pasamos la variable al constructor para eliminar el primer error
-    DaoAuthenticationProvider provider = new DaoAuthenticationProvider(usuarioServiceImpl);
-    
-    // 2. Usamos el PasswordEncoder inyectado
-    provider.setPasswordEncoder(this.passwordEncoder);
-    
-    return provider;
-}
+    @Bean
+    public DaoAuthenticationProvider clienteAuthProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(clienteWebUserDetailsService);
+        provider.setPasswordEncoder(this.passwordEncoder);
+        return provider;
+    }
 
     @Bean
     public AuthenticationManager authenticationManager(
