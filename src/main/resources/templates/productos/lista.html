@@ -142,7 +142,7 @@
                                     <div class="d-flex align-items-center gap-3">
                                         <div class="producto-thumb"
                                             style="width: 40px; height: 40px; overflow: hidden; border-radius: 4px;">
-                                            <img th:src="${p.urlImagen}"
+                                            <img th:src="${p.urlImagen != null && !p.urlImagen.empty} ? ${p.urlImagen} : @{/images/producto-default.png}"
                                                 th:alt="${p.nombre}"
                                                 style="width: 100%; height: 100%; object-fit: cover;"
                                                 onerror="this.src='/images/producto-default.png'" />

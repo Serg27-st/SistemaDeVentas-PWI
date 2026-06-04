@@ -1,0 +1,159 @@
+/* Extra CSS para vistas públicas (separado de HTML)
+   Mantener estilos específicos de cada página aquí.
+*/
+
+/* inicio.html */
+/* Animación rebote (scroll indicator) */
+@keyframes bounce { 
+  0%,100%{transform:translateY(0)} 
+  50%{transform:translateY(5px)} 
+}
+
+/* Hero visual realzado (si se usa en inicio) */
+.hero-bottle-float {
+  animation: bottleFloat 4s ease-in-out infinite;
+}
+@keyframes bottleFloat {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50%       { transform: translateY(-14px) rotate(1deg); }
+}
+
+/* Heading helpers */
+.section-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--color-gold);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0.5rem;
+}
+.section-label::before {
+  content: '';
+  width: 24px;
+  height: 2px;
+  background: var(--color-gold);
+  border-radius: 2px;
+}
+
+/* Categorías grid */
+.cat-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* Card body uniforme */
+.card-inner-body {
+  padding: 14px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  background: var(--color-surface);
+}
+
+/* Combo card */
+.combo-card {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  transition: transform var(--t), box-shadow var(--t), border-color var(--t);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.combo-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: rgba(255,193,7,0.2);
+}
+.combo-img-area {
+  height: 160px;
+  background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.combo-badge-pill {
+  position: absolute;
+  top: 10px; left: 10px;
+  background: var(--color-gold);
+  color: var(--color-gold-text);
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 3px 12px;
+  border-radius: 50px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.combo-save-pill {
+  position: absolute;
+  top: 10px; right: 10px;
+  background: var(--color-bg-public);
+  color: var(--color-text-muted);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 50px;
+  text-decoration: line-through;
+}
+
+/* CTA Banner */
+.cta-section {
+  background: var(--color-nav-bg);
+  position: relative;
+  overflow: hidden;
+}
+.cta-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 70% 50%, rgba(255,193,7,0.08) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+/* Trust badges */
+.trust-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.trust-badge-icon {
+  width: 52px; height: 52px;
+  border-radius: 12px;
+  background: rgba(255,193,7,0.10);
+  border: 1px solid rgba(255,193,7,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  color: var(--color-gold);
+  transition: transform var(--t), background var(--t);
+}
+.trust-badge:hover .trust-badge-icon {
+  transform: scale(1.1) rotate(-4deg);
+  background: rgba(255,193,7,0.18);
+}
+.trust-badge-title { font-weight: 700; font-size: 0.845rem; color: var(--color-text-primary); }
+.trust-badge-sub   { font-size: 0.75rem; color: var(--color-text-muted); }
+
+/* Promo section heading link */
+.section-action-link {
+  font-size: 0.83rem;
+  font-weight: 700;
+  color: var(--color-gold);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: gap var(--t-fast), opacity var(--t-fast);
+}
+.section-action-link:hover { color: var(--color-gold-hover); gap: 8px; }
+
+@media (max-width: 480px) {
+  .combo-img-area { height: 130px; }
+}
+
