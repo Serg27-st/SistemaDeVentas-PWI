@@ -521,6 +521,23 @@ img { display: block; max-width: 100%; }
 .cat-pill.active:hover { transform: translateY(-1px); }
 
 /* ================================================================
+   GRID DE PRODUCTOS DESTACADOS (inicio.html)
+   CSS Grid nativo — evita el bug de height:100% + overflow:hidden
+   de Bootstrap h-100 que colapsaba el cuerpo de la tarjeta a 0px
+   ================================================================ */
+.productos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+@media (min-width: 768px) {
+  .productos-grid { grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+}
+@media (min-width: 992px) {
+  .productos-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ================================================================
    PRODUCT CARDS
    ================================================================ */
 .card-producto {
@@ -559,6 +576,7 @@ img { display: block; max-width: 100%; }
   align-items: center;
   justify-content: center;
   position: relative;
+  flex-shrink: 0; /* impide que la imagen colapse cuando el card crece */
 }
 
 .producto-img {
