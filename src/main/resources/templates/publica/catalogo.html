@@ -285,7 +285,7 @@
 
                 <!-- Imagen + overlay Quick-Add -->
                 <div class="card-img-container" style="height:190px;">
-                  <img th:src="${p.urlImagen != null && !p.urlImagen.empty} ? ${p.urlImagen} : @{/images/producto-default.png}"
+                  <img th:src="${p.urlImagen != null and !p.urlImagen.empty} ? @{${p.urlImagen}} : @{/images/producto-default.png}"
                        th:alt="${p.nombre}"
                        th:data-fallback="@{/images/producto-default.png}"
                        onerror="this.src=this.getAttribute('data-fallback')"
@@ -335,12 +335,10 @@
 
                 <!-- Imagen -->
                 <div class="list-img-wrap">
-                  <img th:src="${p.urlImagen != null && !p.urlImagen.empty} ? ${p.urlImagen} : @{/images/producto-default.png}"
+                  <img th:src="${p.urlImagen != null and !p.urlImagen.empty} ? @{${p.urlImagen}} : @{/images/producto-default.png}"
                        th:alt="${p.nombre}"
                        th:data-fallback="@{/images/producto-default.png}"
-                       onerror="this.src=this.getAttribute('data-fallback')"
-                       />
-
+                       onerror="this.src=this.getAttribute('data-fallback')"/>
                 </div>
 
                 <!-- Info -->
@@ -436,9 +434,8 @@
 
   // Recordar preferencia de vista
   document.addEventListener('DOMContentLoaded', () => {
-    // Forzar vista lista por defecto (reemplaza lo guardado previamente si existe)
-    const guardada = localStorage.getItem('catalogo_vista') || 'lista';
-    setVista(guardada === 'lista' ? 'lista' : 'grid');
+    const guardada = localStorage.getItem('catalogo_vista') || 'grid';
+    if (guardada === 'lista') setVista('lista');
 
     // Auto-submit al cambiar categoría radio
     document.querySelectorAll('#filtrosForm input[name="categoria"]').forEach(r => {

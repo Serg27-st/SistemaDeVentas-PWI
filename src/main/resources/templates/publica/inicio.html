@@ -58,15 +58,6 @@
       /* ── Grid de categorías mejoradas ────────────────────────── */
       .cat-grid { display: flex; flex-wrap: wrap; gap: 10px; }
 
-      /* ── Card body uniforme ──────────────────────────────────── */
-      .card-inner-body {
-        padding: 14px 14px 16px;
-        display: flex;
-        flex-direction: column;
-        flex-grow: 1;
-        background: var(--color-surface);
-      }
-
       /* ── Combo card ──────────────────────────────────────────── */
       .combo-card {
         background: var(--color-surface);
@@ -118,7 +109,7 @@
 
       /* ── CTA Banner ──────────────────────────────────────────── */
       .cta-section {
-        background: var(--color-nav-bg);
+        background: var(--color-nav-bg);   /* #1a2536 — spec */
         position: relative;
         overflow: hidden;
       }
@@ -176,11 +167,7 @@
       }
     </style>
   </th:block>
-
-
-
-
- </head>
+</head>
 <body>
 <th:block th:fragment="main-content">
 
@@ -405,13 +392,12 @@
 
             <!-- ── Imagen + Quick-Add overlay ── -->
             <div class="card-img-container" style="height:185px;">
-              <img th:src="${p.urlImagen != null and !p.urlImagen.empty} ? ${p.urlImagen} : @{/images/producto-default.png}"
+              <img th:src="${p.urlImagen != null and !p.urlImagen.empty} ? @{${p.urlImagen}} : @{/images/producto-default.png}"
                    th:alt="${p.nombre}"
                    th:data-fallback="@{/images/producto-default.png}"
                    onerror="this.src=this.getAttribute('data-fallback')"
                    class="producto-img img-fluid p-3"
                    style="max-height:185px;"/>
-
 
               <!-- Quick-Add: aparece en hover; para agotados muestra "Agotado" -->
               <div th:if="${!p.sinStock}" class="card-quick-overlay">

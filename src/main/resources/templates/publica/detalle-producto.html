@@ -102,7 +102,7 @@
         <!-- Imagen principal -->
         <div class="detalle-img-wrap shadow-sm mb-3" style="border-radius:var(--radius-lg);">
           <img id="img-principal"
-               th:src="${producto.urlImagen != null && !producto.urlImagen.empty} ? ${producto.urlImagen} : @{/images/producto-default.png}"
+               th:src="${producto.urlImagen != null and !producto.urlImagen.empty} ? @{${producto.urlImagen}} : @{/images/producto-default.png}"
                th:alt="${producto.nombre}"
                th:data-fallback="@{/images/producto-default.png}"
                onerror="this.src=this.getAttribute('data-fallback')"
@@ -321,7 +321,7 @@
           <div class="card-producto h-100 shadow-sm d-flex flex-column">
 
             <div class="card-img-container" style="height:165px;">
-              <img th:src="${rel.urlImagen != null && !rel.urlImagen.empty} ? @{${rel.urlImagen}} : @{/images/producto-default.png}"
+              <img th:src="${rel.urlImagen != null and !rel.urlImagen.empty} ? @{${rel.urlImagen}} : @{/images/producto-default.png}"
                    th:alt="${rel.nombre}"
                    th:data-fallback="@{/images/producto-default.png}"
                    onerror="this.src=this.getAttribute('data-fallback')"

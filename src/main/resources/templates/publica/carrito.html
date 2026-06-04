@@ -190,7 +190,7 @@
               <!-- Imagen -->
               <div class="col-3 col-sm-2 text-center">
                 <div class="bg-light rounded-2 p-2 d-inline-flex">
-                  <img th:src="${item.urlImagen != null && !item.urlImagen.empty} ? @{${item.urlImagen}} : @{/images/producto-default.png}"
+                  <img th:src="${item.urlImagen != null and !item.urlImagen.empty} ? @{${item.urlImagen}} : @{/images/producto-default.png}"
                        th:alt="${item.nombre}"
                        th:data-fallback="@{/images/producto-default.png}"
                        onerror="this.src=this.getAttribute('data-fallback')"
@@ -571,23 +571,13 @@ function actualizarBarraMinimo(sub, faltante) {
 function actualizarEnvio() {
   const sel = document.getElementById('distritoSelect');
   const distrito = sel ? sel.value : '';
-
-  const montoCompra = subtotalActual + igvActual; // monto sin envío
-  const umbralEnvioGratis = 50;
-
-  // Regla: envío gratis si monto de compra > 50
-  if (montoCompra > umbralEnvioGratis) {
-    costoEnvio = 0;
-  } else {
-    costoEnvio = tarifas[distrito] !== undefined ? parseFloat(tarifas[distrito]) : 0;
-  }
+  costoEnvio = tarifas[distrito] !== undefined ? parseFloat(tarifas[distrito]) : 0;
 
   const $e = $envio();
   if ($e) {
     $e.textContent = costoEnvio === 0 ? 'Gratis' : 'S/. ' + costoEnvio.toFixed(2);
     $e.className   = costoEnvio === 0 ? 'fw-semibold text-success small' : 'fw-semibold small';
   }
-
   if ($total()) {
     $total().textContent = 'S/. ' + (subtotalActual + igvActual + costoEnvio).toFixed(2);
   }

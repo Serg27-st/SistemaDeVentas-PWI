@@ -614,6 +614,15 @@ img { display: block; max-width: 100%; }
   text-overflow: ellipsis;
   line-height: 1.4;
 }
+
+/* Cuerpo inferior de la tarjeta — info comercial */
+.card-inner-body {
+  padding: 12px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  background: var(--white);
+}
 .card-precio {
   font-size: 1.2rem;
   font-weight: 800;
@@ -641,8 +650,6 @@ img { display: block; max-width: 100%; }
    CARD QUICK-ADD OVERLAY (aparece en hover sobre la imagen)
    UX: El usuario puede agregar sin entrar al detalle → +conversión
    ================================================================ */
-.card-img-container { position: relative; overflow: hidden; }
-
 .card-quick-overlay {
   position: absolute;
   inset: 0;
