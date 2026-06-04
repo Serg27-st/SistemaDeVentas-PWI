@@ -544,7 +544,9 @@ img { display: block; max-width: 100%; }
   border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--white);
-  overflow: hidden;
+  /* overflow:hidden eliminado — causaba que el card-inner-body se recortara a 0px
+     cuando h-100 + flex generaban dependencia circular de altura.
+     El img-container tiene su propio overflow:hidden para las esquinas. */
   transition: transform var(--t), box-shadow var(--t), border-color var(--t);
   position: relative;
   display: flex;
@@ -576,7 +578,8 @@ img { display: block; max-width: 100%; }
   align-items: center;
   justify-content: center;
   position: relative;
-  flex-shrink: 0; /* impide que la imagen colapse cuando el card crece */
+  flex-shrink: 0;                                        /* impide que la imagen colapse cuando el card crece */
+  border-radius: var(--radius) var(--radius) 0 0;        /* esquinas superiores redondeadas (antes las daba el overflow:hidden del card) */
 }
 
 .producto-img {
@@ -1470,16 +1473,17 @@ img { display: block; max-width: 100%; }
 }
 .list-img-wrap img { width: 72px; height: 72px; object-fit: contain; }
 
-/* Grid/List toggle state */
-#productos-grid.vista-lista .col-6,
-#productos-grid.vista-lista .col-md-4 {
-  width: 100%;
-  max-width: 100%;
-  flex: 0 0 100%;
-}
-#productos-grid.vista-lista .card-producto { display: none; }
-#productos-grid.vista-lista .list-product-item { display: flex; }
-#productos-grid:not(.vista-lista) .list-product-item { display: none; }
+/* ── Grid / Lista toggle — controlado 100% por la clase .vista-lista ──
+   El JS sólo añade/quita la clase; el CSS hace la visual completa.
+   ------------------------------------------------------------------ */
+
+/* Default (vista grid): ocultar columnas de lista */
+#productos-grid .list-col                         { display: none; }
+
+/* Vista lista activa */
+#productos-grid.vista-lista .col-6                { display: none; }  /* oculta cols grid */
+#productos-grid.vista-lista .list-col             { display: block; } /* muestra cols lista */
+#productos-grid.vista-lista .list-product-item    { display: flex; }  /* muestra items */
 
 /* ================================================================
    CATÁLOGO — Sidebar filtros mejorado

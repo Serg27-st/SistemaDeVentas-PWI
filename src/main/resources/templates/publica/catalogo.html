@@ -264,7 +264,7 @@
 
             <!-- ── Vista Grid (card) ── -->
             <div class="col-6 col-md-4">
-              <div class="card-producto h-100 shadow-sm d-flex flex-column">
+              <div class="card-producto shadow-sm">
 
                 <!-- Badges estado -->
                 <span th:if="${p.sinStock}"
@@ -330,7 +330,7 @@
             </div>
 
             <!-- ── Vista Lista (item) ── -->
-            <div class="col-12 list-col" style="display:none;">
+            <div class="col-12 list-col">
               <div class="list-product-item">
 
                 <!-- Imagen -->
@@ -412,30 +412,39 @@
 
 <th:block th:fragment="scripts">
 <script>
+  /* ── Toggle Grid / Lista ────────────────────────────────────────────
+     Solo maneja la clase .vista-lista en #productos-grid.
+     El CSS (publica.css) se encarga de toda la lógica visual.
+     NUNCA usar display inline aquí — colisiona con los estilos del CSS.
+  ─────────────────────────────────────────────────────────────────── */
   function setVista(tipo) {
-    const grid = document.getElementById('productos-grid');
+    const grid    = document.getElementById('productos-grid');
     const btnGrid = document.getElementById('btn-grid');
     const btnList = document.getElementById('btn-list');
+    if (!grid) return;
 
     if (tipo === 'lista') {
-      // Mostrar cols de lista, ocultar cols de grid
-      grid.querySelectorAll('.col-6, .col-md-4').forEach(el => el.style.display = 'none');
-      grid.querySelectorAll('.list-col').forEach(el => el.style.display = '');
+      grid.classList.add('vista-lista');
       btnList.classList.add('activo');
       btnGrid.classList.remove('activo');
     } else {
-      grid.querySelectorAll('.col-6, .col-md-4').forEach(el => el.style.display = '');
-      grid.querySelectorAll('.list-col').forEach(el => el.style.display = 'none');
+      grid.classList.remove('vista-lista');
       btnGrid.classList.add('activo');
       btnList.classList.remove('activo');
     }
     try { localStorage.setItem('catalogo_vista', tipo); } catch(e) {}
   }
 
-  // Recordar preferencia de vista
+  // Restaurar preferencia guardada
   document.addEventListener('DOMContentLoaded', () => {
-    const guardada = localStorage.getItem('catalogo_vista') || 'grid';
-    if (guardada === 'lista') setVista('lista');
+    // Limpiar valor obsoleto 'lista' que el código anterior guardaba por defecto
+    const guardada = localStorage.getItem('catalogo_vista');
+    if (guardada === 'lista') {
+      setVista('lista');
+    } else {
+      // Primera visita o preferencia 'grid': asegurar estado limpio
+      localStorage.setItem('catalogo_vista', 'grid');
+    }
 
     // Auto-submit al cambiar categoría radio
     document.querySelectorAll('#filtrosForm input[name="categoria"]').forEach(r => {
