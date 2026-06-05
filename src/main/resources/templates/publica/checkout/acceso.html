@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{publica/layout :: layout(
+        titulo='Continuar con tu compra | Tu Licorería',
+        paginaActual='',
+        contenido=~{::main-content},
+        estilosExtra=~{::estilos},
+        scriptsExtra=~{})}">
+<head><title>Acceso checkout</title>
+<th:block th:fragment="estilos">
+<style>
+  .acceso-card { background:#fff; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,.08); overflow:hidden; }
+  .acceso-opcion { border:2px solid #e5e7eb; border-radius:12px; padding:1.5rem; cursor:pointer; transition:border-color .2s, box-shadow .2s; }
+  .acceso-opcion:hover { border-color:#c9a227; box-shadow:0 0 0 3px rgba(201,162,39,.15); }
+  .acceso-opcion .bi { font-size:2rem; }
+  .divisor { display:flex; align-items:center; gap:1rem; color:#9ca3af; font-size:.85rem; }
+  .divisor::before, .divisor::after { content:''; flex:1; height:1px; background:#e5e7eb; }
+</style>
+</th:block>
+</head>
+<body>
+<th:block th:fragment="main-content">
+
+  <!-- Breadcrumb / stepper -->
+  <div class="container pt-4 pb-2">
+    <div class="d-flex align-items-center justify-content-center mx-auto" style="max-width:480px;">
+      <div class="step text-center"><div class="stepper-circle">1</div><span class="small text-muted d-block">Carrito</span></div>
+      <div class="stepper-line"></div>
+      <div class="step text-center active"><div class="stepper-circle">2</div><span class="small fw-semibold text-dark d-block">Acceso</span></div>
+      <div class="stepper-line"></div>
+      <div class="step text-center"><div class="stepper-circle">3</div><span class="small text-muted d-block">Pago</span></div>
+    </div>
+  </div>
+
+  <div class="container py-4">
+    <div class="row justify-content-center">
+      <div class="col-md-9 col-lg-7">
+
+        <div th:if="${errorAcceso}" class="alert alert-danger d-flex gap-2 mb-3">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span th:text="${errorAcceso}">Error</span>
+        </div>
+
+        <div class="text-center mb-4">
+          <h3 class="fw-bold" style="font-family:'Playfair Display',serif;">Continúa con tu compra</h3>
+          <p class="text-muted">Elige cómo quieres continuar para finalizar tu pedido.</p>
+        </div>
+
+        <div class="row g-3 mb-4">
+
+          <!-- Opción: Ya tengo cuenta -->
+          <div class="col-md-6">
+            <div class="acceso-opcion h-100 d-flex flex-column">
+              <div class="text-center mb-3">
+                <i class="bi bi-person-circle" style="color:#c9a227;font-size:2.5rem;"></i>
+                <h6 class="fw-bold mt-2 mb-1">Ya tengo cuenta</h6>
+                <p class="text-muted small mb-3">Inicia sesión para ver tus datos guardados y historial de pedidos.</p>
+              </div>
+              <a th:href="@{/login(returnUrl='/checkout/iniciar-autenticado')}"
+                 class="btn btn-outline-dark rounded-pill py-2 mt-auto fw-semibold">
+                <i class="bi bi-box-arrow-in-right me-1"></i> Iniciar sesión
+              </a>
+            </div>
+          </div>
+
+          <!-- Opción: Crear cuenta -->
+          <div class="col-md-6">
+            <div class="acceso-opcion h-100 d-flex flex-column">
+              <div class="text-center mb-3">
+                <i class="bi bi-person-plus" style="color:#c9a227;font-size:2.5rem;"></i>
+                <h6 class="fw-bold mt-2 mb-1">Crear cuenta gratis</h6>
+                <p class="text-muted small mb-3">Registra tus datos una sola vez y compra más rápido en el futuro.</p>
+              </div>
+              <a th:href="@{/registro}"
+                 class="btn rounded-pill py-2 mt-auto fw-semibold"
+                 style="background:#c9a227;color:#0d0d16;">
+                <i class="bi bi-person-plus me-1"></i> Registrarme
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="divisor">o continúa sin registrarte</div>
+
+        <!-- Opción: Invitado -->
+        <div class="acceso-card mt-4 p-4">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <i class="bi bi-envelope-open" style="color:#c9a227;font-size:1.8rem;flex-shrink:0;"></i>
+            <div>
+              <h6 class="fw-bold mb-0">Continuar como invitado</h6>
+              <small class="text-muted">Solo necesitamos tu correo para enviarte la confirmación del pedido.</small>
+            </div>
+          </div>
+          <form th:action="@{/checkout/acceso/invitado}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="input-group">
+              <input type="email" name="email" class="form-control"
+                     placeholder="tucorreo@gmail.com" required/>
+              <button type="submit" class="btn btn-dark px-4 fw-semibold">
+                Continuar <i class="bi bi-arrow-right ms-1"></i>
+              </button>
+            </div>
+          </form>
+          <p class="text-muted mt-2 mb-0" style="font-size:.78rem;">
+            <i class="bi bi-shield-check text-success me-1"></i>
+            Tu correo solo se usa para enviarte la confirmación. No spam, prometido.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</th:block>
+</body>
+</html>

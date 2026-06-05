@@ -127,7 +127,8 @@ public class ReporteServiceImpl implements ReporteService {
                             .nombre(p.getNombre())
                             .marca(p.getMarca())
                             .categoria(p.getCategoria().getNombre())
-                            .volumenMl(p.getVolumenMl())
+                            .cantidadPresentacion(p.getCantidadPresentacion())
+                            .unidadPresentacion(p.getUnidadPresentacion())
                             .unidadesVendidas((Long) row[1])
                             .ingresos((BigDecimal) row[2])
                             .stockActual(p.getStock())
@@ -266,7 +267,8 @@ public class ReporteServiceImpl implements ReporteService {
         private String nombre;
         private String marca;
         private String categoria;
-        private Integer volumenMl;
+        private BigDecimal cantidadPresentacion;
+        private String unidadPresentacion;
         private Long unidadesVendidas;
         private BigDecimal ingresos;
         private Integer stockActual;

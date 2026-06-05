@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.tulicoreria.licoreria.dto.DetalleVentaRequestDTO;
 import com.tulicoreria.licoreria.dto.DetalleVentaResponseDTO;
+import com.tulicoreria.licoreria.dto.ItemCarritoDTO;
 import com.tulicoreria.licoreria.dto.VentaRequestDTO;
 import com.tulicoreria.licoreria.dto.VentaResponseDTO;
 import com.tulicoreria.licoreria.model.Cliente;
@@ -167,6 +168,160 @@ public class VentaServiceImpl implements VentaService {
 
     @Override
     @Transactional
+    public VentaResponseDTO registrarDesdeCarrito(List<ItemCarritoDTO> items, String metodoPago) {
+        return registrarDesdeCarrito(items, metodoPago, null, BigDecimal.ZERO, null, null);
+    }
+
+    @Override
+    @Transactional
+    public VentaResponseDTO registrarDesdeCarrito(List<ItemCarritoDTO> items, String metodoPago, Long clienteId) {
+        return registrarDesdeCarrito(items, metodoPago, clienteId, BigDecimal.ZERO, null, null);
+    }
+
+    @Override
+    @Transactional
+    public VentaResponseDTO registrarDesdeCarrito(List<ItemCarritoDTO> items, String metodoPago, Long clienteId,
+                                                   BigDecimal costoEnvio, String distritoEnvio, String culqiChargeId) {
+
+        if (items == null || items.isEmpty()) {
+            throw new RuntimeException("El carrito está vacío");
+        }
+
+        // Vendedor sistema que representa el canal web
+        Usuario vendedor = usuarioRepository.findByUsername("tienda_online")
+                .orElseThrow(() -> new RuntimeException(
+                    "Usuario sistema 'tienda_online' no encontrado. " +
+                    "Reinicia la aplicación para que sea creado automáticamente."));
+
+        // Resolver cliente registrado (puede ser null para compras anónimas)
+        Cliente cliente = null;
+        if (clienteId != null) {
+            cliente = clienteRepository.findById(clienteId).orElse(null);
+        }
+
+        List<DetalleVenta> detalles = new ArrayList<>();
+        BigDecimal subtotalVenta = BigDecimal.ZERO;
+
+        for (ItemCarritoDTO item : items) {
+            Producto producto = productoRepository.findById(item.getProductoId())
+                    .orElseThrow(() -> new RuntimeException(
+                        "Producto no encontrado: " + item.getProductoId()));
+
+            if (producto.getStock() < item.getCantidad()) {
+                throw new RuntimeException(
+                    "Stock insuficiente para \"" + producto.getNombre() + "\". " +
+                    "Disponible: " + producto.getStock() +
+                    ", solicitado: " + item.getCantidad());
+            }
+
+            // getSubtotal() ya descuenta promos de volumen / combo
+            BigDecimal subtotalDetalle = item.getSubtotal().setScale(2, RoundingMode.HALF_UP);
+
+            // Calcular % de descuento efectivo para registrar en el detalle
+            BigDecimal bruto = item.getPrecioUnitario()
+                    .multiply(BigDecimal.valueOf(item.getCantidad()));
+            BigDecimal descuentoPct = bruto.compareTo(BigDecimal.ZERO) > 0
+                    ? bruto.subtract(subtotalDetalle)
+                           .divide(bruto, 4, RoundingMode.HALF_UP)
+                           .multiply(BigDecimal.valueOf(100))
+                    : BigDecimal.ZERO;
+
+            detalles.add(DetalleVenta.builder()
+                    .producto(producto)
+                    .cantidad(item.getCantidad())
+                    .precioUnitario(item.getPrecioUnitario())
+                    .descuentoPorcentaje(descuentoPct)
+                    .subtotal(subtotalDetalle)
+                    .build());
+
+            subtotalVenta = subtotalVenta.add(subtotalDetalle);
+
+            // Descontar stock inmediatamente
+            producto.setStock(producto.getStock() - item.getCantidad());
+            productoRepository.save(producto);
+        }
+
+        BigDecimal envio       = (costoEnvio != null) ? costoEnvio : BigDecimal.ZERO;
+        BigDecimal igvVenta    = subtotalVenta.multiply(IGV).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalVenta  = subtotalVenta.add(igvVenta).add(envio).setScale(2, RoundingMode.HALF_UP);
+        String     comprobante = generarNumeroComprobante(TipoComprobante.TICKET);
+
+        MetodoPago mp;
+        try {
+            mp = MetodoPago.valueOf(metodoPago.toUpperCase());
+        } catch (Exception e) {
+            mp = MetodoPago.EFECTIVO;
+        }
+
+        // Pedido pagado con tarjeta → COMPLETADA; otros métodos → PENDIENTE
+        EstadoVenta estado = (culqiChargeId != null && !culqiChargeId.isBlank())
+                ? EstadoVenta.COMPLETADA : EstadoVenta.PENDIENTE;
+
+        String obs = (cliente != null
+                ? "Pedido web — " + cliente.getNombre() + " " + cliente.getApellido()
+                : "Pedido web — Tienda online")
+                + (distritoEnvio != null && !distritoEnvio.isBlank() ? " | Envío: " + distritoEnvio : "")
+                + (culqiChargeId != null && !culqiChargeId.isBlank() ? " | Culqi: " + culqiChargeId : "");
+
+        Venta venta = Venta.builder()
+                .numeroComprobante(comprobante)
+                .tipoComprobante(TipoComprobante.TICKET)
+                .fechaHora(LocalDateTime.now())
+                .subtotal(subtotalVenta)
+                .igv(igvVenta)
+                .costoEnvio(envio)
+                .total(totalVenta)
+                .estado(estado)
+                .metodoPago(mp)
+                .cliente(cliente)
+                .vendedor(vendedor)
+                .distritoEnvio(distritoEnvio)
+                .culqiChargeId(culqiChargeId)
+                .observaciones(obs)
+                .build();
+
+        for (DetalleVenta d : detalles) {
+            d.setVenta(venta);
+            venta.getDetalles().add(d);
+        }
+
+        Venta ventaGuardada = ventaRepository.save(venta);
+
+        // Registrar salidas en Kardex
+        for (DetalleVenta d : detalles) {
+            Producto p = d.getProducto();
+            kardexRepository.save(Kardex.builder()
+                    .tipo(Kardex.TipoMovimiento.SALIDA_VENTA)
+                    .producto(p)
+                    .cantidad(d.getCantidad())
+                    .stockAnterior(p.getStock() + d.getCantidad())
+                    .stockResultante(p.getStock())
+                    .fechaHora(LocalDateTime.now())
+                    .usuario(vendedor)
+                    .motivo("Venta web: " + comprobante)
+                    .venta(ventaGuardada)
+                    .build());
+        }
+
+        return toDTO(ventaGuardada);
+    }
+
+    @Override
+    @Transactional
+    public VentaResponseDTO completar(Long id) {
+        Venta venta = ventaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Venta no encontrada con id: " + id));
+
+        if (venta.getEstado() != EstadoVenta.PENDIENTE) {
+            throw new RuntimeException("Solo se pueden completar ventas en estado PENDIENTE");
+        }
+
+        venta.setEstado(EstadoVenta.COMPLETADA);
+        return toDTO(ventaRepository.save(venta));
+    }
+
+    @Override
+    @Transactional
     public VentaResponseDTO anular(Long id) {
         Venta venta = ventaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Venta no encontrada con id: " + id));
@@ -240,7 +395,8 @@ public class VentaServiceImpl implements VentaService {
                         .productoNombre(d.getProducto().getNombre())
                         .productoCodigo(d.getProducto().getCodigo())
                         .productoMarca(d.getProducto().getMarca())
-                        .volumenMl(d.getProducto().getVolumenMl())
+                        .cantidadPresentacion(d.getProducto().getCantidadPresentacion())
+                        .unidadPresentacion(d.getProducto().getUnidadPresentacion())
                         .cantidad(d.getCantidad())
                         .precioUnitario(d.getPrecioUnitario())
                         .descuentoPorcentaje(d.getDescuentoPorcentaje())
@@ -264,7 +420,9 @@ public class VentaServiceImpl implements VentaService {
                 .vendedorNombre(v.getVendedor().getNombreCompleto())
                 .subtotal(v.getSubtotal())
                 .igv(v.getIgv())
+                .costoEnvio(v.getCostoEnvio())
                 .total(v.getTotal())
+                .distritoEnvio(v.getDistritoEnvio())
                 .observaciones(v.getObservaciones())
                 .detalles(detallesDTO)
                 .build();

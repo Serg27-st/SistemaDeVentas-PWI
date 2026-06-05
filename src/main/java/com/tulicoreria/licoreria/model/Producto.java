@@ -55,8 +55,14 @@ public class Producto {
     /**
      * Volumen en mililitros: 250, 500, 750, 1000, 1750
      */
-    @Column(nullable = false)
-    private Integer volumenMl;
+    /*@Column(nullable = false)
+    private Integer volumenMl;*/
+
+    @Column(name = "cantidad_presentacion")
+    private BigDecimal cantidadPresentacion;
+
+    @Column(name = "unidad_presentacion", length = 30)
+    private String unidadPresentacion;
 
     /**
      * Grado alcohólico en porcentaje: 0.0 para bebidas sin alcohol

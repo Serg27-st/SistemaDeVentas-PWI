@@ -132,11 +132,15 @@
                                             onerror="this.src='/images/producto-default.png'" />
                                     </div>
                                     <div>
-                                        <div class="fw-semibold" style="color: var(--text-main);"
-                                            th:text="${prod.nombre}"></div>
-                                        <small class="text-muted"
-                                            th:text="${prod.marca + ' · ' + prod.volumenMl + 'ml'}"></small>
-                                    </div>
+    <div class="fw-semibold"
+         style="color: var(--text-main);"
+         th:text="${prod.nombre}">
+    </div>
+
+    <small class="text-muted"
+           th:text="${prod.marca + ' · ' + prod.cantidadPresentacion + ' ' + prod.unidadPresentacion}">
+    </small>
+</div>
                                 </div>
                             </td>
 

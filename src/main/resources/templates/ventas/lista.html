@@ -122,9 +122,20 @@
                             <option value="TRANSFERENCIA">Transferencia</option>
                         </select>
                     </div>
-                    <div class="col-md-2 text-end">
-                        <button class="btn btn-outline-secondary btn-sm" onclick="limpiarFiltros()">
-                            <i class="bi bi-x me-1"></i>Limpiar
+                    <div class="col-md-2">
+                        <select id="filtroOrigen" class="form-select form-select-sm">
+                            <option value="">Canal de venta</option>
+                            <option value="TIENDA">
+                                Tienda física
+                            </option>
+                            <option value="WEB">
+                                Tienda online
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-1 text-end">
+                        <button class="btn btn-outline-secondary btn-sm w-100" onclick="limpiarFiltros()">
+                            <i class="bi bi-x"></i>
                         </button>
                     </div>
                 </div>
@@ -152,12 +163,20 @@
                                 th:data-comprobante="${v.numeroComprobante != null ? #strings.toLowerCase(v.numeroComprobante) : ''}"
                                 th:data-cliente="${v.clienteNombre != null ? #strings.toLowerCase(v.clienteNombre) : ''}"
                                 th:data-estado="${v.estado}" th:data-tipo="${v.tipoComprobante}"
-                                th:data-pago="${v.metodoPago}">
+                                th:data-pago="${v.metodoPago}"
+                                th:data-origen="${v.vendedorNombre == 'Tienda Online'} ? 'WEB' : 'TIENDA'">
 
                                 <td class="ps-4">
-                                    <a th:href="@{/ventas/{id}(id=${v.id})}"
-                                        class="fw-semibold text-decoration-none text-primary"
-                                        th:text="${v.numeroComprobante}"></a>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <a th:href="@{/ventas/{id}(id=${v.id})}"
+                                            class="fw-semibold text-decoration-none text-primary"
+                                            th:text="${v.numeroComprobante}"></a>
+                                        <span th:if="${v.vendedorNombre == 'Tienda Online'}"
+                                              class="badge rounded-pill"
+                                              style="background:rgba(99,102,241,.12);color:#4f46e5;font-size:.65rem;letter-spacing:.5px;">
+                                            <i class="bi bi-globe2 me-1"></i>WEB
+                                        </span>
+                                    </div>
                                     <small class="text-muted d-block" th:text="${v.tipoComprobante}"></small>
                                 </td>
 
@@ -168,7 +187,15 @@
                                         th:text="${v.clienteDocumento}"></small>
                                 </td>
 
-                                <td th:text="${v.vendedorNombre}"></td>
+                                <td>
+                                    <span th:if="${v.vendedorNombre == 'Tienda Online'}"
+                                          class="d-flex align-items-center gap-1">
+                                        <i class="bi bi-globe2" style="color:#4f46e5;"></i>
+                                        <span class="text-secondary" style="font-size:.875rem;">Tienda Online</span>
+                                    </span>
+                                    <span th:if="${v.vendedorNombre != 'Tienda Online'}"
+                                          th:text="${v.vendedorNombre}"></span>
+                                </td>
 
                                 <td>
                                     <span
@@ -219,7 +246,15 @@
                                             class="btn btn-sm btn-outline-primary" title="Imprimir" target="_blank">
                                             <i class="bi bi-printer"></i>
                                         </a>
-                                        <form th:if="${v.estado == 'COMPLETADA'}"
+                                        <form th:if="${v.estado == 'PENDIENTE'}"
+                                            th:action="@{/ventas/{id}/completar(id=${v.id})}" method="post"
+                                            class="d-inline"
+                                            onsubmit="return confirm('¿Marcar este pedido como entregado?')">
+                                            <button type="submit" class="btn btn-sm btn-success" title="Marcar como entregado">
+                                                <i class="bi bi-check2-circle"></i>
+                                            </button>
+                                        </form>
+                                        <form th:if="${v.estado == 'COMPLETADA' || v.estado == 'PENDIENTE'}"
                                             th:action="@{/ventas/{id}/anular(id=${v.id})}" method="post"
                                             class="d-inline"
                                             onsubmit="return confirm('¿Anular esta venta? El stock será devuelto al inventario.')">
@@ -258,41 +293,55 @@
 
     <th:block th:fragment="scripts">
         <script>
-            const buscador = document.getElementById('buscador');
-            const filtroEst = document.getElementById('filtroEstado');
-            const filtroTipo = document.getElementById('filtroTipo');
-            const filtroPago = document.getElementById('filtroPago');
-            const filas = document.querySelectorAll('#tablaVentas tbody tr[data-comprobante]');
-            const filaSinRes = document.getElementById('filaSinResultados');
+            document.addEventListener('DOMContentLoaded', function () {
+                const buscador    = document.getElementById('buscador');
+                const filtroEst   = document.getElementById('filtroEstado');
+                const filtroTipo  = document.getElementById('filtroTipo');
+                const filtroPago  = document.getElementById('filtroPago');
+                const filtroOrigen= document.getElementById('filtroOrigen');
+                const filas       = document.querySelectorAll('#tablaVentas tbody tr[data-comprobante]');
+                const filaSinRes  = document.getElementById('filaSinResultados');
 
-            function filtrar() {
-                const q = buscador.value.toLowerCase().trim();
-                const est = filtroEst.value;
-                const tipo = filtroTipo.value;
-                const pago = filtroPago.value;
-                let visible = 0;
+                if (window.adminFuzzy) window.adminFuzzy.addFuzzyBadge('buscador');
 
-                filas.forEach(fila => {
-                    const matchQ = !q || fila.dataset.comprobante.includes(q) || fila.dataset.cliente.includes(q);
-                    const matchEst = !est || fila.dataset.estado === est;
-                    const matchTipo = !tipo || fila.dataset.tipo === tipo;
-                    const matchPago = !pago || fila.dataset.pago === pago;
-                    const mostrar = matchQ && matchEst && matchTipo && matchPago;
+                function filtrar() {
+                    const q      = (buscador.value || '').trim();
+                    const est    = filtroEst.value;
+                    const tipo   = filtroTipo.value;
+                    const pago   = filtroPago.value;
+                    const origen = filtroOrigen.value;
+                    let visible  = 0;
 
-                    fila.style.display = mostrar ? '' : 'none';
-                    if (mostrar) visible++;
+                    filas.forEach(function (fila) {
+                        // ✦ Fuzzy en comprobante y nombre de cliente
+                        const okTexto = !q || (window.adminFuzzy
+                            ? window.adminFuzzy.matches(q, fila.dataset.comprobante, fila.dataset.cliente)
+                            : (fila.dataset.comprobante.includes(q.toLowerCase()) || fila.dataset.cliente.includes(q.toLowerCase())));
+
+                        const ok = okTexto
+                                && (!est    || fila.dataset.estado  === est)
+                                && (!tipo   || fila.dataset.tipo    === tipo)
+                                && (!pago   || fila.dataset.pago    === pago)
+                                && (!origen || fila.dataset.origen  === origen);
+
+                        fila.style.display = ok ? '' : 'none';
+                        if (ok) visible++;
+                    });
+
+                    filaSinRes.style.display = visible === 0 ? '' : 'none';
+                }
+
+                window.limpiarFiltros = function () {
+                    buscador.value = filtroEst.value = filtroTipo.value =
+                        filtroPago.value = filtroOrigen.value = '';
+                    filtrar();
+                };
+
+                buscador.addEventListener('input', filtrar);
+                [filtroEst, filtroTipo, filtroPago, filtroOrigen].forEach(function (s) {
+                    s.addEventListener('change', filtrar);
                 });
-
-                filaSinRes.style.display = visible === 0 ? '' : 'none';
-            }
-
-            function limpiarFiltros() {
-                buscador.value = filtroEst.value = filtroTipo.value = filtroPago.value = '';
-                filtrar();
-            }
-
-            buscador.addEventListener('input', filtrar);
-            [filtroEst, filtroTipo, filtroPago].forEach(s => s.addEventListener('change', filtrar));
+            });
         </script>
     </th:block>
 </body>

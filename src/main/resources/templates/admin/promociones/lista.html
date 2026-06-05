@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{admin/layout :: layout(
+          titulo='Promociones',
+          currentPage='promociones',
+          content=~{::page-content},
+          extraHead=~{},
+          extraScripts=~{})}">
+<body>
+<th:block th:fragment="page-content">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold mb-1">Promociones &amp; Descuentos</h4>
+      <p class="text-muted mb-0 small">Gestiona descuentos, promos por volumen y packs combo.</p>
+    </div>
+    <a th:href="@{/promociones/nueva}" class="btn btn-primary rounded-pill px-4">
+      <i class="bi bi-plus-lg me-1"></i> Nueva Promoción
+    </a>
+  </div>
+
+  <!-- Tabla -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-4">Nombre</th>
+              <th>Tipo</th>
+              <th>Detalle</th>
+              <th>Producto / Combo</th>
+              <th>Vigencia</th>
+              <th>Estado</th>
+              <th class="text-end pe-4">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:if="${#lists.isEmpty(promociones)}">
+              <td colspan="7" class="text-center text-muted py-5">
+                <i class="bi bi-tag fs-1 d-block mb-2 opacity-30"></i>
+                No hay promociones registradas.
+              </td>
+            </tr>
+            <tr th:each="p : ${promociones}">
+
+              <!-- Nombre -->
+              <td class="ps-4 fw-semibold" th:text="${p.nombre}">Promo</td>
+
+              <!-- Tipo badge -->
+              <td>
+                <span th:switch="${p.tipo}">
+                  <span th:case="'DESCUENTO_DIRECTO'" class="badge rounded-pill px-3"
+                        style="background:rgba(201,162,39,.15);color:#92620a;">
+                    <i class="bi bi-percent me-1"></i>Descuento
+                  </span>
+                  <span th:case="'VOLUMEN'" class="badge rounded-pill px-3"
+                        style="background:rgba(59,130,246,.12);color:#1d4ed8;">
+                    <i class="bi bi-stack me-1"></i>Volumen
+                  </span>
+                  <span th:case="'COMBO'" class="badge rounded-pill px-3"
+                        style="background:rgba(139,92,246,.12);color:#6d28d9;">
+                    <i class="bi bi-box2-heart me-1"></i>Combo
+                  </span>
+                </span>
+              </td>
+
+              <!-- Detalle de la promo -->
+              <td class="small">
+                <span th:if="${p.porcentajeDescuento != null}"
+                      th:text="'−' + ${p.porcentajeDescuento} + ' %'">−15%</span>
+                <span th:if="${p.montoDescuento != null}"
+                      th:text="'−S/. ' + ${p.montoDescuento}">−S/. 20</span>
+                <span th:if="${p.compraX != null}"
+                      th:text="${p.compraX} + '×' + ${p.llevaY} + ' (paga ' + ${p.llevaY} + ')'">2×1</span>
+                <span th:if="${p.precioCombo != null}"
+                      th:text="'S/. ' + ${p.precioCombo}">S/. 99</span>
+              </td>
+
+              <!-- Producto o combo -->
+              <td class="small text-muted"
+                  th:text="${p.productoNombre != null ? p.productoNombre : (p.items != null ? #lists.size(p.items) + ' productos' : '—')}">
+                —
+              </td>
+
+              <!-- Vigencia -->
+              <td class="small">
+                <span th:if="${p.fechaInicio != null or p.fechaFin != null}">
+                  <span th:text="${p.fechaInicio != null ? #temporals.format(p.fechaInicio,'dd/MM/yy') : '∞'}">—</span>
+                  →
+                  <span th:text="${p.fechaFin != null ? #temporals.format(p.fechaFin,'dd/MM/yy') : '∞'}">—</span>
+                </span>
+                <span th:unless="${p.fechaInicio != null or p.fechaFin != null}"
+                      class="text-muted">Sin límite</span>
+              </td>
+
+              <!-- Estado -->
+              <td>
+                <span th:if="${p.vigente and p.activo}"
+                      class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">
+                  <i class="bi bi-circle-fill me-1" style="font-size:.45rem;"></i>Activa
+                </span>
+                <span th:unless="${p.vigente and p.activo}"
+                      class="badge bg-secondary-subtle text-secondary border rounded-pill px-3">
+                  Inactiva
+                </span>
+              </td>
+
+              <!-- Acciones -->
+              <td class="text-end pe-4">
+                <a th:href="@{/promociones/editar/{id}(id=${p.id})}"
+                   class="btn btn-sm btn-outline-secondary me-1" title="Editar">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <form th:if="${p.activo}"
+                      th:action="@{/promociones/desactivar/{id}(id=${p.id})}"
+                      method="post" class="d-inline"
+                      onsubmit="return confirm('¿Desactivar esta promoción?')">
+                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                  <button type="submit" class="btn btn-sm btn-outline-danger" title="Desactivar">
+                    <i class="bi bi-x-circle"></i>
+                  </button>
+                </form>
+              </td>
+
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</th:block>
+</body>
+</html>

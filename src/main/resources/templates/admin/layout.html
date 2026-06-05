@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es" 
-      xmlns:th="http://www.thymeleaf.org" 
-      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
-      th:fragment="layout(titulo, currentPage, content, extraHead, extraScripts)">
+        xmlns:th="http://www.thymeleaf.org" 
+        xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+        th:fragment="layout(titulo, currentPage, content, extraHead, extraScripts)">
 
 <head>
     <meta charset="UTF-8" />
@@ -33,48 +33,57 @@
 
         <div class="sidebar-section" sec:authorize="hasAnyRole('ADMIN','VENDEDOR')">Ventas</div>
         <a th:href="@{/ventas}" class="sidebar-link" sec:authorize="hasAnyRole('ADMIN','VENDEDOR')"
-           th:classappend="${currentPage == 'ventas'} ? 'active'">
+            th:classappend="${currentPage == 'ventas'} ? 'active'">
             <i class="bi bi-receipt"></i> Ventas
         </a>
         <a th:href="@{/ventas/nueva}" class="sidebar-link" sec:authorize="hasAnyRole('ADMIN','VENDEDOR')"
-           th:classappend="${currentPage == 'punto-venta'} ? 'active'">
+            th:classappend="${currentPage == 'punto-venta'} ? 'active'">
             <i class="bi bi-cart-plus-fill"></i> Punto de Venta
         </a>
         <a th:href="@{/clientes}" class="sidebar-link" sec:authorize="hasAnyRole('ADMIN','VENDEDOR')"
-           th:classappend="${currentPage == 'clientes'} ? 'active'">
+            th:classappend="${currentPage == 'clientes'} ? 'active'">
             <i class="bi bi-people-fill"></i> Clientes
         </a>
 
         <div class="sidebar-section" sec:authorize="hasAnyRole('ADMIN','ALMACEN')">Inventario</div>
         <a th:href="@{/productos}" class="sidebar-link" sec:authorize="hasAnyRole('ADMIN','ALMACEN')"
-           th:classappend="${currentPage == 'productos'} ? 'active'">
+            th:classappend="${currentPage == 'productos'} ? 'active'">
             <i class="bi bi-box-seam-fill"></i> Productos
         </a>
         <a th:href="@{/ordenes}" class="sidebar-link" sec:authorize="hasAnyRole('ADMIN','ALMACEN')"
-           th:classappend="${currentPage == 'ordenes'} ? 'active'">
+            th:classappend="${currentPage == 'ordenes'} ? 'active'">
             <i class="bi bi-truck"></i> Órdenes de Compra
         </a>
         <a th:href="@{/kardex}" class="sidebar-link" sec:authorize="hasAnyRole('ADMIN','ALMACEN')"
-           th:classappend="${currentPage == 'kardex'} ? 'active'">
+            th:classappend="${currentPage == 'kardex'} ? 'active'">
             <i class="bi bi-journal-text"></i> Kardex
         </a>
 
         <div class="sidebar-section" sec:authorize="hasAnyRole('ADMIN','ALMACEN')">Administración</div>
         <a th:href="@{/categorias}" class="sidebar-link" sec:authorize="hasRole('ADMIN')"
-           th:classappend="${currentPage == 'categorias'} ? 'active'">
+            th:classappend="${currentPage == 'categorias'} ? 'active'">
             <i class="bi bi-tags-fill"></i> Categorías
         </a>
         <a th:href="@{/proveedores}" class="sidebar-link" sec:authorize="hasAnyRole('ADMIN','ALMACEN')"
-           th:classappend="${currentPage == 'proveedores'} ? 'active'">
+            th:classappend="${currentPage == 'proveedores'} ? 'active'">
             <i class="bi bi-building"></i> Proveedores
         </a>
+            <a th:href="@{/promociones}" class="sidebar-link" sec:authorize="hasRole('ADMIN')"
+            th:classappend="${currentPage == 'promociones'} ? 'active'">
+            <i class="bi bi-tag-fill"></i> Promociones
+        </a>
         <a th:href="@{/reportes}" class="sidebar-link" sec:authorize="hasRole('ADMIN')"
-           th:classappend="${currentPage == 'reportes'} ? 'active'">
+            th:classappend="${currentPage == 'reportes'} ? 'active'">
             <i class="bi bi-bar-chart-fill"></i> Reportes
         </a>
         <a th:href="@{/usuarios}" class="sidebar-link" sec:authorize="hasRole('ADMIN')"
-           th:classappend="${currentPage == 'usuarios'} ? 'active'">
+            th:classappend="${currentPage == 'usuarios'} ? 'active'">
             <i class="bi bi-person-gear"></i> Usuarios
+        </a>
+        <a th:href="@{/reclamaciones/admin}" class="sidebar-link" sec:authorize="hasRole('ADMIN')"
+            th:classappend="${currentPage == 'reclamaciones'} ? 'active'"
+            style="position:relative;">
+            <i class="bi bi-journal-text"></i> Reclamaciones
         </a>
 
         <div class="sidebar-footer">
@@ -103,10 +112,10 @@
         <span class="topbar-title" th:text="${titulo != null ? titulo : 'Dashboard'}">Dashboard</span>
         <div class="topbar-right">
             <span class="text-muted" style="font-size:0.85rem; font-weight:500;"
-                  th:text="${#temporals.format(#temporals.createNow(), 'dd MMM yyyy')}"></span>
+                    th:text="${#temporals.format(#temporals.createNow(), 'dd MMM yyyy')}"></span>
             <a th:href="@{/ventas/nueva}" class="btn btn-primary btn-sm rounded-pill px-3"
-               sec:authorize="hasAnyRole('ADMIN','VENDEDOR')"
-               style="background-color: var(--accent-blue); border: none;">
+                sec:authorize="hasAnyRole('ADMIN','VENDEDOR')"
+                style="background-color: var(--accent-blue); border: none;">
                 <i class="bi bi-plus-lg me-1"></i>Nueva Venta
             </a>
         </div>
@@ -127,6 +136,8 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Motor fuzzy global — debe cargarse antes de los scripts de template -->
+    <script th:src="@{/js/admin-fuzzy.js}"></script>   
     <th:block th:replace="${extraScripts} ?: ~{}"></th:block>
 </body>
 

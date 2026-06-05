@@ -18,7 +18,8 @@ public class DetalleVentaResponseDTO {
     private String productoNombre;
     private String productoCodigo;
     private String productoMarca;
-    private Integer volumenMl;
+    private BigDecimal cantidadPresentacion;
+    private String unidadPresentacion;
     private Integer cantidad;
     private BigDecimal precioUnitario;
     private BigDecimal descuentoPorcentaje;

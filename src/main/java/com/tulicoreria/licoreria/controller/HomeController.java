@@ -28,23 +28,6 @@ public class HomeController {
         return "login";
     }
 
-    @GetMapping("/inicio")
-    public String inicio(Model model) {
-        // Para visualizar la portada, lo mínimo requerido por la vista son estas variables.
-        // Si no hay datos aún, la vista igualmente renderiza (con listas vacías).
-        model.addAttribute("categorias", java.util.List.of());
-        model.addAttribute("destacados", java.util.List.of());
-        return "publica/inicio";
-    }
-
-    @GetMapping("/catalogo")
-    public String catalogo(Model model) {
-        // Endpoint mínimo para que los links de la portada no fallen.
-        model.addAttribute("productos", java.util.List.of());
-        model.addAttribute("categorias", java.util.List.of());
-        return "productos/lista";
-    }
-
     @GetMapping("/error/403")
     public String accesoDenegado() {
         return "error/403";

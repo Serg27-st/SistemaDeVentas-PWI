@@ -1,7 +1,10 @@
 package com.tulicoreria.licoreria.service.impl;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,11 +12,13 @@ import com.tulicoreria.licoreria.dto.ProductoRequestDTO;
 import com.tulicoreria.licoreria.dto.ProductoResponseDTO;
 import com.tulicoreria.licoreria.model.Categoria;
 import com.tulicoreria.licoreria.model.Producto;
+import com.tulicoreria.licoreria.model.Promocion;
 import com.tulicoreria.licoreria.model.Proveedor;
 import com.tulicoreria.licoreria.repository.CategoriaRepository;
 import com.tulicoreria.licoreria.repository.ProductoRepository;
 import com.tulicoreria.licoreria.repository.ProveedorRepository;
 import com.tulicoreria.licoreria.service.ProductoService;
+import com.tulicoreria.licoreria.service.PromocionService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,12 +30,16 @@ public class ProductoServiceImpl implements ProductoService {
     private final CategoriaRepository categoriaRepository;
     private final ProveedorRepository proveedorRepository;
     private final ImagenService imagenService;
+    @Lazy private final PromocionService promocionService;
 
     @Override
     @Transactional(readOnly = true)
     public List<ProductoResponseDTO> listarTodos() {
+        Map<Long, Promocion> promoDirecta = promocionService.mapPromoDirectaActiva();
+        Map<Long, Promocion> promoVolumen = promocionService.mapPromoVolumenActiva();
         return productoRepository.findByActivoTrue().stream()
-                .map(this::toDTO).toList();
+                .map(p -> toDTOConPromo(p, promoDirecta.get(p.getId()), promoVolumen.get(p.getId())))
+                .toList();
     }
 
     @Override
@@ -90,7 +99,8 @@ public class ProductoServiceImpl implements ProductoService {
                 .descripcion(dto.getDescripcion())
                 .marca(dto.getMarca())
                 .paisOrigen(dto.getPaisOrigen())
-                .volumenMl(dto.getVolumenMl())
+                .cantidadPresentacion(dto.getCantidadPresentacion())
+                .unidadPresentacion(dto.getUnidadPresentacion())
                 .gradoAlcohol(dto.getGradoAlcohol())
                 .precioCompra(dto.getPrecioCompra())
                 .precioVenta(dto.getPrecioVenta())
@@ -121,7 +131,8 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setDescripcion(dto.getDescripcion());
         producto.setMarca(dto.getMarca());
         producto.setPaisOrigen(dto.getPaisOrigen());
-        producto.setVolumenMl(dto.getVolumenMl());
+        producto.setCantidadPresentacion(dto.getCantidadPresentacion());
+        producto.setUnidadPresentacion(dto.getUnidadPresentacion());
         producto.setGradoAlcohol(dto.getGradoAlcohol());
         producto.setPrecioCompra(dto.getPrecioCompra());
         producto.setPrecioVenta(dto.getPrecioVenta());
@@ -164,8 +175,37 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     @Transactional(readOnly = true)
     public ProductoResponseDTO toDTO(Producto p) {
+        Optional<Promocion> directa = promocionService.findPromocionActivaDirecta(p.getId());
+        Optional<Promocion> volumen = promocionService.findPromocionActivaVolumen(p.getId());
+        return toDTOConPromo(p, directa.orElse(null), volumen.orElse(null));
+    }
+
+    /** Construye el DTO con datos de promoción ya resueltos (evita N+1 en listados). */
+    private ProductoResponseDTO toDTOConPromo(Producto p, Promocion directa, Promocion volumen) {
         int stockActual = p.getStock() != null ? p.getStock() : 0;
-        int stockMin = p.getStockMinimo() != null ? p.getStockMinimo() : 0;
+        int stockMin    = p.getStockMinimo() != null ? p.getStockMinimo() : 0;
+
+        // Resolución del precio final y campos de promo
+        java.math.BigDecimal precioFinal    = p.getPrecioVenta();
+        java.math.BigDecimal precioOriginal = null;
+        String  etiquetaPromo  = null;
+        boolean tienePromocion = false;
+        Long    promocionId    = null;
+        String  tipoPromocion  = null;
+
+        if (directa != null) {
+            precioOriginal = p.getPrecioVenta();
+            precioFinal    = promocionService.calcularPrecioConDescuento(precioOriginal, directa);
+            etiquetaPromo  = directa.etiquetaCorta();
+            tienePromocion = true;
+            promocionId    = directa.getId();
+            tipoPromocion  = "DESCUENTO_DIRECTO";
+        } else if (volumen != null) {
+            etiquetaPromo  = volumen.etiquetaCorta();
+            tienePromocion = true;
+            promocionId    = volumen.getId();
+            tipoPromocion  = "VOLUMEN";
+        }
 
         return ProductoResponseDTO.builder()
                 .id(p.getId())
@@ -174,15 +214,20 @@ public class ProductoServiceImpl implements ProductoService {
                 .descripcion(p.getDescripcion())
                 .marca(p.getMarca())
                 .paisOrigen(p.getPaisOrigen())
-                .volumenMl(p.getVolumenMl())
+                .cantidadPresentacion(p.getCantidadPresentacion())
+                .unidadPresentacion(p.getUnidadPresentacion())
                 .gradoAlcohol(p.getGradoAlcohol())
                 .precioCompra(p.getPrecioCompra())
-                .precioVenta(p.getPrecioVenta())
+                .precioVenta(precioFinal)
+                .precioOriginal(precioOriginal)
+                .etiquetaPromo(etiquetaPromo)
+                .tienePromocion(tienePromocion)
+                .promocionId(promocionId)
+                .tipoPromocion(tipoPromocion)
                 .stock(stockActual)
                 .stockMinimo(stockMin)
                 .fechaVencimiento(p.getFechaVencimiento())
                 .activo(p.isActivo())
-                // 🔑 NUEVOS MAPEOS: Agregamos los identificadores requeridos para la edición
                 .categoriaId(p.getCategoria() != null ? p.getCategoria().getId() : null)
                 .proveedorId(p.getProveedor() != null ? p.getProveedor().getId() : null)
                 .categoriaNombre(p.getCategoria() != null ? p.getCategoria().getNombre() : "Sin Categoría")

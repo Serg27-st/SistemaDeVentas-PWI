@@ -1,166 +1,697 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org" th:replace="~{publica/layout :: layout(
-          titulo='Inicio | Licorería',
-          paginaActual='inicio',
-          contenido=~{::main-content},
-          estilosExtra=~{},
-          scriptsExtra=~{})}">
-
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{publica/layout :: layout(
+        titulo='Inicio | Tu Licorería',
+        paginaActual='inicio',
+        contenido=~{::main-content},
+        estilosExtra=~{::estilos},
+        scriptsExtra=~{::scripts})}">
 <head>
+  <title>Inicio</title>
+  <th:block th:fragment="estilos">
+    <style>
+      /* ── Barra de promo scroll-up ────────────────────────────── */
+      .inicio-promo-strip-wrapper {
+        overflow: hidden;
+        white-space: nowrap;
+      }
+      .inicio-promo-strip-track {
+        display: inline-flex;
+        gap: 4rem;
+        animation: ticker 28s linear infinite;
+      }
+      @keyframes ticker {
+        from { transform: translateX(0); }
+        to   { transform: translateX(-50%); }
+      }
+      .inicio-promo-strip-track:hover { animation-play-state: paused; }
+
+      /* ── Hero visual realzado ────────────────────────────────── */
+      .hero-bottle-float {
+        animation: bottleFloat 4s ease-in-out infinite;
+      }
+      @keyframes bottleFloat {
+        0%, 100% { transform: translateY(0) rotate(-1deg); }
+        50%       { transform: translateY(-14px) rotate(1deg); }
+      }
+
+      /* ── Sección heading helpers ─────────────────────────────── */
+      .section-label {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--color-gold);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 0.5rem;
+      }
+      .section-label::before {
+        content: '';
+        width: 24px;
+        height: 2px;
+        background: var(--color-gold);
+        border-radius: 2px;
+      }
+
+      /* ── Grid de categorías mejoradas ────────────────────────── */
+      .cat-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+
+      /* ── Card body uniforme ──────────────────────────────────── */
+      .card-inner-body {
+        padding: 14px 14px 16px;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        background: var(--color-surface);
+      }
+
+      /* ── Combo card ──────────────────────────────────────────── */
+      .combo-card {
+        background: var(--color-surface);
+        border-radius: var(--radius);
+        border: 1px solid var(--color-border);
+        overflow: hidden;
+        transition: transform var(--t), box-shadow var(--t), border-color var(--t);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      .combo-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-card-hover);
+        border-color: rgba(255,193,7,0.2);
+      }
+      .combo-img-area {
+        height: 160px;
+        background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .combo-badge-pill {
+        position: absolute;
+        top: 10px; left: 10px;
+        background: var(--color-gold);
+        color: var(--color-gold-text);
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 3px 12px;
+        border-radius: 50px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+      }
+      .combo-save-pill {
+        position: absolute;
+        top: 10px; right: 10px;
+        background: var(--color-bg-public);
+        color: var(--color-text-muted);
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 50px;
+        text-decoration: line-through;
+      }
+
+      /* ── CTA Banner ──────────────────────────────────────────── */
+      .cta-section {
+        background: var(--color-nav-bg);   /* #1a2536 — spec */
+        position: relative;
+        overflow: hidden;
+      }
+      .cta-section::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at 70% 50%, rgba(255,193,7,0.08) 0%, transparent 65%);
+        pointer-events: none;
+      }
+
+      /* ── Trust badges ────────────────────────────────────────── */
+      .trust-badge {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        text-align: center;
+      }
+      .trust-badge-icon {
+        width: 52px; height: 52px;
+        border-radius: 12px;
+        background: rgba(255,193,7,0.10);
+        border: 1px solid rgba(255,193,7,0.18);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+        color: var(--color-gold);
+        transition: transform var(--t), background var(--t);
+      }
+      .trust-badge:hover .trust-badge-icon {
+        transform: scale(1.1) rotate(-4deg);
+        background: rgba(255,193,7,0.18);
+      }
+      .trust-badge-title { font-weight: 700; font-size: 0.845rem; color: var(--color-text-primary); }
+      .trust-badge-sub   { font-size: 0.75rem; color: var(--color-text-muted); }
+
+      /* ── Promo section heading ────────────────────────────────── */
+      .section-action-link {
+        font-size: 0.83rem;
+        font-weight: 700;
+        color: var(--color-gold);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: gap var(--t-fast), opacity var(--t-fast);
+      }
+      .section-action-link:hover { color: var(--color-gold-hover); gap: 8px; }
+
+      /* ── Responsive grid cards ───────────────────────────────── */
+      @media (max-width: 480px) {
+        .combo-img-area { height: 130px; }
+      }
+    </style>
+  </th:block>
 </head>
-
 <body>
+<th:block th:fragment="main-content">
 
-    <th:block th:fragment="main-content">
+  <!-- ══════════════════════════════════════════════════════════════
+       BARRA DE ANUNCIOS (Urgencia / Promoción activa)
+       UX: Ticker horizontal que comunica valor antes del hero
+       ══════════════════════════════════════════════════════════════ -->
+  <div class="promo-strip inicio-promo-strip-wrapper">
+    <div class="inicio-promo-strip-track">
+      <!-- Se duplica para el efecto de loop continuo -->
+      <span th:each="i : ${#numbers.sequence(1,2)}">
+        <span><i class="bi bi-stars me-1"></i>Envío gratuito en pedidos con recojo en tienda</span>
+        <span class="mx-4">·</span>
+        <span><i class="bi bi-clock me-1"></i>Entrega en 30–60 min · Lima Metropolitana</span>
+        <span class="mx-4">·</span>
+        <span><i class="bi bi-shield-check me-1"></i>100% original · Garantía de autenticidad</span>
+        <span class="mx-4">·</span>
+        <span><i class="bi bi-tag-fill me-1"></i>Hasta 20% off en licores seleccionados</span>
+        <span class="mx-4">·</span>
+      </span>
+    </div>
+  </div>
 
-        <section class="hero-section">
-            <div class="hero-overlay"></div>
-            <div class="container position-relative">
-                <div class="row align-items-center min-vh-60">
-                    <div class="col-lg-6 text-white py-5">
-                        <span class="badge bg-warning text-dark mb-3 px-3 py-2 rounded-pill">
-                            🥃 Nueva temporada
-                        </span>
-                        <h1 class="hero-title">
-                            Los mejores licores<br />
-                            <span class="text-warning">para cada ocasión</span>
-                        </h1>
-                        <p class="hero-subtitle text-white-50">
-                            Variedad, calidad y los mejores precios del mercado.
-                            Delivery rápido a todo Lima.
-                        </p>
-                        <div class="d-flex gap-3 flex-wrap mt-4">
-                            <a th:href="@{/catalogo}" class="btn btn-warning btn-lg px-4 fw-semibold">
-                                <i class="bi bi-grid me-2"></i>Ver catálogo
-                            </a>
-                            <a href="#destacados" class="btn btn-outline-light btn-lg px-4">
-                                Productos destacados
-                            </a>
-                        </div>
-                        <div class="d-flex gap-4 mt-5 flex-wrap">
-                            <div class="trust-badge">
-                                <i class="bi bi-truck text-warning fs-4"></i>
-                                <span>Delivery 100%</span>
-                            </div>
-                            <div class="trust-badge">
-                                <i class="bi bi-shield-check text-warning fs-4"></i>
-                                <span>Productos originales</span>
-                            </div>
-                            <div class="trust-badge">
-                                <i class="bi bi-credit-card text-warning fs-4"></i>
-                                <span>Pago seguro</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+  <!-- ══════════════════════════════════════════════════════════════
+       HERO
+       UX: CTA primario claro, stats de prueba social, imagen flotante
+       ══════════════════════════════════════════════════════════════ -->
+  <section class="hero-section" id="inicio-hero">
+    <div class="container position-relative" style="z-index:1;">
+      <div class="row align-items-center gy-5">
+
+        <!-- Texto -->
+        <div class="col-lg-6 col-xl-5 py-4 py-lg-5">
+
+          <div class="hero-eyebrow">
+            <i class="bi bi-stars"></i> Colección 2026 — Licores premium
+          </div>
+
+          <h1 class="hero-title">
+            Los mejores<br>
+            licores para<br>
+            <span class="hero-accent">cada ocasión</span>
+          </h1>
+
+          <p class="hero-desc">
+            Whiskies, rones, piscos, vinos y más. Entrega rápida en Lima,
+            precios directos y siempre con stock disponible.
+          </p>
+
+          <div class="hero-cta d-flex flex-wrap gap-3">
+            <a th:href="@{/catalogo}" class="btn-hero-main">
+              <i class="bi bi-grid-3x3-gap-fill"></i> Ver catálogo completo
+            </a>
+            <a th:href="@{/combos}" class="btn-hero-outline">
+              <i class="bi bi-box2-heart-fill"></i> Ver Combos &amp; Packs
+            </a>
+          </div>
+
+          <div class="hero-stats">
+            <div>
+              <span class="hero-stat-num">500+</span>
+              <span class="hero-stat-label">Productos</span>
             </div>
-        </section>
-
-        <section class="py-4 bg-dark">
-            <div class="container">
-                <div class="d-flex gap-2 overflow-auto pb-1 categorias-scroll">
-                    <a th:href="@{/catalogo}" class="btn btn-outline-warning btn-sm rounded-pill px-3 flex-shrink-0">
-                        <i class="bi bi-grid me-1"></i>Todos
-                    </a>
-                    <a th:each="cat : ${categorias}" th:href="@{/catalogo(categoria=${cat.id})}" th:text="${cat.nombre}"
-                        class="btn btn-outline-secondary btn-sm rounded-pill px-3 flex-shrink-0 text-white">
-                    </a>
-                </div>
+            <div>
+              <span class="hero-stat-num">15+</span>
+              <span class="hero-stat-label">Marcas premium</span>
             </div>
-        </section>
-
-        <section id="destacados" class="py-5">
-            <div class="container">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                        <h2 class="section-title">Productos destacados</h2>
-                        <p class="text-muted mb-0">Los más vendidos del mes</p>
-                    </div>
-                    <a th:href="@{/catalogo}" class="btn btn-outline-dark btn-sm">
-                        Ver todos <i class="bi bi-arrow-right ms-1"></i>
-                    </a>
-                </div>
-
-                <div class="row g-3">
-                    <div th:each="producto : ${destacados}" class="col-6 col-md-4 col-lg-3">
-                        <div class="card card-producto h-100 border-0 shadow-sm">
-                            <span th:if="${producto.stockBajo and !producto.sinStock}"
-                                class="badge bg-warning text-dark position-absolute top-0 start-0 m-2">
-                                Últimas unidades
-                            </span>
-                            <span th:if="${producto.sinStock}"
-                                class="badge bg-danger position-absolute top-0 start-0 m-2">
-                                Agotado
-                            </span>
-
-                            <div class="card-img-container">
-                                <img th:src="${producto.urlImagen != null and !producto.urlImagen.empty} ? @{${producto.urlImagen}} : @{/images/producto-default.png}"
-                                    th:alt="${producto.nombre}" th:data-fallback="@{/images/producto-default.png}"
-                                    onerror="this.src=this.getAttribute('data-fallback')"
-                                    class="card-img-top producto-img" />
-                            </div>
-
-                            <div class="card-body d-flex flex-column p-3">
-                                <small class="text-muted text-uppercase fw-semibold"
-                                    th:text="${producto.categoriaNombre}">Categoría</small>
-                                <h6 class="card-title mt-1 mb-1 fw-semibold" th:text="${producto.nombre}">Nombre</h6>
-
-                                <small class="text-muted mb-2" th:text="|${producto.marca} · ${producto.volumenMl}ml|">
-                                </small>
-
-                                <div class="mt-auto">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="precio-producto"
-                                            th:text="'S/. ' + ${#numbers.formatDecimal(producto.precioVenta, 1, 2)}">
-                                        </span>
-                                        <a th:href="@{/producto/{id}(id=${producto.id})}"
-                                            th:classappend="${producto.sinStock} ? 'disabled'"
-                                            class="btn btn-sm btn-warning">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div th:if="${#lists.isEmpty(destacados)}" class="col-12 text-center py-5">
-                        <i class="bi bi-box-seam fs-1 text-muted"></i>
-                        <p class="text-muted mt-2">No hay productos disponibles aún</p>
-                    </div>
-                </div>
+            <div>
+              <span class="hero-stat-num">≥18</span>
+              <span class="hero-stat-label">Solo mayores</span>
             </div>
-        </section>
+          </div>
 
-        <section class="banner-promo py-5">
-            <div class="container">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <div class="promo-card text-center p-4 rounded-3">
-                            <i class="bi bi-truck fs-1 text-warning mb-3"></i>
-                            <h6 class="fw-bold">Delivery rápido</h6>
-                            <p class="small text-muted mb-0">Entrega en menos de 2 horas en Lima</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="promo-card text-center p-4 rounded-3">
-                            <i class="bi bi-award fs-1 text-warning mb-3"></i>
-                            <h6 class="fw-bold">Productos originales</h6>
-                            <p class="small text-muted mb-0">100% garantizados y sellados de fábrica</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="promo-card text-center p-4 rounded-3">
-                            <i class="bi bi-headset fs-1 text-warning mb-3"></i>
-                            <h6 class="fw-bold">Atención 24/7</h6>
-                            <p class="small text-muted mb-0">Soporte por WhatsApp en todo momento</p>
-                        </div>
-                    </div>
-                </div>
+        </div>
+
+        <!-- Imagen decorativa (si existe) -->
+        <div class="col-lg-6 col-xl-7 d-none d-lg-flex justify-content-center align-items-center">
+          <img th:src="@{/images/hero-bottle.png}"
+               th:onerror="this.parentElement.style.display='none'"
+               alt="Licores premium Tu Licorería"
+               class="hero-bottle-float"
+               style="max-height:480px;filter:drop-shadow(0 24px 60px rgba(255,193,7,.18));"/>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Indicador de scroll -->
+    <a href="#trust-strip"
+       class="position-absolute d-none d-md-flex align-items-center gap-2"
+       style="bottom:28px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.35);font-size:.74rem;text-decoration:none;letter-spacing:1px;animation:hero-fade-up .65s .7s both;"
+       aria-label="Scroll hacia abajo">
+      <i class="bi bi-chevron-down" style="font-size:.9rem;animation:bounce 1.6s ease-in-out infinite;"></i>
+      Explorar
+    </a>
+  </section>
+
+  <style>
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(5px)} }
+  </style>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       TRUST STRIP — Beneficios de compra
+       UX: Reafirmar propuesta de valor justo después del hero
+       ══════════════════════════════════════════════════════════════ -->
+  <section class="strip-feature" id="trust-strip">
+    <div class="container">
+      <div class="row g-0">
+
+        <div class="col-md-3 col-6 px-3 px-lg-4 border-end">
+          <div class="feature-item">
+            <div class="feature-icon-wrap"><i class="bi bi-truck"></i></div>
+            <div>
+              <p class="feature-title">Envío rápido</p>
+              <p class="feature-sub">30–60 min en Lima</p>
             </div>
-        </section>
+          </div>
+        </div>
 
-    </th:block>
+        <div class="col-md-3 col-6 px-3 px-lg-4 border-end">
+          <div class="feature-item">
+            <div class="feature-icon-wrap"><i class="bi bi-shield-check"></i></div>
+            <div>
+              <p class="feature-title">100% originales</p>
+              <p class="feature-sub">Garantía de autenticidad</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3 col-6 px-3 px-lg-4 border-end">
+          <div class="feature-item">
+            <div class="feature-icon-wrap"><i class="bi bi-credit-card"></i></div>
+            <div>
+              <p class="feature-title">Pagos seguros</p>
+              <p class="feature-sub">Yape, tarjeta, efectivo</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3 col-6 px-3 px-lg-4">
+          <div class="feature-item">
+            <div class="feature-icon-wrap"><i class="bi bi-headset"></i></div>
+            <div>
+              <p class="feature-title">Atención 7/7</p>
+              <p class="feature-sub">9 am a 10 pm</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       CATEGORÍAS
+       UX: Navegación rápida por tipo de licor — pills accesibles
+       ══════════════════════════════════════════════════════════════ -->
+  <section class="py-5 bg-white" th:if="${categorias != null and !categorias.isEmpty()}" id="categorias">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+          <span class="section-label">Explorar</span>
+          <h2 class="section-heading mb-0">Categorías</h2>
+        </div>
+        <a th:href="@{/catalogo}" class="section-action-link">
+          Ver todo <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+
+      <div class="cat-grid">
+        <a th:href="@{/catalogo}" class="cat-pill active">
+          <i class="bi bi-grid-fill"></i> Todos
+        </a>
+        <a th:each="cat : ${categorias}"
+           th:href="@{/catalogo(categoria=${cat.id})}"
+           th:text="${cat.nombre}"
+           class="cat-pill">Categoría</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       PRODUCTOS DESTACADOS
+       UX FIX: 2-line clamp en nombre + overlay Quick-Add al carrito
+             sin redirigir al detalle → reduce fricción y aumenta conversión
+       ══════════════════════════════════════════════════════════════ -->
+  <section class="py-5" style="background:var(--color-bg-public);" id="destacados">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+          <span class="section-label">Selección del mes</span>
+          <h2 class="section-heading mb-0">Productos destacados</h2>
+        </div>
+        <a th:href="@{/catalogo}" class="section-action-link">
+          Ver todos <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+
+      <!-- Grid de productos -->
+      <div class="row g-3" th:if="${productosDestacados != null and !productosDestacados.isEmpty()}">
+        <div th:each="p : ${productosDestacados}" class="col-6 col-md-4 col-lg-3">
+          <div class="card-producto h-100 shadow-sm d-flex flex-column">
+
+            <!-- ── Badges de estado ── -->
+            <span th:if="${p.sinStock}"
+                  class="producto-badge badge-agotado">Agotado</span>
+            <span th:if="${p.stockBajo and !p.sinStock}"
+                  class="producto-badge badge-ultimas">Últimas unidades</span>
+
+            <!-- Promo badge — descuento directo -->
+            <span th:if="${p.tienePromocion and p.etiquetaPromo != null and p.tipoPromocion == 'DESCUENTO_DIRECTO'}"
+                  class="producto-badge"
+                  th:text="${p.etiquetaPromo}"
+                  style="background:var(--color-gold);color:var(--color-gold-text);font-weight:800;right:10px;left:auto;top:10px;">
+            </span>
+            <!-- Promo badge — volumen -->
+            <span th:if="${p.tienePromocion and p.etiquetaPromo != null and p.tipoPromocion == 'VOLUMEN'}"
+                  class="producto-badge"
+                  th:text="${p.etiquetaPromo}"
+                  style="background:#2563eb;color:#fff;font-weight:800;right:10px;left:auto;top:10px;">
+            </span>
+
+            <!-- ── Imagen + Quick-Add overlay ── -->
+            <div class="card-img-container" style="height:185px;">
+              <img th:src="${p.urlImagen != null and !p.urlImagen.empty} ? @{${p.urlImagen}} : @{/images/producto-default.png}"
+                   th:alt="${p.nombre}"
+                   th:data-fallback="@{/images/producto-default.png}"
+                   onerror="this.src=this.getAttribute('data-fallback')"
+                   class="producto-img img-fluid p-3"
+                   style="max-height:185px;"/>
+
+              <!-- Quick-Add: aparece en hover; para agotados muestra "Agotado" -->
+              <div th:if="${!p.sinStock}" class="card-quick-overlay">
+                <form th:action="@{/carrito/agregar}" method="post">
+                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                  <input type="hidden" name="productoId" th:value="${p.id}"/>
+                  <input type="hidden" name="cantidad" value="1"/>
+                  <button type="submit" class="btn-agregar-card">
+                    <i class="bi bi-cart-plus"></i> Agregar al carrito
+                  </button>
+                </form>
+              </div>
+              <div th:if="${p.sinStock}" class="card-quick-overlay agotado-overlay">
+                <span class="agotado-overlay-label">Sin stock</span>
+              </div>
+
+            </div>
+
+            <!-- ── Cuerpo de la tarjeta ── -->
+            <div class="card-inner-body">
+              <span class="card-cat-label" th:text="${p.categoriaNombre}">Categoría</span>
+
+              <!-- Nombre — 2 líneas máximo, altura fija → grid siempre alineado -->
+              <h6 class="card-nombre" th:text="${p.nombre}">Nombre del Producto</h6>
+
+              <p class="card-marca-vol mb-0"
+   th:text="|${p.marca} · ${(p.cantidadPresentacion != null ? p.cantidadPresentacion + ' ' + p.unidadPresentacion : '-')}|">
+   Marca · Presentación
+</p>
+
+              <!-- Precio + botón Ver detalle -->
+              <div class="mt-auto pt-3 d-flex justify-content-between align-items-end gap-2">
+                <div>
+                  <!-- Precio original tachado (solo con descuento activo) -->
+                  <del th:if="${p.precioOriginal != null}"
+                       class="card-precio-original"
+                       th:text="'S/. ' + ${#numbers.formatDecimal(p.precioOriginal,1,2)}">
+                  </del>
+
+                  <!-- Precio final: gold si es oferta, oscuro si es normal -->
+                  <span th:class="${p.precioOriginal != null} ? 'card-precio precio-oferta' : 'card-precio'"
+                        th:text="'S/. ' + ${#numbers.formatDecimal(p.precioVenta,1,2)}">
+                    S/. 0.00
+                  </span>
+
+                  <!-- Badge de ahorro -->
+                  <span th:if="${p.precioOriginal != null}"
+                        class="badge-ahorro d-inline-flex mt-1"
+                        th:with="ahorro=${p.precioOriginal - p.precioVenta}"
+                        th:text="'Ahorras S/. ' + ${#numbers.formatDecimal(ahorro,1,2)}">
+                  </span>
+                </div>
+
+                <a th:href="@{/producto/{id}(id=${p.id})}"
+                   class="btn-ver flex-shrink-0"
+                   title="Ver detalle del producto">Ver</a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado vacío -->
+      <div th:if="${productosDestacados == null or productosDestacados.isEmpty()}"
+           class="text-center py-5" style="color:var(--color-text-muted);">
+        <i class="bi bi-box-seam d-block mb-3" style="font-size:3.5rem;opacity:.35;"></i>
+        <p class="fw-semibold mb-1">No hay productos disponibles en este momento.</p>
+        <p class="small mb-4">Vuelve pronto, actualizamos el stock constantemente.</p>
+        <a th:href="@{/catalogo}" class="btn-ver px-4 py-2">Explorar catálogo</a>
+      </div>
+
+      <!-- CTA hacia catálogo completo (mobile friendly) -->
+      <div class="text-center mt-5 d-md-none">
+        <a th:href="@{/catalogo}" class="btn-hero-main">
+          <i class="bi bi-grid-3x3-gap-fill"></i> Ver todos los productos
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       BANNER PROMOCIONAL CENTRAL
+       UX: Rompe el scroll y genera urgencia de compra
+       ══════════════════════════════════════════════════════════════ -->
+  <section style="background:var(--color-nav-bg);padding:2rem 0;" th:if="${combosDestacados != null and !combosDestacados.isEmpty()}">
+    <div class="container">
+      <div class="row align-items-center g-3">
+        <div class="col-md-8">
+          <div style="color:rgba(255,255,255,.55);font-size:.72rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:.4rem;">
+            Oferta especial
+          </div>
+          <div style="color:#fff;font-family:var(--font-display);font-size:clamp(1.3rem,2.5vw,1.9rem);font-weight:700;line-height:1.2;">
+            🎉 Lleva más y paga menos con nuestros <span style="color:var(--color-gold);">Combos &amp; Packs</span>
+          </div>
+        </div>
+        <div class="col-md-4 text-md-end">
+          <a th:href="@{/combos}" class="btn-hero-main d-inline-flex">
+            <i class="bi bi-box2-heart-fill"></i> Ver todos los combos
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       COMBOS & PACKS
+       UX FIX: Botón "Agregar" ahora usa el gold primario (--color-gold)
+               en lugar del morado que no pertenece al Design System
+       ══════════════════════════════════════════════════════════════ -->
+  <section class="py-5 bg-white" th:if="${combosDestacados != null and !combosDestacados.isEmpty()}" id="combos">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+          <span class="section-label">Ahorra más</span>
+          <h2 class="section-heading mb-0">Combos &amp; Packs</h2>
+        </div>
+        <a th:href="@{/combos}" class="section-action-link">
+          Ver todos <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+
+      <div class="row g-3">
+        <div th:each="combo : ${combosDestacados}" class="col-sm-6 col-lg-3">
+          <div class="combo-card">
+
+            <!-- Imagen del combo -->
+            <div class="combo-img-area">
+              <span class="combo-badge-pill">
+                <i class="bi bi-box2-heart me-1"></i>Pack
+              </span>
+              <!-- Badge precio tachado -->
+              <span th:if="${combo.items != null and !combo.items.isEmpty()}"
+                    class="combo-save-pill"
+                    th:with="totalNormal=${combo.items.stream().mapToDouble(i -> i.cantidad * i.producto.precioVenta.doubleValue()).sum()}"
+                    th:text="'S/. ' + ${#numbers.formatDecimal(totalNormal,1,2)}">
+              </span>
+
+              <img th:if="${combo.imagenCombo != null and !combo.imagenCombo.empty}"
+                   th:src="@{'/images/' + ${combo.imagenCombo}}"
+                   th:alt="${combo.nombre}"
+                   th:data-fallback="@{/images/producto-default.png}"
+                   onerror="this.src=this.getAttribute('data-fallback')"
+                   style="max-height:130px;object-fit:contain;transition:transform var(--t);"/>
+              <img th:unless="${combo.imagenCombo != null and !combo.imagenCombo.empty}"
+                   th:src="@{/images/producto-default.png}"
+                   th:alt="${combo.nombre}"
+                   style="max-height:130px;object-fit:contain;opacity:.4;"/>
+            </div>
+
+            <!-- Cuerpo del combo -->
+            <div class="card-inner-body">
+              <h6 class="fw-bold mb-1"
+                  style="font-size:.9rem;color:var(--color-text-primary);"
+                  th:text="${combo.nombre}">Pack</h6>
+
+              <!-- Ítems del combo en texto compacto -->
+              <p class="mb-3"
+                 style="font-size:.76rem;color:var(--color-text-muted);line-height:1.55;"
+                 th:if="${combo.items != null and !combo.items.isEmpty()}"
+                 th:text="${#strings.listJoin(combo.items.![cantidad + '× ' + producto.nombre], ' + ')}">
+                Ítems del combo
+              </p>
+
+              <!-- Precio combo vs precio normal -->
+              <div class="mt-auto d-flex align-items-baseline gap-2 mb-3">
+                <span style="font-size:1.25rem;font-weight:800;color:var(--color-gold);"
+                      th:text="'S/. ' + ${#numbers.formatDecimal(combo.precioCombo,1,2)}">S/. 0</span>
+                <span th:if="${combo.items != null and !combo.items.isEmpty()}"
+                      style="font-size:.78rem;color:var(--color-text-muted);text-decoration:line-through;"
+                      th:with="totalNormal=${combo.items.stream().mapToDouble(i -> i.cantidad * i.producto.precioVenta.doubleValue()).sum()}"
+                      th:text="'S/. ' + ${#numbers.formatDecimal(totalNormal,1,2)}">
+                </span>
+              </div>
+
+              <!-- ✅ UX FIX: Botón gold en lugar de morado → acción primaria de la marca -->
+              <form th:action="@{/carrito/agregar-combo}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <input type="hidden" name="comboId" th:value="${combo.id}"/>
+                <input type="hidden" name="cantidad" value="1"/>
+                <button type="submit" class="btn-combo-agregar">
+                  <i class="bi bi-bag-plus"></i> Agregar al carrito
+                </button>
+              </form>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       TRUST BADGES SECUNDARIOS
+       UX: Aporta confianza antes del footer (social proof extra)
+       ══════════════════════════════════════════════════════════════ -->
+  <section style="background:var(--color-bg-public);padding:3rem 0;">
+    <div class="container">
+      <div class="row g-4 justify-content-center text-center">
+        <div class="col-6 col-md-3">
+          <div class="trust-badge">
+            <div class="trust-badge-icon"><i class="bi bi-award-fill"></i></div>
+            <span class="trust-badge-title">Calidad certificada</span>
+            <span class="trust-badge-sub">Solo marcas reconocidas</span>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="trust-badge">
+            <div class="trust-badge-icon"><i class="bi bi-box-seam-fill"></i></div>
+            <span class="trust-badge-title">+500 productos</span>
+            <span class="trust-badge-sub">Stock siempre actualizado</span>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="trust-badge">
+            <div class="trust-badge-icon"><i class="bi bi-lock-fill"></i></div>
+            <span class="trust-badge-title">Pago seguro</span>
+            <span class="trust-badge-sub">Cifrado SSL · Culqi PCI DSS</span>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="trust-badge">
+            <div class="trust-badge-icon"><i class="bi bi-person-check-fill"></i></div>
+            <span class="trust-badge-title">Mayores de 18</span>
+            <span class="trust-badge-sub">Venta responsable de alcohol</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       CTA FINAL — WhatsApp
+       UX FIX: Color corregido a #1a2536 (spec) en lugar de #0d0d16
+       ══════════════════════════════════════════════════════════════ -->
+  <section class="cta-section py-5">
+    <div class="container text-center py-3 position-relative" style="z-index:1;">
+      <div class="mb-2" style="font-size:.7rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.45);">
+        ¿Necesitas ayuda?
+      </div>
+      <h2 style="font-family:var(--font-display);font-size:clamp(1.7rem,3vw,2.4rem);font-weight:700;color:#fff;margin-bottom:.75rem;">
+        Encuentra el licor perfecto
+        <span style="color:var(--color-gold);">para tu evento</span>
+      </h2>
+      <p style="color:rgba(255,255,255,.55);max-width:440px;margin:0 auto 2rem;font-size:.97rem;line-height:1.75;">
+        Escríbenos por WhatsApp y te asesoramos sin costo. También atendemos pedidos especiales y eventos.
+      </p>
+      <div class="d-flex gap-3 flex-wrap justify-content-center">
+        <a href="https://wa.me/51960566897?text=Hola,%20necesito%20ayuda%20para%20elegir%20un%20licor"
+           target="_blank" rel="noopener noreferrer"
+           class="btn-hero-main">
+          <i class="bi bi-whatsapp"></i> Contactar por WhatsApp
+        </a>
+        <a th:href="@{/catalogo}" class="btn-hero-outline">
+          <i class="bi bi-grid-3x3-gap-fill"></i> Ir al catálogo
+        </a>
+      </div>
+
+      <div class="d-flex justify-content-center gap-4 mt-4"
+           style="font-size:.76rem;color:rgba(255,255,255,.38);">
+        <span><i class="bi bi-clock me-1"></i>Lun–Dom 9 am–10 pm</span>
+        <span><i class="bi bi-telephone me-1"></i>+51 960 566 897</span>
+        <span><i class="bi bi-envelope me-1"></i>info@licoreria.com</span>
+      </div>
+    </div>
+  </section>
+
+</th:block>
+
+<th:block th:fragment="scripts">
+  <script>
+    /* Navbar scroll effect — ya con la variable correcta #1a2536 */
+    window.addEventListener('scroll', () => {
+      const nav = document.getElementById('navbar-publica');
+      if (nav) nav.classList.toggle('navbar-scrolled', window.scrollY > 50);
+    }, { passive: true });
+
+    /* Hover en combos — zoom imagen */
+    document.querySelectorAll('.combo-card').forEach(card => {
+      const img = card.querySelector('.combo-img-area img');
+      if (!img) return;
+      card.addEventListener('mouseenter', () => img.style.transform = 'scale(1.06)');
+      card.addEventListener('mouseleave', () => img.style.transform = '');
+    });
+  </script>
+</th:block>
 </body>
-
 </html>

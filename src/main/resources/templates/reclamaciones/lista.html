@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/layout :: layout(
+          titulo='Libro de Reclamaciones',
+          currentPage='reclamaciones',
+          content=~{::main-content},
+          extraHead=~{},
+          extraScripts=~{::scripts})}">
+<head><title>Reclamaciones</title></head>
+<body>
+<th:block th:fragment="main-content">
+
+  <!-- Cabecera -->
+  <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+    <div>
+      <h4 class="page-title mb-1">Libro de Reclamaciones</h4>
+      <p class="text-muted mb-0 small">Gestiona las quejas y reclamos de clientes</p>
+    </div>
+    <a th:href="@{/reclamaciones}" target="_blank" class="btn btn-outline-warning btn-sm fw-semibold">
+      <i class="bi bi-box-arrow-up-right me-1"></i>Ver formulario público
+    </a>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon bg-primary-soft">
+          <i class="bi bi-journal-text text-primary"></i>
+        </div>
+        <div>
+          <div class="stat-value" th:text="${#lists.size(reclamaciones)}">0</div>
+          <div class="stat-label">Total registros</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon bg-warning-soft">
+          <i class="bi bi-hourglass-split text-warning"></i>
+        </div>
+        <div>
+          <div class="stat-value" th:text="${pendientes}">0</div>
+          <div class="stat-label">Pendientes</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon bg-success-soft">
+          <i class="bi bi-check2-circle text-success"></i>
+        </div>
+        <div>
+          <div class="stat-value"
+               th:text="${reclamaciones != null ? reclamaciones.?[estado == 'ATENDIDO'].size() : 0}">0</div>
+          <div class="stat-label">Atendidas</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon bg-danger-soft">
+          <i class="bi bi-exclamation-triangle text-danger"></i>
+        </div>
+        <div>
+          <div class="stat-value"
+               th:text="${reclamaciones != null ? reclamaciones.?[tipoReclamo == 'RECLAMO'].size() : 0}">0</div>
+          <div class="stat-label">Reclamos</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-3">
+      <div class="row g-2 align-items-center">
+        <div class="col-md-4">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="bi bi-search text-muted"></i>
+            </span>
+            <input type="text" id="buscador" class="form-control border-start-0"
+                   placeholder="Nombre, email o producto..." />
+          </div>
+        </div>
+        <div class="col-md-2">
+          <select id="filtroTipo" class="form-select form-select-sm">
+            <option value="">Todos los tipos</option>
+            <option value="QUEJA">Queja</option>
+            <option value="RECLAMO">Reclamo</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select id="filtroEstado" class="form-select form-select-sm">
+            <option value="">Todos los estados</option>
+            <option value="PENDIENTE">Pendiente</option>
+            <option value="ATENDIDO">Atendido</option>
+          </select>
+        </div>
+        <div class="col-md-1">
+          <button class="btn btn-outline-secondary btn-sm w-100" onclick="limpiarFiltros()">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="tablaReclamos">
+          <thead class="table-dark">
+            <tr>
+              <th class="ps-4">#</th>
+              <th>Cliente</th>
+              <th>Tipo</th>
+              <th>Producto</th>
+              <th>Fecha</th>
+              <th class="text-center">Estado</th>
+              <th class="text-center pe-4">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="r : ${reclamaciones}"
+                th:data-nombre="${#strings.toLowerCase(r.nombre + ' ' + r.apellido)}"
+                th:data-email="${#strings.toLowerCase(r.email)}"
+                th:data-producto="${r.productoAfectado != null ? #strings.toLowerCase(r.productoAfectado) : ''}"
+                th:data-tipo="${r.tipoReclamo}"
+                th:data-estado="${r.estado}">
+
+              <!-- # -->
+              <td class="ps-4 fw-semibold text-muted small" th:text="'#' + ${r.id}"></td>
+
+              <!-- Cliente -->
+              <td>
+                <div class="fw-semibold" th:text="${r.nombre + ' ' + r.apellido}"></div>
+                <small class="text-muted d-block" th:text="${r.email}"></small>
+                <small class="text-muted" th:if="${r.telefono != null and !#strings.isEmpty(r.telefono)}"
+                       th:text="${r.telefono}"></small>
+              </td>
+
+              <!-- Tipo -->
+              <td>
+                <span th:switch="${r.tipoReclamo}">
+                  <span th:case="'QUEJA'" class="badge rounded-pill"
+                        style="background:rgba(99,102,241,.12);color:#4f46e5;">
+                    <i class="bi bi-emoji-frown me-1"></i>Queja
+                  </span>
+                  <span th:case="'RECLAMO'" class="badge rounded-pill"
+                        style="background:rgba(220,53,69,.1);color:#dc3545;">
+                    <i class="bi bi-exclamation-triangle me-1"></i>Reclamo
+                  </span>
+                </span>
+              </td>
+
+              <!-- Producto -->
+              <td>
+                <span th:if="${r.productoAfectado != null and !#strings.isEmpty(r.productoAfectado)}"
+                      class="small" th:text="${r.productoAfectado}"></span>
+                <span th:unless="${r.productoAfectado != null and !#strings.isEmpty(r.productoAfectado)}"
+                      class="text-muted small">—</span>
+              </td>
+
+              <!-- Fecha -->
+              <td>
+                <span class="small"
+                      th:text="${#temporals.format(r.fechaRegistro,'dd/MM/yyyy')}"></span>
+                <small class="text-muted d-block"
+                       th:text="${#temporals.format(r.fechaRegistro,'HH:mm')}"></small>
+              </td>
+
+              <!-- Estado -->
+              <td class="text-center">
+                <span th:switch="${r.estado}">
+                  <span th:case="'PENDIENTE'" class="badge bg-warning text-dark">
+                    <i class="bi bi-hourglass-split me-1"></i>Pendiente
+                  </span>
+                  <span th:case="'ATENDIDO'" class="badge bg-success">
+                    <i class="bi bi-check2-circle me-1"></i>Atendido
+                  </span>
+                </span>
+              </td>
+
+              <!-- Acción -->
+              <td class="text-center pe-4">
+                <div class="d-flex gap-1 justify-content-center">
+
+                  <!-- Ver descripción -->
+                  <button type="button" class="btn btn-sm btn-outline-secondary"
+                          title="Ver descripción"
+                          th:data-desc="${r.descripcion}"
+                          th:data-nombre="${r.nombre + ' ' + r.apellido}"
+                          th:data-tipo="${r.tipoReclamo}"
+                          onclick="verDetalle(this)">
+                    <i class="bi bi-eye"></i>
+                  </button>
+
+                  <!-- Marcar como atendido -->
+                  <form th:if="${r.estado == 'PENDIENTE'}"
+                        th:action="@{/reclamaciones/{id}/atender(id=${r.id})}"
+                        method="post" class="d-inline"
+                        onsubmit="return confirm('¿Marcar esta reclamación como atendida?')">
+                    <button type="submit" class="btn btn-sm btn-success" title="Marcar como atendida">
+                      <i class="bi bi-check2-circle"></i>
+                    </button>
+                  </form>
+
+                  <span th:if="${r.estado == 'ATENDIDO'}" class="btn btn-sm btn-success disabled" aria-disabled="true">
+                    <i class="bi bi-check2-all"></i>
+                  </span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Sin resultados de filtro -->
+            <tr id="filaSinResultados" style="display:none;">
+              <td colspan="7" class="text-center py-5 text-muted">
+                <i class="bi bi-search fs-2 d-block mb-2 text-secondary"></i>
+                No se encontraron reclamaciones con los filtros aplicados.
+              </td>
+            </tr>
+
+            <!-- Tabla vacía -->
+            <tr th:if="${#lists.isEmpty(reclamaciones)}">
+              <td colspan="7" class="text-center py-5 text-muted">
+                <i class="bi bi-journal-check fs-2 d-block mb-2 text-secondary"></i>
+                No hay reclamaciones registradas. ¡Todo en orden!
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal descripción -->
+  <div class="modal fade" id="modalDetalle" tabindex="-1" aria-labelledby="modalDetalleLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header border-bottom" style="background:#0f0f1c;">
+          <h6 class="modal-title text-white" id="modalDetalleLabel">
+            <i class="bi bi-journal-text me-2" style="color:#c9a227;"></i>
+            <span id="modalTitulo"></span>
+          </h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <p class="mb-0" id="modalDesc" style="white-space:pre-wrap;line-height:1.75;"></p>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</th:block>
+
+<th:block th:fragment="scripts">
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // ── Filtros con fuzzy ────────────────────────────────────────
+      const buscador   = document.getElementById('buscador');
+      const filtroTipo = document.getElementById('filtroTipo');
+      const filtroEst  = document.getElementById('filtroEstado');
+      const filas      = document.querySelectorAll('#tablaReclamos tbody tr[data-tipo]');
+      const filaSinRes = document.getElementById('filaSinResultados');
+
+      if (window.adminFuzzy) window.adminFuzzy.addFuzzyBadge('buscador');
+
+      function filtrar() {
+        const q    = (buscador.value || '').trim();
+        const tipo = filtroTipo.value;
+        const est  = filtroEst.value;
+        let visible = 0;
+
+        filas.forEach(function (fila) {
+          // ✦ Fuzzy en nombre, email y producto
+          const okTexto = !q || (window.adminFuzzy
+            ? window.adminFuzzy.matches(q, fila.dataset.nombre, fila.dataset.email, fila.dataset.producto)
+            : (fila.dataset.nombre.includes(q.toLowerCase())
+            || fila.dataset.email.includes(q.toLowerCase())
+            || fila.dataset.producto.includes(q.toLowerCase())));
+
+          const ok = okTexto
+                  && (!tipo || fila.dataset.tipo   === tipo)
+                  && (!est  || fila.dataset.estado === est);
+
+          fila.style.display = ok ? '' : 'none';
+          if (ok) visible++;
+        });
+        filaSinRes.style.display = visible === 0 ? '' : 'none';
+      }
+
+      window.limpiarFiltros = function () {
+        buscador.value = filtroTipo.value = filtroEst.value = '';
+        filtrar();
+      };
+
+      buscador.addEventListener('input', filtrar);
+      [filtroTipo, filtroEst].forEach(function (s) { s.addEventListener('change', filtrar); });
+    });
+
+    // ── Modal detalle ──────────────────────────────────────────────
+    function verDetalle(btn) {
+      document.getElementById('modalTitulo').textContent =
+        btn.dataset.tipo.charAt(0) + btn.dataset.tipo.slice(1).toLowerCase()
+        + ' de ' + btn.dataset.nombre;
+      document.getElementById('modalDesc').textContent = btn.dataset.desc;
+      new bootstrap.Modal(document.getElementById('modalDetalle')).show();
+    }
+  </script>
+</th:block>
+</body>
+</html>

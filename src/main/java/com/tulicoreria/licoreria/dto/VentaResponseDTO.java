@@ -32,9 +32,11 @@ public class VentaResponseDTO {
 
     private BigDecimal subtotal;
     private BigDecimal igv;
+    private BigDecimal costoEnvio;
     private BigDecimal total;
 
     private String observaciones;
+    private String distritoEnvio;
 
     private List<DetalleVentaResponseDTO> detalles;
 }

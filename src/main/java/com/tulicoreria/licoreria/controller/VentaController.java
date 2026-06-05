@@ -64,6 +64,19 @@ public class VentaController {
         return "ventas/comprobante";
     }
 
+        // Marcar pedido pendiente como entregado — ADMIN o VENDEDOR
+    @PostMapping("/{id}/completar")
+    @PreAuthorize("hasAnyRole('ADMIN','VENDEDOR')")
+    public String completar(@PathVariable Long id, RedirectAttributes flash) {
+        try {
+            ventaService.completar(id);
+            flash.addFlashAttribute("exito", "Pedido marcado como entregado correctamente.");
+        } catch (RuntimeException e) {
+            flash.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/ventas/" + id;
+    }
+
     // Anular venta — solo ADMIN
     @PostMapping("/{id}/anular")
     @PreAuthorize("hasRole('ADMIN')")

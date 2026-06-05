@@ -84,6 +84,18 @@ public class Venta {
     @Column(length = 300)
     private String observaciones;
 
+    /** Costo de envío (0 si recojo en tienda). */
+    @Column(precision = 10, scale = 2)
+    private BigDecimal costoEnvio;
+
+    /** Distrito o zona de entrega seleccionada. */
+    @Column(length = 100)
+    private String distritoEnvio;
+
+    /** ID del cargo Culqi para pagos con tarjeta (nullable). */
+    @Column(length = 60)
+    private String culqiChargeId;
+
     public enum TipoComprobante {
         BOLETA, FACTURA, TICKET
     }

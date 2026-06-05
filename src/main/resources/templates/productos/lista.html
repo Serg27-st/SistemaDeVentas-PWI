@@ -24,6 +24,7 @@
             </a>
         </div>
 
+        <!-- Stats -->
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-3">
                 <div class="stat-card">
@@ -71,6 +72,7 @@
             </div>
         </div>
 
+        <!-- Alerta stock bajo -->
         <div th:if="${stockBajo != null && !#lists.isEmpty(stockBajo)}"
             class="alert alert-warning alert-dismissible fade show mb-4 border-0 shadow-sm">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>
@@ -79,6 +81,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
+        <!-- Filtros -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body py-3">
                 <div class="row g-2 align-items-center">
@@ -115,6 +118,7 @@
             </div>
         </div>
 
+        <!-- Tabla -->
         <div class="card border-0 shadow-sm">
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -161,9 +165,17 @@
                                         th:text="${p.categoriaNombre}"></span>
                                 </td>
 
+                                <!-- Volumen y Grado - CORREGIDO -->
                                 <td>
-                                    <span th:text="${p.volumenMl + ' ml'}"></span>
-                                    <small class="text-muted d-block" th:text="${p.gradoAlcohol + '° alc.'}"></small>
+                                    <div th:if="${p.cantidadPresentacion != null and p.unidadPresentacion != null}">
+                                        <span th:text="${p.cantidadPresentacion + ' ' + p.unidadPresentacion}"></span>
+                                    </div>
+                                    <div th:if="${p.cantidadPresentacion == null or p.unidadPresentacion == null}">
+                                        <span class="text-muted">-</span>
+                                    </div>
+                                    <small class="text-muted d-block" 
+                                          th:if="${p.gradoAlcohol != null}"
+                                          th:text="${p.gradoAlcohol + '° alc.'}"></small>
                                 </td>
 
                                 <td class="fw-semibold"
@@ -213,6 +225,7 @@
                                 </td>
                             </tr>
 
+                            <!-- Sin resultados -->
                             <tr id="filaSinResultados" style="display:none">
                                 <td colspan="7" class="text-center py-5 text-muted">
                                     <i class="bi bi-search fs-2 d-block mb-2 text-secondary"></i>
@@ -220,6 +233,7 @@
                                 </td>
                             </tr>
 
+                            <!-- Lista vacía -->
                             <tr th:if="${#lists.isEmpty(productos)}">
                                 <td colspan="7" class="text-center py-5 text-muted">
                                     <i class="bi bi-box-seam fs-2 d-block mb-2 text-secondary"></i>
@@ -239,73 +253,66 @@
 
     <th:block th:fragment="scripts">
         <script>
-           document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
 
-    const buscador = document.getElementById('buscador');
-    const filtroCategoria = document.getElementById('filtroCategoria');
-    const filtroStock = document.getElementById('filtroStock');
-    const filas = document.querySelectorAll('#tablaProductos tbody tr[data-nombre]');
-    const filaSinRes = document.getElementById('filaSinResultados');
+                const buscador = document.getElementById('buscador');
+                const filtroCategoria = document.getElementById('filtroCategoria');
+                const filtroStock = document.getElementById('filtroStock');
+                const filas = document.querySelectorAll('#tablaProductos tbody tr[data-nombre]');
+                const filaSinRes = document.getElementById('filaSinResultados');
 
-    function filtrar() {
+                function filtrar() {
+                    const q = (buscador.value || '').toLowerCase().trim();
+                    const cat = (filtroCategoria.value || '').toLowerCase();
+                    const est = filtroStock.value || '';
+                    let visibles = 0;
 
-        const q = (buscador.value || '').toLowerCase().trim();
-        const cat = (filtroCategoria.value || '').toLowerCase();
-        const est = filtroStock.value || '';
+                    filas.forEach(fila => {
+                        const nombre = fila.dataset.nombre || '';
+                        const marca = fila.dataset.marca || '';
+                        const codigo = fila.dataset.codigo || '';
+                        const categoria = fila.dataset.categoria || '';
+                        const estado = fila.dataset.estado || '';
 
-        let visibles = 0;
+                        const coincideBusqueda =
+                            q === '' ||
+                            nombre.includes(q) ||
+                            marca.includes(q) ||
+                            codigo.includes(q);
 
-        filas.forEach(fila => {
+                        const coincideCategoria =
+                            cat === '' ||
+                            categoria === cat;
 
-            const nombre = fila.dataset.nombre || '';
-            const marca = fila.dataset.marca || '';
-            const codigo = fila.dataset.codigo || '';
-            const categoria = fila.dataset.categoria || '';
-            const estado = fila.dataset.estado || '';
+                        const coincideEstado =
+                            est === '' ||
+                            estado === est;
 
-            const coincideBusqueda =
-                q === '' ||
-                nombre.includes(q) ||
-                marca.includes(q) ||
-                codigo.includes(q);
+                        const mostrar =
+                            coincideBusqueda &&
+                            coincideCategoria &&
+                            coincideEstado;
 
-            const coincideCategoria =
-                cat === '' ||
-                categoria === cat;
+                        fila.style.display = mostrar ? '' : 'none';
+                        if (mostrar) visibles++;
+                    });
 
-            const coincideEstado =
-                est === '' ||
-                estado === est;
+                    filaSinRes.style.display = visibles === 0 ? '' : 'none';
+                }
 
-            const mostrar =
-                coincideBusqueda &&
-                coincideCategoria &&
-                coincideEstado;
+                function limpiarFiltros() {
+                    buscador.value = '';
+                    filtroCategoria.value = '';
+                    filtroStock.value = '';
+                    filtrar();
+                }
 
-            fila.style.display = mostrar ? '' : 'none';
+                buscador.addEventListener('keyup', filtrar);
+                filtroCategoria.addEventListener('change', filtrar);
+                filtroStock.addEventListener('change', filtrar);
 
-            if (mostrar) {
-                visibles++;
-            }
-        });
-
-        filaSinRes.style.display = visibles === 0 ? '' : 'none';
-    }
-
-    function limpiarFiltros() {
-        buscador.value = '';
-        filtroCategoria.value = '';
-        filtroStock.value = '';
-        filtrar();
-    }
-
-    buscador.addEventListener('keyup', filtrar);
-    filtroCategoria.addEventListener('change', filtrar);
-    filtroStock.addEventListener('change', filtrar);
-
-    window.limpiarFiltros = limpiarFiltros;
-
-});
+                window.limpiarFiltros = limpiarFiltros;
+            });
         </script>
     </th:block>
 </body>

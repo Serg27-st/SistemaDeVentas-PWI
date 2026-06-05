@@ -18,17 +18,21 @@
         <!-- Logo -->
         <div class="text-center mb-4">
             <div class="brand-logo">🥃 LICORERÍA</div>
-            <div class="brand-sub">Panel Administrativo</div>
+            <div class="brand-sub">Iniciar sesión</div>
         </div>
 
         <!-- Alertas -->
         <div th:if="${param.error}" class="alerta-error mb-3">
             <i class="bi bi-exclamation-circle me-2"></i>
-            Usuario o contraseña incorrectos.
+            Correo/usuario o contraseña incorrectos.
         </div>
         <div th:if="${param.logout}" class="alerta-exito mb-3">
             <i class="bi bi-check-circle me-2"></i>
             Sesión cerrada correctamente.
+        </div>
+        <div th:if="${param.registrado}" class="alerta-exito mb-3">
+            <i class="bi bi-person-check me-2"></i>
+            ¡Cuenta creada! Ya puedes ingresar con tu correo y contraseña.
         </div>
         <div th:if="${param.expired}" class="alerta-error mb-3">
             <i class="bi bi-clock me-2"></i>
@@ -39,15 +43,15 @@
         <form th:action="@{/login}" method="post">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
-            <!-- Usuario -->
+            <!-- Usuario / correo -->
             <div class="mb-3">
-                <label class="form-label">Usuario</label>
+                <label class="form-label">Usuario o correo electrónico</label>
                 <div class="input-group">
                     <span class="input-group-text">
                         <i class="bi bi-person-fill"></i>
                     </span>
                     <input type="text" name="username" class="form-control"
-                           placeholder="Tu nombre de usuario"
+                           placeholder="usuario o correo@ejemplo.com"
                            autocomplete="username" autofocus required/>
                 </div>
             </div>
@@ -75,9 +79,11 @@
 
         <hr class="divisor"/>
 
-        <div class="badge-aviso mb-3">
-            <i class="bi bi-shield-lock me-1"></i>
-            Acceso restringido — Solo personal autorizado
+        <div class="text-center mb-3">
+            <span style="font-size:.82rem;color:#6b7280;">¿Eres cliente? </span>
+            <a th:href="@{/registro}" style="font-size:.82rem;color:#c9a227;font-weight:600;">
+                Crea tu cuenta aquí
+            </a>
         </div>
 
         <div class="text-center">

@@ -31,7 +31,8 @@ public class ProductoRequestDTO {
     private String paisOrigen;
 
     // 💡 Mantenemos este nombre para tu HTML, pero asegúrate de mapearlo bien en el Service
-    private Integer volumenMl;
+    private BigDecimal cantidadPresentacion;
+    private String unidadPresentacion;
 
     // 🔑 CORREGIDO: Cambiado de BigDecimal a Double para evitar conflictos de tipo con la Entidad
     private BigDecimal gradoAlcohol;

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{publica/layout :: layout(
+        titulo='Pedido confirmado | Tu Licorería',
+        paginaActual='',
+        contenido=~{::main-content},
+        estilosExtra=~{::estilos},
+        scriptsExtra=~{::scripts})}">
+<head>
+  <title>Pedido confirmado</title>
+  <th:block th:fragment="estilos">
+    <style>
+      @keyframes check-in {
+        0%   { transform: scale(0) rotate(-30deg); opacity: 0; }
+        70%  { transform: scale(1.15) rotate(5deg); }
+        100% { transform: scale(1) rotate(0deg); opacity: 1; }
+      }
+      .confirm-check { animation: check-in .55s .2s both; }
+    </style>
+  </th:block>
+</head>
+<body>
+<th:block th:fragment="main-content">
+
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6">
+
+        <!-- ── Card principal ─── -->
+        <div class="bg-white rounded-3 shadow-sm border text-center p-5">
+
+          <!-- Ícono animado -->
+          <div class="confirm-icon-wrap">
+            <i class="bi bi-bag-check-fill confirm-check"></i>
+          </div>
+
+          <!-- Si llegó con flash de venta confirmada -->
+          <div th:if="${pedidoConfirmado}">
+
+            <h2 class="fw-bold mb-2" style="font-family:'Playfair Display',serif;color:#0d0d16;">
+              ¡Pedido recibido!
+            </h2>
+            <p class="text-muted mb-4" style="line-height:1.75;">
+              Gracias por tu compra. Nuestro equipo te contactará pronto para coordinar la entrega.
+            </p>
+
+            <!-- Número de comprobante -->
+            <div class="d-inline-flex align-items-center gap-2 rounded-2 px-4 py-2 mb-4 border"
+                 style="background:#f9f9fb;border-color:#e5e7eb !important;">
+              <i class="bi bi-receipt" style="color:#c9a227;font-size:1.1rem;"></i>
+              <div class="text-start">
+                <div class="text-muted" style="font-size:.72rem;letter-spacing:1px;text-transform:uppercase;font-weight:700;">N° Comprobante</div>
+                <div class="fw-bold text-dark" style="font-size:1.1rem;letter-spacing:1px;"
+                     th:text="${comprobante}">TICKET-000000</div>
+              </div>
+            </div>
+
+            <!-- Resumen de la orden -->
+            <div class="rounded-3 border p-4 mb-4 text-start" style="background:#f9f9fb;">
+              <h6 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-clipboard-check" style="color:#c9a227;"></i> Resumen del pedido
+              </h6>
+
+              <div class="d-flex justify-content-between small mb-2">
+                <span class="text-muted">Fecha y hora</span>
+                <span class="fw-semibold"
+                      th:text="${fechaVenta != null ? #temporals.format(fechaVenta,'dd/MM/yyyy HH:mm') : '—'}">
+                  01/01/2026 00:00
+                </span>
+              </div>
+
+              <div class="d-flex justify-content-between small mb-2">
+                <span class="text-muted">Método de pago</span>
+                <span class="fw-semibold d-flex align-items-center gap-1">
+                  <span th:switch="${metodoPago}">
+                    <i th:case="'EFECTIVO'"     class="bi bi-cash-stack text-success"></i>
+                    <i th:case="'YAPE'"         class="bi bi-qr-code text-primary"></i>
+                    <i th:case="'TARJETA'"      class="bi bi-credit-card text-primary"></i>
+                    <i th:case="'TRANSFERENCIA'"class="bi bi-bank text-secondary"></i>
+                    <i th:case="*"              class="bi bi-cash text-success"></i>
+                  </span>
+                  <span th:text="${metodoPago}">EFECTIVO</span>
+                  <!-- Badge de pago confirmado si fue por tarjeta Culqi -->
+                  <span th:if="${pagoConTarjeta}"
+                        class="badge bg-success-subtle text-success border border-success-subtle ms-1"
+                        style="font-size:.65rem;">
+                    <i class="bi bi-shield-check me-1"></i>Cobro confirmado
+                  </span>
+                </span>
+              </div>
+
+              <!-- Envío -->
+              <div th:if="${distritoEnvio != null and !distritoEnvio.empty}"
+                   class="d-flex justify-content-between small mb-2">
+                <span class="text-muted"><i class="bi bi-geo-alt me-1"></i>Zona de entrega</span>
+                <span class="fw-semibold" th:text="${distritoEnvio}">—</span>
+              </div>
+              <div th:if="${costoEnvio != null}"
+                   class="d-flex justify-content-between small mb-2">
+                <span class="text-muted">Costo de envío</span>
+                <span th:if="${costoEnvio == 0}" class="fw-semibold text-success">Gratis (recojo)</span>
+                <span th:unless="${costoEnvio == 0}" class="fw-semibold"
+                      th:text="'S/. ' + ${#numbers.formatDecimal(costoEnvio,1,2)}">S/. 0.00</span>
+              </div>
+
+              <hr class="my-3 opacity-25"/>
+
+              <div class="d-flex justify-content-between fw-bold">
+                <span>Total pagado</span>
+                <span style="color:#c9a227;font-size:1.15rem;"
+                      th:text="${totalVenta != null} ? 'S/. ' + ${#numbers.formatDecimal(totalVenta,1,2)} : '—'">
+                  S/. 0.00
+                </span>
+              </div>
+            </div>
+
+            <!-- Siguiente paso -->
+            <div class="alert d-flex align-items-start gap-3 text-start mb-4"
+                 style="background:rgba(201,162,39,.08);border:1px solid rgba(201,162,39,.25);border-radius:10px;">
+              <i class="bi bi-info-circle-fill mt-1" style="color:#c9a227;font-size:1.1rem;flex-shrink:0;"></i>
+              <div style="font-size:.875rem;color:#374151;">
+                Un representante de <strong>Tu Licorería</strong> se comunicará contigo para confirmar
+                la entrega. Guarda tu número de comprobante como referencia.
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Si acceden directamente sin flash (URL directa) -->
+          <div th:if="${pedidoConfirmado == null}">
+            <h2 class="fw-bold mb-2" style="font-family:'Playfair Display',serif;color:#0d0d16;">
+              Página de confirmación
+            </h2>
+            <div class="alert alert-warning text-start small mb-4">
+              <i class="bi bi-info-circle me-1"></i>
+              Esta página solo es válida inmediatamente después de procesar un pedido.
+            </div>
+          </div>
+
+          <!-- Acciones -->
+          <div class="d-flex flex-column gap-3">
+            <a th:href="@{/catalogo}"
+               class="btn-hero-main justify-content-center text-decoration-none d-flex">
+              <i class="bi bi-grid-3x3-gap-fill"></i> Seguir comprando
+            </a>
+            <a th:href="@{/inicio}"
+               class="btn-hero-outline justify-content-center text-decoration-none d-flex"
+               style="color:#374151;border-color:#d1d5db;">
+              <i class="bi bi-house"></i> Volver al inicio
+            </a>
+          </div>
+
+          <hr class="my-4 opacity-25"/>
+
+          <div class="d-flex align-items-center justify-content-center gap-4 small text-muted">
+            <span>
+              <i class="bi bi-whatsapp text-success me-1"></i>+51 960566897
+            </span>
+            <span>
+              <i class="bi bi-shield-check me-1" style="color:#c9a227;"></i>Mayores de 18
+            </span>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</th:block>
+<th:block th:fragment="scripts"></th:block>
+</body>
+</html>

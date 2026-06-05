@@ -29,6 +29,9 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
     // Ventas por vendedor para control de desempeño
     List<Venta> findByVendedor(Usuario vendedor);
 
+    // Historial de pedidos de un cliente registrado (tienda web)
+    List<Venta> findByClienteIdOrderByFechaHoraDesc(Long clienteId);
+
     // Último número de comprobante para generar el siguiente (BOLETA-000002)
     @Query("SELECT MAX(v.numeroComprobante) FROM Venta v " +
            "WHERE v.tipoComprobante = :tipo")

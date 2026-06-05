@@ -31,7 +31,18 @@
                class="btn btn-outline-primary btn-sm" target="_blank">
                 <i class="bi bi-printer me-1"></i>Imprimir
             </a>
-            <form th:if="${venta.estado == 'COMPLETADA'}"
+            <form th:if="${venta.estado == 'PENDIENTE'}"
+                  th:action="@{/ventas/{id}/completar(id=${venta.id})}"
+                  method="post"
+                  onsubmit="return confirm('¿Marcar este pedido como entregado?')">
+                <input type="hidden"
+                       th:name="${_csrf.parameterName}"
+                       th:value="${_csrf.token}"/>
+                <button type="submit" class="btn btn-success btn-sm">
+                    <i class="bi bi-check2-circle me-1"></i>Marcar como entregado
+                </button>
+            </form>
+            <form th:if="${venta.estado == 'COMPLETADA' || venta.estado == 'PENDIENTE'}"
                   th:action="@{/ventas/{id}/anular(id=${venta.id})}"
                   method="post"
                   onsubmit="return confirm('¿Anular esta venta? El stock será devuelto.')">
@@ -164,13 +175,14 @@
                             </thead>
                             <tbody>
                                 <tr th:each="d : ${venta.detalles}">
-                                    <td class="ps-4">
-                                        <div class="fw-semibold"
-                                             th:text="${d.productoNombre}"></div>
-                                        <small class="text-muted"
-                                               th:text="${d.productoMarca + ' · ' + d.volumenMl + 'ml'}">
-                                        </small>
-                                    </td>
+                                   <td class="ps-4">
+        <div class="fw-semibold"
+             th:text="${d.productoNombre}"></div>
+
+        <small class="text-muted"
+               th:text="${d.productoMarca + ' · ' + d.cantidadPresentacion + ' ' + d.unidadPresentacion}">
+        </small>
+    </td>
                                     <td class="text-center fw-semibold"
                                         th:text="${d.cantidad}"></td>
                                     <td class="text-end"

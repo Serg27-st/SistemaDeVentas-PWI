@@ -37,6 +37,7 @@
         </div>
 
         <div class="row g-4">
+            <!-- Columna de Imagen -->
             <div class="col-md-5">
                 <div class="card border-0 shadow-sm bg-white h-100">
                     <div class="card-header border-0 py-3 bg-white"
@@ -73,6 +74,7 @@
                 </div>
             </div>
 
+            <!-- Columna de Especificaciones -->
             <div class="col-md-7">
                 <div class="card border-0 shadow-sm bg-white h-100">
                     <div class="card-header border-0 py-3 bg-white"
@@ -116,8 +118,12 @@
 
                         <div class="d-flex justify-content-between align-items-center py-2 border-bottom"
                             style="border-color: #f1f5f9 !important;">
-                            <span class="text-secondary fw-semibold small">Volumen</span>
-                            <span class="text-dark" th:text="${producto.volumenMl != null ? producto.volumenMl + ' ml' : '-'}">-</span>
+                            <span class="text-secondary fw-semibold small">Presentación</span>
+                            <span class="text-dark"
+                                th:text="${producto.cantidadPresentacion != null ?
+                                    producto.cantidadPresentacion + ' ' + producto.unidadPresentacion :
+                                    '-'}">
+                            </span>
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center py-2 border-bottom"
@@ -125,20 +131,14 @@
                             <span class="text-secondary fw-semibold small">Grado Alcohólico</span>
                             <span class="text-dark" th:text="${producto.gradoAlcohol != null ? producto.gradoAlcohol + '%' : '-'}">-</span>
                         </div>
+
                         <div class="d-flex justify-content-between align-items-center py-2 border-bottom"
-    style="border-color: #f1f5f9 !important;">
-
-    <span class="text-secondary fw-semibold small">
-        Fecha de Vencimiento
-    </span>
-
-    <span class="text-dark fw-medium"
-        th:text="${producto.fechaVencimiento != null 
-                    ? #temporals.format(producto.fechaVencimiento, 'dd/MM/yyyy') 
-                    : 'No registrada'}">
-        -
-    </span>
-</div>
+                            style="border-color: #f1f5f9 !important;">
+                            <span class="text-secondary fw-semibold small">Fecha de Vencimiento</span>
+                            <span class="text-dark fw-medium"
+                                th:text="${producto.fechaVencimiento != null ? #temporals.format(producto.fechaVencimiento, 'dd/MM/yyyy') : 'No registrada'}">
+                            </span>
+                        </div>
 
                         <div class="d-flex justify-content-between align-items-center py-2 border-bottom"
                             style="border-color: #f1f5f9 !important;">
@@ -167,22 +167,35 @@
                 </div>
             </div>
 
+            <!-- Margen Bruto - CORREGIDO -->
             <div class="col-12">
-                <div class="card border-0 shadow-sm bg-white">
-                    <div class="card-body p-4 d-flex align-items-center gap-3">
-                        <div class="rounded-3 p-3 bg-light text-primary">
-                            <i class="bi bi-graph-up-arrow fs-4"></i>
-                        </div>
-                        <div>
-                            <span class="text-muted small d-block">Margen Bruto Estimado</span>
-                            <h4 class="fw-bold mb-0 text-dark"
-                                th:text="${producto.precioVenta != null and producto.precioCompra != null ? 'S/ ' + #numbers.formatDecimal(producto.precioVenta - producto.precioCompra, 1, 2) : 'S/ 0.00'}">
-                            </h4>
+                <div class="card border-0 shadow-sm bg-white h-100">
+                    <div class="card-body p-4">
+                        <div class="row align-items-center">
+                            <div class="col-auto">
+                                <div class="rounded-3 p-3 bg-light text-primary">
+                                    <i class="bi bi-graph-up-arrow fs-4"></i>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <span class="text-muted small d-block">Margen Bruto Estimado</span>
+                                <h4 class="fw-bold mb-0 text-dark"
+                                    th:text="${producto.precioVenta != null and producto.precioCompra != null ? 'S/ ' + #numbers.formatDecimal(producto.precioVenta - producto.precioCompra, 1, 2) : 'S/ 0.00'}">
+                                </h4>
+                            </div>
+                            <div class="col-auto text-end" th:if="${producto.precioVenta != null and producto.precioCompra != null and producto.precioVenta > 0}">
+                                <span class="badge bg-success-subtle text-success px-3 py-2">
+                                    <i class="bi bi-arrow-up-circle me-1"></i>
+                                    <span th:text="${#numbers.formatDecimal(((producto.precioVenta - producto.precioCompra) / producto.precioVenta) * 100, 1, 1)} + '%'"></span>
+                                    margen
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Acciones de Control -->
             <div class="col-12" sec:authorize="hasRole('ADMIN')">
                 <div class="card border-0 shadow-sm bg-white">
                     <div class="card-header border-0 py-3 bg-white"

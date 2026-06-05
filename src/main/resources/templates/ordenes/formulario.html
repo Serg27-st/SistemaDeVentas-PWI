@@ -140,10 +140,11 @@
                             <select name="detalles[__IDX__].productoId" class="form-select form-select-sm sel-producto"
                                 onchange="calcularFila(this)" required>
                                 <option value="">Selecciona producto</option>
-                                <option th:each="p : ${productos}" th:value="${p.id}"
-                                    th:text="${p.nombre + ' (' + p.volumenMl + 'ml)'}"
-                                    th:data-precio="${p.precioCompra}">
-                                </option>
+                                <option th:each="p : ${productos}"
+        th:value="${p.id}"
+        th:text="${p.nombre + ' (' + p.cantidadPresentacion + ' ' + p.unidadPresentacion + ')'}"
+        th:data-precio="${p.precioCompra}">
+</option>
                             </select>
                         </td>
                         <td>
