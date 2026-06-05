@@ -40,7 +40,6 @@ public class CheckoutController {
     private final PromocionService   promocionService;
     private final ClienteWebService  clienteWebService;
     private final EnvioService       envioService;
-    private final CulqiService       culqiService;
     private final CategoriaService   categoriaService;
 
     private static final String CARRITO_KEY = "carrito";
@@ -48,8 +47,12 @@ public class CheckoutController {
     private static final String GUEST_EMAIL = "checkout_guest_email";
     private static final BigDecimal IGV_RATE = new BigDecimal("0.18");
 
-    @Value("${culqi.public-key:pk_test_REEMPLAZA_CON_TU_CLAVE_PUBLICA}")
-    private String culqiPublicKey;
+    // ── Datos Yape configurables desde application.properties ────────────────
+    @Value("${app.pago.yape.numero:51977968942}")
+    private String yapeNumero;
+
+    @Value("${app.pago.yape.nombre:Tu Licorería}")
+    private String yapeNombre;
 
     /** Inyectar categorías en todos los modelos (necesario para el navbar). */
     @ModelAttribute
@@ -206,27 +209,16 @@ public class CheckoutController {
         Pedido pedido = safe(id, model);
         if (pedido == null) return "redirect:/carrito";
 
-        model.addAttribute("pedido", pedido);
-        model.addAttribute("culqiPublicKey", culqiPublicKey);
+        // Formatear número Yape para mostrar: +51 977 968 942
+        String yapeFormateado = formatearYape(yapeNumero);
+
+        model.addAttribute("pedido",      pedido);
+        model.addAttribute("yapeNumero",  yapeFormateado);
+        model.addAttribute("yapeNombre",  yapeNombre);
         return "publica/checkout/pago";
     }
 
-    /** Procesar pago con tarjeta (Culqi token). */
-    @PostMapping("/{id}/pagar/tarjeta")
-    public String pagarTarjeta(@PathVariable Long id,
-                               @RequestParam String culqiToken,
-                               @RequestParam(required = false, defaultValue = "") String emailCulqi,
-                               RedirectAttributes flash) {
-        try {
-            pedidoService.confirmarPagoOnline(id, culqiToken, emailCulqi);
-            return "redirect:/checkout/" + id + "/ok";
-        } catch (RuntimeException e) {
-            flash.addFlashAttribute("errorPago", e.getMessage());
-            return "redirect:/checkout/" + id + "/error";
-        }
-    }
-
-    /** Procesar contra entrega / Yape / Plin. */
+    /** Procesar pago con Yape o Efectivo (contra entrega). */
     @PostMapping("/{id}/pagar/entrega")
     public String pagarEntrega(@PathVariable Long id,
                                @RequestParam(defaultValue = "CONTRA_ENTREGA") String metodoPago,
@@ -269,8 +261,18 @@ public class CheckoutController {
         Pedido pedido = safe(id, model);
         if (pedido == null) return "redirect:/carrito";
         model.addAttribute("pedido", pedido);
-        model.addAttribute("culqiPublicKey", culqiPublicKey);
         return "publica/checkout/error";
+    }
+
+    /** Formatea número de 11 dígitos (51XXXXXXXXX) como +51 XXX XXX XXX */
+    private String formatearYape(String numero) {
+        if (numero == null) return "";
+        String limpio = numero.replaceAll("[^0-9]", "");
+        if (limpio.startsWith("51") && limpio.length() == 11) {
+            String local = limpio.substring(2); // 9 dígitos
+            return "+51 " + local.substring(0,3) + " " + local.substring(3,6) + " " + local.substring(6);
+        }
+        return "+" + limpio;
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

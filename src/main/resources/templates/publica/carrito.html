@@ -298,7 +298,7 @@
                       <i class="bi bi-dash"></i>
                     </button>
                     <input type="number" th:id="'qty-' + ${item.productoId}" class="qty-display"
-                      th:value="${item.cantidad}" min="1"
+                      th:value="${item.cantidad}" min="1" step="1"
                       th:onchange="'setCantidad(' + ${item.productoId} + ', this.value)'" />
                     <button type="button" class="qty-btn" th:onclick="'cambiarCantidad(' + ${item.productoId} + ', 1)'"
                       aria-label="Sumar">
@@ -358,10 +358,15 @@
             </div>
           </div>
 
+          <!-- Barra de progreso hacia envío gratis — solo informativa, no bloquea el pago -->
           <div id="minOrderBlock" th:if="${pedidoMinimo != null and pedidoMinimo > 0}"
             class="mt-3 bg-white rounded-3 shadow-sm border p-3 min-order-bar">
             <div class="d-flex justify-content-between small mb-1">
-              <span class="text-muted fw-semibold">Pedido mínimo para delivery</span>
+              <span class="text-muted fw-semibold">
+                <i class="bi bi-truck me-1" style="color:var(--color-gold);"></i>
+                Envío gratis desde
+                <span th:text="'S/. ' + ${#numbers.formatDecimal(pedidoMinimo,1,2)}">S/. 50</span>
+              </span>
               <span>
                 <span id="lblSubtotalMin" th:text="'S/. ' + ${#numbers.formatDecimal(subtotal,1,2)}">S/. 0</span>
                 /
@@ -377,12 +382,12 @@
             <div id="minOrderMsg" class="small">
               <span th:if="${subtotal < pedidoMinimo}" class="text-muted">
                 Te faltan
-                <strong class="text-dark" id="txtFaltanteMinimoBarra"
+                <strong class="text-dark"
                   th:text="'S/. ' + ${#numbers.formatDecimal(pedidoMinimo - subtotal, 1, 2)}">S/. 50</strong>
-                para el mínimo de delivery.
+                para envío gratis.
               </span>
               <span th:unless="${subtotal < pedidoMinimo}" class="text-success fw-semibold">
-                <i class="bi bi-check-circle-fill me-1"></i>¡Monto mínimo alcanzado!
+                <i class="bi bi-check-circle-fill me-1"></i>¡Envío gratis aplicado!
               </span>
             </div>
           </div>
@@ -450,12 +455,7 @@
                 <i class="bi bi-exclamation-triangle-fill me-1"></i>
                 <span id="alertaStockMsg">Algunos productos tienen stock insuficiente.</span>
               </div>
-              <div id="alertaMinimo" class="alert alert-warning py-2 small d-none mb-3">
-                <i class="bi bi-info-circle-fill me-1"></i>
-                El pedido mínimo es
-                <strong th:text="'S/. ' + ${#numbers.formatDecimal(pedidoMinimo,1,2)}">S/. 50.00</strong>.
-                <span id="alertaMinimoFaltante"></span>
-              </div>
+              <!-- alertaMinimo eliminada: el monto mínimo es informativo, no bloquea -->
 
               <form th:action="@{/checkout/iniciar}" method="post" id="checkoutForm">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
@@ -469,7 +469,7 @@
               <div class="d-flex align-items-center justify-content-center gap-2 mt-2"
                 style="font-size:.74rem;color:#9ca3af;">
                 <i class="bi bi-shield-lock-fill text-success"></i>
-                Pago seguro · Culqi PCI DSS · Visa · Mastercard
+                Pago seguro · Yape · Efectivo
               </div>
             </div>
           </div>
@@ -490,19 +490,16 @@
   </th:block>
 
   <th:block th:fragment="scripts">
-    <script src="https://checkout.culqi.com/js/v4"></script>
     <script th:inline="javascript">
       // ── Constantes del servidor ────────────────────────────────────────────
-      const CULQI_PUBLIC_KEY = /*[[${culqiPublicKey}]]*/ 'pk_test_DEMO';
       const PEDIDO_MINIMO = parseFloat(/*[[${pedidoMinimo}]]*/ '0');
       const CSRF_TOKEN = /*[[${_csrf.token}]]*/ '';
       const CSRF_HEADER = /*[[${_csrf.headerName}]]*/ 'X-CSRF-TOKEN';
 
-      // ── Tarifas de envío ─────────────────────────────────────────────────
-      const tarifas = {};
-      /*[# th:each="entry : ${tarifasEnvio}"]*/
-      tarifas[/*[[${entry.key}]]*/ ''] = /*[[${entry.value}]]*/ 0;
-      /*[/]*/
+      // ── Tarifas de envío (serializado como objeto JS por Thymeleaf) ──────
+      // Nota: NO usar th:each con tarifas[/*[[key]]*/] — Thymeleaf 3.1 falla
+      // al parsear "[/*[[" (confunde el "[" con inicio de expresión inline).
+      const tarifas = /*[[${tarifasEnvio}]]*/ {};
 
       // ── Estado local ─────────────────────────────────────────────────────
       let subtotalActual = parseFloat(/*[[${subtotal}]]*/ '0');
@@ -529,16 +526,27 @@
       const $contador = () => document.getElementById('contadorItems');
 
       // ── Fetch helper ─────────────────────────────────────────────────────
+      // Los endpoints /api/** están excluidos de CSRF en SecurityConfig,
+      // por lo que no es necesario enviar el token. Se incluye de todas
+      // formas por compatibilidad si se cambia la configuración.
       async function apiFetch(url, method = 'GET', body = null) {
         const opts = {
           method,
-          headers: { [CSRF_HEADER]: CSRF_TOKEN }
+          headers: {}
         };
         if (body) {
           opts.headers['Content-Type'] = 'application/x-www-form-urlencoded';
           opts.body = body;
         }
-        const res = await fetch(url, opts);
+        let res;
+        try {
+          res = await fetch(url, opts);
+        } catch (networkErr) {
+          throw new Error('Error de red: ' + networkErr.message);
+        }
+        if (!res.ok) {
+          throw new Error('Error HTTP ' + res.status + ' en ' + url);
+        }
         return res.json();
       }
 
@@ -568,7 +576,24 @@
           }
         });
 
-        // El precio de licorería en Perú ya incluye IGV. Desglosamos sobre la suma de productos:
+        // ── Recalcular envío según el monto actual ─────────────────────────
+        // Envío GRATIS si el monto bruto de productos >= pedido mínimo (50 soles)
+        // Si es menor, se aplica la tarifa del distrito seleccionado
+        const tarifaDistrito = (() => {
+          const sel = document.getElementById('distritoSelect');
+          const dist = sel ? sel.value : '';
+          return tarifas[dist] !== undefined ? parseFloat(tarifas[dist]) : 0;
+        })();
+        costoEnvio = sumaSubtotalesProductos >= PEDIDO_MINIMO ? 0 : tarifaDistrito;
+
+        // Actualizar etiqueta de envío en el resumen
+        const $e = $envio();
+        if ($e) {
+          $e.textContent = costoEnvio === 0 ? 'Gratis' : 'S/. ' + costoEnvio.toFixed(2);
+          $e.className = costoEnvio === 0 ? 'fw-semibold text-success small' : 'fw-semibold small';
+        }
+
+        // El precio en Perú ya incluye IGV; desglosaamos sobre la suma de productos:
         subtotalActual = sumaSubtotalesProductos / 1.18;
         igvActual = sumaSubtotalesProductos - subtotalActual;
         const totalFinal = sumaSubtotalesProductos + costoEnvio;
@@ -602,24 +627,16 @@
           const cumple = montoEvaluado >= PEDIDO_MINIMO;
           minOrderMsgEl.innerHTML = cumple
             ? '<span class="text-success fw-semibold"><i class="bi bi-check-circle-fill me-1"></i>¡Monto mínimo alcanzado!</span>'
-            : `Te faltan <strong class="text-dark">S/. ${(PEDIDO_MINIMO - montoEvaluado).toFixed(2)}</strong> para el mínimo de delivery.`;
+            : 'Te faltan <strong class="text-dark">S/. ' + (PEDIDO_MINIMO - montoEvaluado).toFixed(2) + '</strong> para envío gratis.';
         }
 
         actualizarBotonesCheckout();
       }
 
       // ── Sincronización del Selector de Distrito de Envío ──────────────────
+      // Cuando el usuario cambia el distrito, recalculamos todo (incluido el envío).
+      // La lógica de envío gratis vs. tarifa por zona vive en recalcularTotalesDesdeInterfaz().
       function actualizarEnvio() {
-        const sel = document.getElementById('distritoSelect');
-        const distrito = sel ? sel.value : '';
-        costoEnvio = tarifas[distrito] !== undefined ? parseFloat(tarifas[distrito]) : 0;
-
-        const $e = $envio();
-        if ($e) {
-          $e.textContent = costoEnvio === 0 ? 'Gratis' : 'S/. ' + costoEnvio.toFixed(2);
-          $e.className = costoEnvio === 0 ? 'fw-semibold text-success small' : 'fw-semibold small';
-        }
-
         recalcularTotalesDesdeInterfaz();
       }
 
@@ -642,6 +659,20 @@
         const row = document.getElementById('row-' + productoId);
         if (row) row.classList.add('updating');
 
+        // ── Actualización local inmediata del subtotal de línea ──────────────
+        // Muestra la cifra antes de recibir respuesta del servidor (mejor UX).
+        // El servidor la corregirá si aplica descuento por volumen.
+        const precioUnitLocal = parseFloat(
+          row?.querySelector('.raw-precio-unitario')?.getAttribute('data-precio-u')
+        ) || 0;
+        const subtotalElLocal = document.getElementById('subtotal-' + productoId);
+        if (subtotalElLocal && precioUnitLocal > 0) {
+          const txtEl = subtotalElLocal.querySelector('.txt-subtotal-dinamico');
+          if (txtEl) txtEl.textContent = 'S/. ' + (precioUnitLocal * cantidad).toFixed(2);
+        }
+        // Recalcular totales del resumen lateral con el valor inmediato
+        recalcularTotalesDesdeInterfaz();
+
         try {
           const data = await apiFetch(
             '/api/carrito/actualizar',
@@ -659,12 +690,12 @@
             const desc = parseFloat(data.descuentoItem) || 0;
 
             subtotalEl.innerHTML =
-              `<span class="fw-bold text-dark d-block txt-subtotal-dinamico">S/. ${sub.toFixed(2)}</span>` +
-              (desc > 0 ? `<small class="ahorro-badge d-inline-flex data-descuento-item" data-desc-i="${desc}">−S/. ${desc.toFixed(2)}</small>` : '');
+              '<span class="fw-bold text-dark d-block txt-subtotal-dinamico">S/. ' + sub.toFixed(2) + '</span>' +
+              (desc > 0 ? '<small class="ahorro-badge d-inline-flex data-descuento-item" data-desc-i="' + desc + '">−S/. ' + desc.toFixed(2) + '</small>' : '');
           }
 
           // Gestionar avisos de inventario del almacén
-          mostrarAlertaStock(data.stockInsuficiente, data.mensajeStock);
+          mostrarAlertaStock(productoId, data.stockInsuficiente, data.mensajeStock);
 
           // Bloquear botones en límites físicos del Stock disponible
           actualizarBotonesQty(productoId, cantidad, parseInt(data.stockDisponible) || 999);
@@ -730,40 +761,18 @@
         if (btnPlus) btnPlus.disabled = cantidad >= stock;
       }
 
-      // ── Flujos de seguridad y restricciones operativas del checkout ─────
+      // ── Flujos de seguridad del checkout ─────────────────────────────────
+      // El botón solo se bloquea por errores de stock; el monto mínimo
+      // es informativo (barra de progreso) pero NO impide continuar.
       function actualizarBotonesCheckout() {
-        // Sumar el total de productos directamente de la interfaz para la validación
-        let valorTotalProductos = 0;
-        document.querySelectorAll('.item-row').forEach(row => {
-          const qty = parseInt(row.querySelector('.qty-display')?.value) || 0;
-          const unit = parseFloat(row.querySelector('.raw-precio-unitario')?.getAttribute('data-precio-u')) || 0;
-          valorTotalProductos += (qty * unit);
-        });
+        if ($btnProcesar()) $btnProcesar().disabled = tieneStockError;
 
-        const cumpleMinimo = PEDIDO_MINIMO === 0 || valorTotalProductos >= PEDIDO_MINIMO;
-        const bloqueado = tieneStockError || !cumpleMinimo;
-
-        if ($btnProcesar()) $btnProcesar().disabled = bloqueado;
-
-        if ($alertaMinimo()) {
-          $alertaMinimo().classList.toggle('d-none', cumpleMinimo);
-          if (!cumpleMinimo && $alertaMinimoFaltante()) {
-            $alertaMinimoFaltante().textContent = `Te faltan S/. ${(PEDIDO_MINIMO - valorTotalProductos).toFixed(2)}.`;
-          }
-        }
+        // Ocultar siempre la alerta de mínimo (ya no bloquea)
+        if ($alertaMinimo()) $alertaMinimo().classList.add('d-none');
       }
 
       function procederAlPago() {
-        let valorTotalProductos = 0;
-        document.querySelectorAll('.item-row').forEach(row => {
-          const qty = parseInt(row.querySelector('.qty-display')?.value) || 0;
-          const unit = parseFloat(row.querySelector('.raw-precio-unitario')?.getAttribute('data-precio-u')) || 0;
-          valorTotalProductos += (qty * unit);
-        });
-
-        if (tieneStockError || valorTotalProductos < PEDIDO_MINIMO) {
-          return;
-        }
+        if (tieneStockError) return;
         document.getElementById('checkoutForm').submit();
       }
 

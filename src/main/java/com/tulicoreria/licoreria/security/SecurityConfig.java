@@ -29,6 +29,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+            .csrf(csrf -> csrf
+                // Los endpoints /api/** son AJAX de mismo origen — excluimos CSRF
+                // para que fetch() funcione sin necesidad de token en header/body
+                .ignoringRequestMatchers("/api/**")
+            )
             .authenticationProvider(authenticationProvider())
             .authenticationProvider(clienteAuthProvider())
             .authorizeHttpRequests(auth -> auth

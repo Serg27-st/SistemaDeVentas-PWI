@@ -17,7 +17,10 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         String rutaUploads = Paths.get(rutaImagenes).toAbsolutePath().toUri().toString();
 
+        // Primero busca en la carpeta externa de uploads (imágenes subidas por el admin).
+        // Si el archivo no existe ahí (p.ej. producto-default.png), cae al classpath
+        // src/main/resources/static/images/ como respaldo.
         registry.addResourceHandler("/images/**")
-                .addResourceLocations(rutaUploads);
+                .addResourceLocations(rutaUploads, "classpath:/static/images/");
     }
 }

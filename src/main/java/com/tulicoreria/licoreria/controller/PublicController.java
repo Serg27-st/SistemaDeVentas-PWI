@@ -8,7 +8,6 @@ import com.tulicoreria.licoreria.util.FuzzySearchUtil;
 import com.tulicoreria.licoreria.model.ClienteWeb;
 import com.tulicoreria.licoreria.service.CategoriaService;
 import com.tulicoreria.licoreria.service.ClienteWebService;
-import com.tulicoreria.licoreria.service.CulqiService;
 import com.tulicoreria.licoreria.service.EnvioService;
 import com.tulicoreria.licoreria.service.ProductoService;
 import com.tulicoreria.licoreria.service.PromocionService;
@@ -37,11 +36,7 @@ public class PublicController {
     private final ClienteWebService clienteWebService;
     private final BusquedaService busquedaService;
     private final PromocionService promocionService;
-    private final CulqiService culqiService;
     private final EnvioService envioService;
-
-    @org.springframework.beans.factory.annotation.Value("${culqi.public-key:pk_test_REEMPLAZA_CON_TU_CLAVE_PUBLICA}")
-    private String culqiPublicKey;
 
     @org.springframework.beans.factory.annotation.Value("${app.carrito.pedido-minimo:50.00}")
     private BigDecimal pedidoMinimo;
@@ -168,7 +163,6 @@ public class PublicController {
         model.addAttribute("igv", igv);
         model.addAttribute("total", total);
         model.addAttribute("tarifasEnvio", envioService.getTarifas());
-        model.addAttribute("culqiPublicKey", culqiPublicKey);
         model.addAttribute("pedidoMinimo", pedidoMinimo);
         return "publica/carrito";
     }
@@ -256,7 +250,6 @@ public class PublicController {
     public String confirmarPedido(
             @RequestParam String metodoPago,
             @RequestParam(required = false, defaultValue = "") String distritoEnvio,
-            @RequestParam(required = false, defaultValue = "") String culqiToken,
             @RequestParam(required = false, defaultValue = "") String emailCliente,
             HttpSession session,
             Authentication authentication,
@@ -304,23 +297,8 @@ public class PublicController {
             // Calcular costo de envío
             BigDecimal costoEnvio = envioService.getCosto(distritoEnvio);
 
-            // Total para cobro con Culqi
-            BigDecimal subtotalItems = itemsConDescuento.stream()
-                    .map(ItemCarritoDTO::getSubtotal)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-            BigDecimal igv   = subtotalItems.multiply(IGV_RATE).setScale(2, RoundingMode.HALF_UP);
-            BigDecimal totalConEnvio = subtotalItems.add(igv).add(costoEnvio)
-                    .setScale(2, RoundingMode.HALF_UP);
-
-            // Si hay token Culqi, procesar cargo ANTES de crear la orden
-            String culqiChargeId = null;
-            if (!culqiToken.isBlank()) {
-                String email = emailFinal.isBlank() ? "cliente@tulicoreria.com" : emailFinal;
-                culqiChargeId = culqiService.cobrar(culqiToken, totalConEnvio, email, "Pedido Licorería");
-            }
-
             VentaResponseDTO venta = ventaService.registrarDesdeCarrito(
-                    itemsConDescuento, metodoPago, clienteId, costoEnvio, distritoEnvio, culqiChargeId);
+                    itemsConDescuento, metodoPago, clienteId, costoEnvio, distritoEnvio, null);
 
             session.removeAttribute(CARRITO_KEY);
             session.removeAttribute(COMBOS_KEY);
@@ -332,7 +310,7 @@ public class PublicController {
             flash.addFlashAttribute("distritoEnvio", venta.getDistritoEnvio());
             flash.addFlashAttribute("metodoPago", venta.getMetodoPago());
             flash.addFlashAttribute("fechaVenta", venta.getFechaHora());
-            flash.addFlashAttribute("pagoConTarjeta", culqiChargeId != null);
+            flash.addFlashAttribute("pagoConTarjeta", false);
         } catch (RuntimeException e) {
             flash.addFlashAttribute("errorMensaje", e.getMessage());
             return "redirect:/carrito";
