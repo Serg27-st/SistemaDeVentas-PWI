@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{publica/layout :: layout(
+        titulo='Sobre nosotros | Tu Licorería',
+        paginaActual='',
+        contenido=~{::main-content},
+        estilosExtra=~{::estilos},
+        scriptsExtra=~{})}">
+<head><title>Sobre nosotros</title>
+<th:block th:fragment="estilos">
+<style>
+  .info-hero {
+    background: linear-gradient(135deg, #0d0d16 0%, #1a1025 60%, #2d1b4e 100%);
+    padding: 3.5rem 0 2.5rem;
+    border-bottom: 1px solid rgba(201,162,39,.15);
+  }
+  .info-section { padding: 4rem 0; }
+  .valor-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 1.75rem;
+    border: 1px solid #f0f0f2;
+    height: 100%;
+    transition: box-shadow .2s, transform .2s;
+  }
+  .valor-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,.09); transform: translateY(-3px); }
+  .valor-icon {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .stat-box {
+    background: linear-gradient(135deg, #0d0d16, #1a1025);
+    border-radius: 14px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    color: #fff;
+  }
+  .stat-num {
+    font-size: 2.8rem;
+    font-weight: 800;
+    color: #c9a227;
+    line-height: 1;
+  }
+</style>
+</th:block>
+</head>
+<body>
+<th:block th:fragment="main-content">
+
+  <!-- Hero -->
+  <section class="info-hero">
+    <div class="container text-center text-white">
+      <div class="mb-3">
+        <span style="background:rgba(201,162,39,.15);color:#c9a227;padding:.35rem 1.1rem;border-radius:50px;font-size:.8rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;">
+          <i class="bi bi-shop me-1"></i>Nuestra Historia
+        </span>
+      </div>
+      <h1 class="fw-bold mb-3" style="font-size:2.4rem;font-family:'Playfair Display',serif;">
+        Sobre <span style="color:#c9a227;">Nosotros</span>
+      </h1>
+      <p class="mb-0 mx-auto" style="color:rgba(255,255,255,.65);max-width:520px;line-height:1.7;">
+        Más de una década llevando los mejores licores a tu mesa con pasión, calidad y el mejor servicio.
+      </p>
+    </div>
+  </section>
+
+  <!-- Breadcrumb -->
+  <div style="background:#f8f8fb;border-bottom:1px solid #ececf1;">
+    <div class="container py-2">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0 small">
+          <li class="breadcrumb-item"><a th:href="@{/inicio}" style="color:#c9a227;">Inicio</a></li>
+          <li class="breadcrumb-item active">Sobre nosotros</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Historia -->
+  <section class="info-section">
+    <div class="container">
+      <div class="row g-5 align-items-center">
+        <div class="col-lg-6">
+          <h2 class="fw-bold mb-4" style="font-family:'Playfair Display',serif;color:#1a1a2e;">
+            Una tienda nacida de la pasión por los buenos licores
+          </h2>
+          <p class="text-muted mb-3" style="line-height:1.8;">
+            <strong style="color:#1a1a2e;">Tu Licorería</strong> nació como un pequeño emprendimiento familiar en Lima con un objetivo claro: ofrecer a nuestros clientes una selección cuidadosa de vinos, cervezas, espirituosas y destilados de calidad, a precios justos y con un servicio cercano.
+          </p>
+          <p class="text-muted mb-3" style="line-height:1.8;">
+            Con los años fuimos creciendo, ampliando nuestro catálogo y perfeccionando nuestra distribución. Hoy contamos con delivery rápido a toda Lima, una tienda en línea disponible las 24 horas y un equipo comprometido con hacer que cada compra sea una experiencia placentera.
+          </p>
+          <p class="text-muted mb-0" style="line-height:1.8;">
+            Nos enorgullecemos de trabajar directamente con importadores y distribuidores certificados, garantizando la autenticidad y procedencia de cada producto que ofrecemos.
+          </p>
+        </div>
+        <div class="col-lg-6">
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="stat-box">
+                <div class="stat-num">10+</div>
+                <div class="small mt-1" style="color:rgba(255,255,255,.65);">Años de experiencia</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="stat-box">
+                <div class="stat-num">500+</div>
+                <div class="small mt-1" style="color:rgba(255,255,255,.65);">Productos disponibles</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="stat-box">
+                <div class="stat-num">5k+</div>
+                <div class="small mt-1" style="color:rgba(255,255,255,.65);">Clientes satisfechos</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="stat-box">
+                <div class="stat-num">30+</div>
+                <div class="small mt-1" style="color:rgba(255,255,255,.65);">Distritos con delivery</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Valores -->
+  <section class="py-5" style="background:#f8f8fb;">
+    <div class="container">
+      <div class="text-center mb-5">
+        <h2 class="fw-bold" style="font-family:'Playfair Display',serif;color:#1a1a2e;">Nuestros valores</h2>
+        <p class="text-muted">Lo que nos guía cada día</p>
+      </div>
+      <div class="row g-4">
+        <div class="col-sm-6 col-lg-3">
+          <div class="valor-card">
+            <div class="valor-icon" style="background:rgba(201,162,39,.12);">
+              <i class="bi bi-patch-check-fill" style="color:#c9a227;"></i>
+            </div>
+            <h6 class="fw-bold mb-2">Calidad garantizada</h6>
+            <p class="text-muted small mb-0" style="line-height:1.7;">
+              Todos nuestros productos son seleccionados con altos estándares y provienen de distribuidores certificados.
+            </p>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="valor-card">
+            <div class="valor-icon" style="background:rgba(59,130,246,.1);">
+              <i class="bi bi-lightning-fill" style="color:#3b82f6;"></i>
+            </div>
+            <h6 class="fw-bold mb-2">Entrega rápida</h6>
+            <p class="text-muted small mb-0" style="line-height:1.7;">
+              Delivery express a toda Lima. Nos comprometemos a que tu pedido llegue en el menor tiempo posible.
+            </p>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="valor-card">
+            <div class="valor-icon" style="background:rgba(16,185,129,.1);">
+              <i class="bi bi-shield-fill-check" style="color:#10b981;"></i>
+            </div>
+            <h6 class="fw-bold mb-2">Venta responsable</h6>
+            <p class="text-muted small mb-0" style="line-height:1.7;">
+              Solo vendemos a mayores de 18 años. Promovemos el consumo responsable y moderado de bebidas alcohólicas.
+            </p>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="valor-card">
+            <div class="valor-icon" style="background:rgba(139,92,246,.1);">
+              <i class="bi bi-people-fill" style="color:#8b5cf6;"></i>
+            </div>
+            <h6 class="fw-bold mb-2">Atención cercana</h6>
+            <p class="text-muted small mb-0" style="line-height:1.7;">
+              Nuestro equipo está siempre disponible para ayudarte a elegir el producto perfecto para cada ocasión.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="py-5">
+    <div class="container">
+      <div class="rounded-3 p-5 text-center" style="background:linear-gradient(135deg,#0d0d16,#1a1025);">
+        <h4 class="fw-bold text-white mb-2" style="font-family:'Playfair Display',serif;">
+          ¿Tienes alguna consulta?
+        </h4>
+        <p class="mb-4" style="color:rgba(255,255,255,.6);">
+          Escríbenos por WhatsApp y te atendemos al instante.
+        </p>
+        <a href="https://wa.me/51977968942" target="_blank" rel="noopener"
+           class="btn rounded-pill px-4 py-2 fw-semibold"
+           style="background:#c9a227;color:#0d0d16;">
+          <i class="bi bi-whatsapp me-2"></i>Contactar por WhatsApp
+        </a>
+      </div>
+    </div>
+  </section>
+
+</th:block>
+</body>
+</html>

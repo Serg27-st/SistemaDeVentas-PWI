@@ -98,29 +98,28 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
             @Param("anio") int anio
     );
 
-    // Total e IGV vendido en un mes (para declaración tributaria)
+    // Total, IGV y subtotal del mes para declaración tributaria.
+    // Retorna List<Object[]> con exactamente 1 fila: [subtotal, igv, total].
     @Query("SELECT COALESCE(SUM(v.subtotal), 0), " +
            "COALESCE(SUM(v.igv), 0), " +
            "COALESCE(SUM(v.total), 0) " +
            "FROM Venta v " +
            "WHERE v.estado = 'COMPLETADA' " +
            "AND MONTH(v.fechaHora) = :mes " +
-           "AND YEAR(v.fechaHora) = :anio")
-Object[] findTotalesPorMes(
+           "AND YEAR(v.fechaHora)  = :anio")
+    List<Object[]> findTotalesPorMes(
             @Param("mes") int mes,
-            @Param("anio") int anio
-    );
+            @Param("anio") int anio);
 
-    // Variante tipada para evitar inconsistencias de mapeo del Object[]
-    @Query("SELECT COALESCE(SUM(v.subtotal), 0), " +
-           "COALESCE(SUM(v.igv), 0), " +
-           "COALESCE(SUM(v.total), 0) " +
+    // Desglose diario del mes: [dia(int), cantVentas(Long), total(BigDecimal)]
+    @Query("SELECT DAY(v.fechaHora), COUNT(v), SUM(v.total) " +
            "FROM Venta v " +
            "WHERE v.estado = 'COMPLETADA' " +
            "AND MONTH(v.fechaHora) = :mes " +
-           "AND YEAR(v.fechaHora) = :anio")
-    Object[] findTotalesPorMesOpt(
+           "AND YEAR(v.fechaHora)  = :anio " +
+           "GROUP BY DAY(v.fechaHora) " +
+           "ORDER BY DAY(v.fechaHora)")
+    List<Object[]> findResumenPorDia(
             @Param("mes") int mes,
-            @Param("anio") int anio
-    );
+            @Param("anio") int anio);
 }

@@ -149,13 +149,13 @@
 
         <!-- Especificaciones técnicas -->
         <div class="d-flex flex-wrap gap-2 mb-4">
-          <span class="spec-badge">
+          <span class="spec-badge" th:if="${producto.gradoAlcohol != null}">
             <i class="bi bi-droplet-fill"></i>
             <span th:text="${producto.gradoAlcohol} + '° Alch.'">0°</span>
           </span>
-          <span class="spec-badge">
+          <span class="spec-badge" th:if="${producto.cantidad != null}">
             <i class="bi bi-box-seam-fill"></i>
-            <span th:text="${producto.volumenMl} + ' ml'">0 ml</span>
+            <span th:text="${producto.cantidad % 1 == 0 ? producto.cantidad.intValue() : producto.cantidad} + (producto.unidadMedida != null ? ' ' + producto.unidadMedida : '')">Vol</span>
           </span>
           <span class="spec-badge" th:if="${producto.stockBajo and !producto.sinStock}"
                 style="border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.06);">

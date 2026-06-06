@@ -117,7 +117,7 @@
                         <div class="d-flex justify-content-between align-items-center py-2 border-bottom"
                             style="border-color: #f1f5f9 !important;">
                             <span class="text-secondary fw-semibold small">Volumen</span>
-                            <span class="text-dark" th:text="${producto.volumenMl != null ? producto.volumenMl + ' ml' : '-'}">-</span>
+                            <span class="text-dark" th:text="${producto.cantidad != null ? (producto.cantidad % 1 == 0 ? producto.cantidad.intValue() : producto.cantidad) + (producto.unidadMedida != null ? ' ' + producto.unidadMedida : '') : '-'}">-</span>
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center py-2 border-bottom"

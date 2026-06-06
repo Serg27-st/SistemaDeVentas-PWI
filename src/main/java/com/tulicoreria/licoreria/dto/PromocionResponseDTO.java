@@ -31,6 +31,10 @@ public class PromocionResponseDTO {
 
     private List<ComboItemDTO> items;
 
+    /** Listas paralelas para pre-poblar el formulario de edición */
+    private List<Long>    comboProductoIds;
+    private List<Integer> comboCantidades;
+
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
     private boolean activo;

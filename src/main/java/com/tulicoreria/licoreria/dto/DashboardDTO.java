@@ -28,4 +28,8 @@ public class DashboardDTO {
 
     // Los 5 productos más vendidos del mes
     private List<String> productosMasVendidos;
+
+    // Datos para la gráfica de ventas de los últimos 7 días
+    private List<BigDecimal> ventasUltimos7Dias;
+    private List<String>     labelsUltimos7Dias;
 }

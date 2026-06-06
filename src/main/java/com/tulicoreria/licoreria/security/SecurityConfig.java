@@ -48,6 +48,7 @@ public class SecurityConfig {
                 .requestMatchers("/promociones/**").hasRole("ADMIN")
                 .requestMatchers("/reclamaciones", "/reclamaciones/").permitAll()
                 .requestMatchers("/reclamaciones/admin", "/reclamaciones/*/atender").hasRole("ADMIN")
+                .requestMatchers("/nosotros", "/privacidad", "/terminos", "/faq").permitAll()
                 .requestMatchers("/mi-cuenta", "/mi-cuenta/**").hasRole("CLIENTE")
                 .requestMatchers("/dashboard").hasAnyRole("ADMIN", "VENDEDOR", "ALMACEN")
                 .requestMatchers("/ventas/**").hasAnyRole("ADMIN", "VENDEDOR")

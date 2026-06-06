@@ -312,7 +312,9 @@
                   <span class="card-cat-label" th:text="${p.categoriaNombre}">Cat</span>
                   <h6 class="card-nombre" th:text="${p.nombre}">Nombre</h6>
                   <p class="card-marca-vol mb-0"
-                     th:text="|${p.marca} · ${p.volumenMl} ml · ${p.gradoAlcohol}° Alch.|">Info</p>
+                     th:text="${p.marca}
+                              + (p.cantidad != null ? ' · ' + (p.cantidad % 1 == 0 ? p.cantidad.intValue() : p.cantidad) + (p.unidadMedida != null ? ' ' + p.unidadMedida : '') : '')
+                              + (p.gradoAlcohol != null ? ' · ' + p.gradoAlcohol + '° Alch.' : '')">Info</p>
 
                   <div class="mt-auto pt-3 d-flex justify-content-between align-items-end">
                     <div>
@@ -348,7 +350,9 @@
                       th:text="${p.nombre}"
                       style="color:var(--color-text-primary);font-size:.93rem;">Nombre</h6>
                   <p class="mb-1" style="font-size:.78rem;color:var(--color-text-muted);"
-                     th:text="|${p.marca} · ${p.volumenMl} ml · ${p.gradoAlcohol}° Alch.|"></p>
+                     th:text="${p.marca}
+                              + (p.cantidad != null ? ' · ' + (p.cantidad % 1 == 0 ? p.cantidad.intValue() : p.cantidad) + (p.unidadMedida != null ? ' ' + p.unidadMedida : '') : '')
+                              + (p.gradoAlcohol != null ? ' · ' + p.gradoAlcohol + '° Alch.' : '')"></p>
                   <!-- Promo badge -->
                   <span th:if="${p.tienePromocion and p.etiquetaPromo != null}"
                         class="badge rounded-pill px-2"

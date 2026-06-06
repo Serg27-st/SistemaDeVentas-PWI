@@ -179,7 +179,7 @@
                                         <div class="fw-semibold"
                                              th:text="${d.productoNombre}"></div>
                                         <small class="text-muted"
-                                               th:text="${d.productoMarca + ' · ' + d.volumenMl + 'ml'}">
+                                               th:text="${d.productoMarca + (d.productoCantidad != null ? ' · ' + (d.productoCantidad % 1 == 0 ? d.productoCantidad.intValue() : d.productoCantidad) + (d.productoUnidad != null ? ' ' + d.productoUnidad : '') : '')}">
                                         </small>
                                     </td>
                                     <td class="text-center fw-semibold"

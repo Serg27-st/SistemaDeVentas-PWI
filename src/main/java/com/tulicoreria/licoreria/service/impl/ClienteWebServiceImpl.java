@@ -4,6 +4,7 @@ import com.tulicoreria.licoreria.dto.RegistroClienteWebDTO;
 import com.tulicoreria.licoreria.model.Cliente;
 import com.tulicoreria.licoreria.model.ClienteWeb;
 import com.tulicoreria.licoreria.model.DireccionEnvio;
+import com.tulicoreria.licoreria.repository.ClienteRepository;
 import com.tulicoreria.licoreria.repository.ClienteWebRepository;
 import com.tulicoreria.licoreria.repository.DireccionEnvioRepository;
 import com.tulicoreria.licoreria.service.ClienteWebService;
@@ -20,6 +21,7 @@ public class ClienteWebServiceImpl implements ClienteWebService {
 
     private final ClienteWebRepository clienteWebRepository;
     private final DireccionEnvioRepository direccionEnvioRepository;
+    private final ClienteRepository clienteRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -32,12 +34,19 @@ public class ClienteWebServiceImpl implements ClienteWebService {
             throw new RuntimeException("Las contraseñas no coinciden.");
         }
 
+        // Determinar número de documento
+        boolean tieneDni = dto.getDni() != null && !dto.getDni().isBlank();
+        if (tieneDni && clienteRepository.existsByNumeroDocumento(dto.getDni().trim())) {
+            throw new RuntimeException("El DNI " + dto.getDni().trim() + " ya está registrado en el sistema.");
+        }
+        String numDoc = tieneDni ? dto.getDni().trim() : "WEB-" + System.currentTimeMillis();
+
         // Crear el registro de negocio (Cliente) para poder vincular ventas
         Cliente cliente = Cliente.builder()
                 .nombre(dto.getNombre())
                 .apellido(dto.getApellido())
                 .tipoDocumento(Cliente.TipoDocumento.DNI)
-                .numeroDocumento("WEB-" + System.currentTimeMillis())
+                .numeroDocumento(numDoc)
                 .telefono(dto.getTelefono())
                 .correo(dto.getEmail())
                 .fechaNacimiento(dto.getFechaNacimiento())
@@ -55,7 +64,22 @@ public class ClienteWebServiceImpl implements ClienteWebService {
                 .cliente(cliente)
                 .build();
 
-        return clienteWebRepository.save(cw);
+        ClienteWeb guardado = clienteWebRepository.save(cw);
+
+        // Guardar dirección inicial si fue proporcionada
+        if (dto.getDireccion() != null && !dto.getDireccion().isBlank()) {
+            DireccionEnvio dir = DireccionEnvio.builder()
+                    .alias("Casa")
+                    .direccionCompleta(dto.getDireccion().trim())
+                    .referencia(dto.getReferencia() != null ? dto.getReferencia().trim() : null)
+                    .distrito(dto.getDistrito() != null ? dto.getDistrito().trim() : null)
+                    .esDefault(true)
+                    .clienteWeb(guardado)
+                    .build();
+            direccionEnvioRepository.save(dir);
+        }
+
+        return guardado;
     }
 
     @Override
@@ -114,7 +138,7 @@ public class ClienteWebServiceImpl implements ClienteWebService {
 
     @Override
     @Transactional
-    public void actualizarPerfil(String email, String nombre, String apellido, String telefono) {
+    public void actualizarPerfil(String email, String nombre, String apellido, String telefono, String dni) {
         ClienteWeb cw = findByEmail(email);
         cw.setNombre(nombre);
         cw.setApellido(apellido);
@@ -125,6 +149,19 @@ public class ClienteWebServiceImpl implements ClienteWebService {
             cw.getCliente().setNombre(nombre);
             cw.getCliente().setApellido(apellido);
             cw.getCliente().setTelefono(telefono);
+
+            // Actualizar DNI solo si se proporcionó uno válido
+            if (dni != null && !dni.isBlank()) {
+                String dniNuevo = dni.trim();
+                String dniActual = cw.getCliente().getNumeroDocumento();
+                // Solo actualizar si cambió
+                if (!dniNuevo.equals(dniActual)) {
+                    if (clienteRepository.existsByNumeroDocumento(dniNuevo)) {
+                        throw new RuntimeException("El DNI " + dniNuevo + " ya pertenece a otro cliente.");
+                    }
+                    cw.getCliente().setNumeroDocumento(dniNuevo);
+                }
+            }
         }
 
         clienteWebRepository.save(cw);

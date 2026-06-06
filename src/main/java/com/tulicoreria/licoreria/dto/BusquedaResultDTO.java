@@ -16,7 +16,8 @@ public class BusquedaResultDTO {
     private String nombre;
     private String marca;
     private String categoriaNombre;
-    private Integer volumenMl;
+    private Double cantidad;
+    private String unidadMedida;
     private BigDecimal precioVenta;
     private String urlImagen;
     private boolean sinStock;

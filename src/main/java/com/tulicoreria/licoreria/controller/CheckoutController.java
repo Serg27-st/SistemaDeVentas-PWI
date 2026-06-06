@@ -165,6 +165,13 @@ public class CheckoutController {
                 dto.setApellido(cw.getApellido());
                 dto.setEmail(cw.getEmail());
                 dto.setTelefono(cw.getTelefono());
+                // Pre-fill DNI si ya está registrado (no es el placeholder WEB-...)
+                if (cw.getCliente() != null) {
+                    String numDoc = cw.getCliente().getNumeroDocumento();
+                    if (numDoc != null && !numDoc.startsWith("WEB-")) {
+                        dto.setDni(numDoc);
+                    }
+                }
                 // Pre-fill dirección por defecto si tiene
                 cw.getDirecciones().stream()
                   .filter(d -> d.isEsDefault())

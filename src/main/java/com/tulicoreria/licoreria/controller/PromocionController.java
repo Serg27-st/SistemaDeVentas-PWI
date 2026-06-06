@@ -66,10 +66,36 @@ public class PromocionController {
         return "redirect:/promociones";
     }
 
+    @PostMapping("/activar/{id}")
+    public String activar(@PathVariable Long id, RedirectAttributes flash) {
+        try {
+            promocionService.activar(id);
+            flash.addFlashAttribute("exito", "Promoción activada.");
+        } catch (Exception e) {
+            flash.addFlashAttribute("error", "Error: " + e.getMessage());
+        }
+        return "redirect:/promociones";
+    }
+
     @PostMapping("/desactivar/{id}")
     public String desactivar(@PathVariable Long id, RedirectAttributes flash) {
-        promocionService.desactivar(id);
-        flash.addFlashAttribute("exito", "Promoción desactivada.");
+        try {
+            promocionService.desactivar(id);
+            flash.addFlashAttribute("exito", "Promoción desactivada.");
+        } catch (Exception e) {
+            flash.addFlashAttribute("error", "Error: " + e.getMessage());
+        }
+        return "redirect:/promociones";
+    }
+
+    @PostMapping("/eliminar/{id}")
+    public String eliminar(@PathVariable Long id, RedirectAttributes flash) {
+        try {
+            promocionService.eliminar(id);
+            flash.addFlashAttribute("exito", "Promoción eliminada.");
+        } catch (Exception e) {
+            flash.addFlashAttribute("error", "No se puede eliminar: " + e.getMessage());
+        }
         return "redirect:/promociones";
     }
 }

@@ -3,6 +3,7 @@ package com.tulicoreria.licoreria.controller;
 import com.tulicoreria.licoreria.dto.ItemCarritoDTO;
 import com.tulicoreria.licoreria.dto.ProductoResponseDTO;
 import com.tulicoreria.licoreria.dto.VentaResponseDTO;
+import com.tulicoreria.licoreria.model.Promocion;
 import com.tulicoreria.licoreria.service.BusquedaService;
 import com.tulicoreria.licoreria.util.FuzzySearchUtil;
 import com.tulicoreria.licoreria.model.ClienteWeb;
@@ -57,8 +58,23 @@ public class PublicController {
                 .limit(8)
                 .toList();
         model.addAttribute("productosDestacados", destacados);
-        model.addAttribute("combosDestacados", promocionService.findCombosActivos().stream()
-                .limit(4).toList());
+
+        List<Promocion> combosDestacados = promocionService.findCombosActivos().stream()
+                .limit(4).toList();
+        model.addAttribute("combosDestacados", combosDestacados);
+
+        // Pre-computar totalNormal por combo para evitar lambdas Java en SpEL del template
+        Map<Long, BigDecimal> totalesNormales = new LinkedHashMap<>();
+        for (Promocion combo : combosDestacados) {
+            BigDecimal total = combo.getItems().stream()
+                    .filter(ci -> ci.getProducto() != null)
+                    .map(ci -> ci.getProducto().getPrecioVenta()
+                            .multiply(BigDecimal.valueOf(ci.getCantidad())))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            totalesNormales.put(combo.getId(), total);
+        }
+        model.addAttribute("totalesNormales", totalesNormales);
+
         return "publica/inicio";
     }
 

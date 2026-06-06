@@ -107,7 +107,7 @@ img { display: block; max-width: 100%; }
    ================================================================ */
 #navbar-publica {
   background-color: var(--dark-nav);
-  height: var(--nav-h);
+  min-height: var(--nav-h);
   border-bottom: 1px solid var(--border-dark);
   transition: background var(--t), box-shadow var(--t);
   z-index: 1030;
@@ -259,6 +259,29 @@ img { display: block; max-width: 100%; }
 /* Toggler icon (mobile) */
 .navbar-toggler { border: none !important; box-shadow: none !important; }
 .navbar-toggler:focus { box-shadow: none !important; }
+
+/* Menú desplegable en móvil */
+@media (max-width: 991px) {
+  #navMenu.show,
+  #navMenu.collapsing {
+    background-color: var(--dark-nav);
+    border-top: 1px solid var(--border-dark);
+    padding: 12px 0 16px;
+  }
+  #navMenu .navbar-nav { padding: 0 4px; }
+  #navMenu .nav-link { padding: 10px 14px !important; }
+  #navMenu .nav-link::after { display: none; }
+  #navMenu form,
+  #navMenu .btn-carrito,
+  #navMenu .dropdown,
+  #navMenu > div { margin-top: 10px; }
+  #navMenu .btn-carrito { width: fit-content; }
+  #navMenu > div.d-flex { flex-wrap: wrap; gap: 8px; padding: 0 4px; }
+  #navMenu .smart-search-wrap { width: 100% !important; }
+  #navMenu #public-search-form { width: 100%; margin-right: 0 !important; }
+  .search-input { width: 100% !important; }
+  .search-input:focus { width: 100% !important; }
+}
 
 /* ================================================================
    HERO

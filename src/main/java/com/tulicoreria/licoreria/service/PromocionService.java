@@ -15,7 +15,9 @@ public interface PromocionService {
     // ── Admin CRUD ────────────────────────────────────────────────────────────
     PromocionResponseDTO crear(PromocionRequestDTO dto);
     PromocionResponseDTO actualizar(Long id, PromocionRequestDTO dto);
+    void activar(Long id);
     void desactivar(Long id);
+    void eliminar(Long id);
     List<PromocionResponseDTO> listarTodas();
     PromocionResponseDTO buscarPorId(Long id);
 

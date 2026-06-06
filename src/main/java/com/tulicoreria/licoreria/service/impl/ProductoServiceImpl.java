@@ -99,7 +99,8 @@ public class ProductoServiceImpl implements ProductoService {
                 .descripcion(dto.getDescripcion())
                 .marca(dto.getMarca())
                 .paisOrigen(dto.getPaisOrigen())
-                .volumenMl(dto.getVolumenMl())
+                .cantidad(dto.getCantidad())
+                .unidadMedida(dto.getUnidadMedida())
                 .gradoAlcohol(dto.getGradoAlcohol())
                 .precioCompra(dto.getPrecioCompra())
                 .precioVenta(dto.getPrecioVenta())
@@ -130,7 +131,8 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setDescripcion(dto.getDescripcion());
         producto.setMarca(dto.getMarca());
         producto.setPaisOrigen(dto.getPaisOrigen());
-        producto.setVolumenMl(dto.getVolumenMl());
+        producto.setCantidad(dto.getCantidad());
+        producto.setUnidadMedida(dto.getUnidadMedida());
         producto.setGradoAlcohol(dto.getGradoAlcohol());
         producto.setPrecioCompra(dto.getPrecioCompra());
         producto.setPrecioVenta(dto.getPrecioVenta());
@@ -212,7 +214,8 @@ public class ProductoServiceImpl implements ProductoService {
                 .descripcion(p.getDescripcion())
                 .marca(p.getMarca())
                 .paisOrigen(p.getPaisOrigen())
-                .volumenMl(p.getVolumenMl())
+                .cantidad(p.getCantidad())
+                .unidadMedida(p.getUnidadMedida())
                 .gradoAlcohol(p.getGradoAlcohol())
                 .precioCompra(p.getPrecioCompra())
                 .precioVenta(precioFinal)

@@ -142,6 +142,20 @@
         </div>
       </div>
 
+      <!-- Alerta si falta el DNI -->
+      <div th:if="${cliente.cliente != null and #strings.startsWith(cliente.cliente.numeroDocumento,'WEB-')}"
+           class="alert d-flex align-items-center gap-3 mb-4 py-3"
+           style="background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.25);border-radius:12px;">
+        <i class="bi bi-exclamation-triangle-fill" style="color:#d97706;font-size:1.3rem;flex-shrink:0;"></i>
+        <div>
+          <div class="fw-semibold small" style="color:#92400e;">Completa tu perfil</div>
+          <div class="small" style="color:#78350f;">
+            Aún no has registrado tu DNI.
+            <a th:href="@{/mi-cuenta/perfil}" style="color:#c9a227;font-weight:600;">Ir a mi perfil →</a>
+          </div>
+        </div>
+      </div>
+
       <!-- Accesos rápidos -->
       <div class="row g-3">
         <div class="col-sm-6">

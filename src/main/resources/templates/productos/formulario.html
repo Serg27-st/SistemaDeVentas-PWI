@@ -125,39 +125,61 @@
                                     </select>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Proveedor</label>
-                                    <select th:field="*{proveedorId}" class="form-select">
-                                        <option value="">Sin proveedor</option>
+                                    <label class="form-label fw-semibold">
+                                        Proveedor <span class="text-danger">*</span>
+                                    </label>
+                                    <select th:field="*{proveedorId}" class="form-select" id="selectProveedor">
+                                        <option value="">— Selecciona un proveedor —</option>
                                         <option th:each="prov : ${proveedores}" th:value="${prov.id}"
                                             th:text="${prov.razonSocial}">
                                         </option>
                                     </select>
+                                    <div id="alertaProveedor" class="alert alert-warning py-2 mt-2 small d-none">
+                                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                        Debes seleccionar un proveedor antes de guardar.
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="row g-3 mb-3">
                                 <div class="col-md-4">
-                                    <label class="form-label fw-semibold">
-                                        Volumen (ml) <span class="text-danger">*</span>
-                                    </label>
-                                    <select th:field="*{volumenMl}" class="form-select" required>
-                                        <option value="">Selecciona...</option>
-                                        <option th:each="v : ${ {180,250,330,500,620,750,1000,1750} }" th:value="${v}"
-                                            th:text="${v + ' ml'}">
-                                        </option>
+                                    <label class="form-label fw-semibold">Cantidad</label>
+                                    <input type="number" th:field="*{cantidad}" class="form-control"
+                                        placeholder="Ej: 750" step="any" min="0" />
+                                    <small class="text-muted">Opcional. Dejar en blanco si no aplica.</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Unidad de medida</label>
+                                    <select th:field="*{unidadMedida}" class="form-select">
+                                        <option value="">— Sin unidad —</option>
+                                        <option value="ml">ml</option>
+                                        <option value="L">L</option>
+                                        <option value="cl">cl</option>
+                                        <option value="oz">oz</option>
+                                        <option value="und">und</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label fw-semibold">
-                                        Grado alcohol (%) <span class="text-danger">*</span>
-                                    </label>
-                                    <input type="number" th:field="*{gradoAlcohol}" class="form-control"
-                                        placeholder="0.0" step="0.1" min="0" max="100" required />
+                                    <label class="form-label fw-semibold">Grado alcohol (%)</label>
+                                    <div class="input-group">
+                                        <input type="number" th:field="*{gradoAlcohol}" class="form-control"
+                                            placeholder="Ej: 40.0" step="0.1" min="0" max="100" />
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                    <small class="text-muted">Opcional. Dejar en blanco para cigarros.</small>
                                 </div>
-                                <div class="col-md-4">
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
                                     <label class="form-label fw-semibold">País de origen</label>
                                     <input type="text" th:field="*{paisOrigen}" class="form-control"
                                         placeholder="Ej: Escocia" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Fecha de Vencimiento</label>
+                                    <input type="date" th:field="*{fechaVencimiento}" class="form-control" />
+                                    <small class="text-muted">Solo para productos perecibles o con caducidad.</small>
                                 </div>
                             </div>
 
@@ -224,20 +246,6 @@
 
 </div>
 
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">
-                                    Fecha de Vencimiento
-                                </label>
-
-                                <input type="date"
-                                    th:field="*{fechaVencimiento}"
-                                    class="form-control" />
-
-                                <small class="text-muted">
-                                    Solo para productos perecibles o con caducidad.
-                                </small>
-                            </div>
-
                             <div class="mb-0">
                                 <label class="form-label fw-semibold">Descripción</label>
                                 <textarea th:field="*{descripcion}" class="form-control" rows="3"
@@ -264,61 +272,26 @@
 
     <th:block th:fragment="scripts">
         <script th:inline="javascript">
-            // Corregido: Cargamos la lista de categorías directamente convirtiéndola a JSON nativo
             const listaCategoriasBackend = /*[[${categorias}]]*/[];
             const categorias = {};
+            listaCategoriasBackend.forEach(cat => { categorias[cat.id] = cat.nombre; });
 
-            // Construimos el mapa de JS iterando el array ya mapeado
-            if (listaCategoriasBackend) {
-                listaCategoriasBackend.forEach(cat => {
-                    categorias[cat.id] = cat.nombre;
-                });
-            }
-
-            // Preview físico de la imagen al seleccionar archivo
+            // ── Preview de imagen ─────────────────────────────────────────────────────
             function previewImagen(input) {
-                const imgNueva = document.getElementById('imgNueva');
-                const imgPreview = document.getElementById('imgPreview');
+                const imgNueva    = document.getElementById('imgNueva');
+                const imgPreview  = document.getElementById('imgPreview');
                 const placeholder = document.getElementById('imgPlaceholder');
                 const infoArchivo = document.getElementById('archivoSeleccionado');
                 const nombreArchivo = document.getElementById('nombreArchivo');
 
-                if (input.files && input.files[0]) {
-                    const archivo = input.files[0];
+                if (!input.files || !input.files[0]) return;
 
-                    const reader = new FileReader();
-                    reader.onload = e => {
-                        imgNueva.src = e.target.result;
-                        imgNueva.classList.remove('d-none');
-
-                        if (imgPreview) imgPreview.style.display = 'none';
-                        if (placeholder) placeholder.style.display = 'none';
-                    };
-                    reader.readAsDataURL(archivo);
-
-                    nombreArchivo.textContent = archivo.name;
-                    infoArchivo.classList.remove('d-none');
-
-                    actualizarRutaPreview();
-                }
-            });
-        }
-
-        // Preview físico de la imagen
-        function previewImagen(input) {
-            var imgNueva = document.getElementById('imgNueva');
-            var imgPreview = document.getElementById('imgPreview');
-            var placeholder = document.getElementById('imgPlaceholder');
-            var infoArchivo = document.getElementById('archivoSeleccionado');
-            var nombreArchivo = document.getElementById('nombreArchivo');
-
-            if (input.files && input.files[0]) {
-                var archivo = input.files[0];
-                var reader = new FileReader();
-                reader.onload = function(e) {
+                const archivo = input.files[0];
+                const reader  = new FileReader();
+                reader.onload = e => {
                     imgNueva.src = e.target.result;
                     imgNueva.classList.remove('d-none');
-                    if (imgPreview) imgPreview.style.display = 'none';
+                    if (imgPreview)  imgPreview.style.display  = 'none';
                     if (placeholder) placeholder.style.display = 'none';
                 };
                 reader.readAsDataURL(archivo);
@@ -326,47 +299,61 @@
                 infoArchivo.classList.remove('d-none');
                 actualizarRutaPreview();
             }
-        }
 
-        // Actualiza la ruta preview
-        function actualizarRutaPreview() {
-            var categoriaSelect = document.getElementById('selectCategoria');
-            var previewRuta = document.getElementById('previewRuta');
-            var productoId = /*[[${producto.id}]]*/ null;
-            var categoriaId = categoriaSelect ? categoriaSelect.value : '';
-
-            if (!categoriaId) {
-                previewRuta.textContent = 'CATEGORIA/producto_ID.jpg';
-                return;
-            }
-
-            // Actualiza de manera visual el informativo de almacenamiento
+            // ── Preview de ruta de almacenamiento ────────────────────────────────────
             function actualizarRutaPreview() {
                 const categoriaSelect = document.getElementById('selectCategoria');
-                const previewRuta = document.getElementById('previewRuta');
-                const productoId = /*[[${producto.id}]]*/ null;
-
-                const categoriaId = categoriaSelect.value;
+                const previewRuta     = document.getElementById('previewRuta');
+                const productoId      = /*[[${producto.id}]]*/ null;
+                const categoriaId     = categoriaSelect ? categoriaSelect.value : '';
 
                 if (!categoriaId) {
                     previewRuta.textContent = '{CATEGORIA}/producto_{id}.ext';
                     return;
                 }
 
-                const categoriaNombre = categorias[categoriaId] || '';
+                const categoriaNombre  = categorias[categoriaId] || '';
                 const carpetaCategoria = categoriaNombre.trim().toUpperCase().replace(/\s+/g, '_');
-                const idTexto = productoId ? productoId : '{id_autogenerado}';
-
-        // Inicializar
-        document.addEventListener('DOMContentLoaded', function() {
-            actualizarRutaPreview();
-            var selectCat = document.getElementById('selectCategoria');
-            if (selectCat) {
-                selectCat.addEventListener('change', actualizarRutaPreview);
+                const idTexto          = productoId ? productoId : '{id_autogenerado}';
+                previewRuta.textContent = carpetaCategoria + '/producto_' + idTexto + '.jpg';
             }
-        });
-    </script>
-</th:block>
+
+            // ── Validación al enviar ──────────────────────────────────────────────────
+            document.getElementById('formProducto').addEventListener('submit', function (e) {
+                const selectProv = document.getElementById('selectProveedor');
+                const alerta     = document.getElementById('alertaProveedor');
+                let ok = true;
+
+                // Validar proveedor
+                if (!selectProv.value) {
+                    alerta.classList.remove('d-none');
+                    selectProv.classList.add('is-invalid');
+                    selectProv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    ok = false;
+                } else {
+                    alerta.classList.add('d-none');
+                    selectProv.classList.remove('is-invalid');
+                }
+
+                if (!ok) e.preventDefault();
+            });
+
+            // Ocultar alerta en cuanto el usuario elige un proveedor
+            document.getElementById('selectProveedor').addEventListener('change', function () {
+                if (this.value) {
+                    document.getElementById('alertaProveedor').classList.add('d-none');
+                    this.classList.remove('is-invalid');
+                }
+            });
+
+            // ── Inicializar ───────────────────────────────────────────────────────────
+            document.addEventListener('DOMContentLoaded', function () {
+                actualizarRutaPreview();
+                const selectCat = document.getElementById('selectCategoria');
+                if (selectCat) selectCat.addEventListener('change', actualizarRutaPreview);
+            });
+        </script>
+    </th:block>
 
 </body>
 

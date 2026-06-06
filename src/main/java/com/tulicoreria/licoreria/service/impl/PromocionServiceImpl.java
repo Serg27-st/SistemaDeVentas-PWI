@@ -50,11 +50,28 @@ public class PromocionServiceImpl implements PromocionService {
 
     @Override
     @Transactional
+    public void activar(Long id) {
+        Promocion p = promocionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Promoción no encontrada: " + id));
+        p.setActivo(true);
+        promocionRepository.save(p);
+    }
+
+    @Override
+    @Transactional
     public void desactivar(Long id) {
         Promocion p = promocionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Promoción no encontrada: " + id));
         p.setActivo(false);
         promocionRepository.save(p);
+    }
+
+    @Override
+    @Transactional
+    public void eliminar(Long id) {
+        Promocion p = promocionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Promoción no encontrada: " + id));
+        promocionRepository.delete(p);
     }
 
     @Override
@@ -214,6 +231,10 @@ public class PromocionServiceImpl implements PromocionService {
                         .build())
                 .toList();
 
+        // Listas paralelas para el formulario de edición (combo)
+        List<Long>    comboIds  = p.getItems().stream().map(ci -> ci.getProducto().getId()).toList();
+        List<Integer> comboCant = p.getItems().stream().map(ComboItem::getCantidad).toList();
+
         return PromocionResponseDTO.builder()
                 .id(p.getId())
                 .nombre(p.getNombre())
@@ -228,6 +249,8 @@ public class PromocionServiceImpl implements PromocionService {
                 .productoId(p.getProducto() != null ? p.getProducto().getId() : null)
                 .productoNombre(p.getProducto() != null ? p.getProducto().getNombre() : null)
                 .items(itemDTOs)
+                .comboProductoIds(comboIds)
+                .comboCantidades(comboCant)
                 .fechaInicio(p.getFechaInicio())
                 .fechaFin(p.getFechaFin())
                 .activo(p.isActivo())
@@ -239,47 +262,65 @@ public class PromocionServiceImpl implements PromocionService {
     // ── Private helpers ────────────────────────────────────────────────────────
 
     private Promocion buildFromDTO(Promocion p, PromocionRequestDTO dto) {
-        p.setNombre(dto.getNombre());
+        TipoPromocion tipo = TipoPromocion.valueOf(dto.getTipo());
+
+        p.setNombre(dto.getNombre() != null ? dto.getNombre().trim() : "");
         p.setDescripcion(dto.getDescripcion());
-        p.setTipo(TipoPromocion.valueOf(dto.getTipo()));
-        p.setPorcentajeDescuento(dto.getPorcentajeDescuento());
-        p.setMontoDescuento(dto.getMontoDescuento());
-        p.setCompraX(dto.getCompraX());
-        p.setLlevaY(dto.getLlevaY());
-        p.setPrecioCombo(dto.getPrecioCombo());
+        p.setTipo(tipo);
         p.setFechaInicio(dto.getFechaInicio());
         p.setFechaFin(dto.getFechaFin());
         p.setActivo(dto.isActivo());
 
-        // Producto vinculado
-        if (dto.getProductoId() != null) {
-            productoRepository.findById(dto.getProductoId()).ifPresent(p::setProducto);
-        } else {
-            p.setProducto(null);
-        }
+        // ── Limpiar todos los campos específicos y solo rellenar los del tipo activo
+        p.setPorcentajeDescuento(null);
+        p.setMontoDescuento(null);
+        p.setCompraX(null);
+        p.setLlevaY(null);
+        p.setPrecioCombo(null);
+        p.setProducto(null);
 
-        // Imagen del combo
-        if (dto.getImagenComboFile() != null && !dto.getImagenComboFile().isEmpty()) {
-            String ruta = imagenService.guardarImagenProducto("combos", dto.getImagenComboFile());
-            p.setImagenCombo(ruta);
-        }
-
-        // Ítems del combo
-        if (TipoPromocion.COMBO.name().equals(dto.getTipo())
-                && dto.getComboProductoIds() != null) {
-            p.getItems().clear();
-            List<Long>    ids  = dto.getComboProductoIds();
-            List<Integer> ctds = dto.getComboCantidades();
-            for (int i = 0; i < ids.size(); i++) {
-                Long pId = ids.get(i);
-                int  qty = (ctds != null && i < ctds.size()) ? ctds.get(i) : 1;
-                productoRepository.findById(pId).ifPresent(prod ->
-                    p.getItems().add(ComboItem.builder()
-                            .promocion(p)
-                            .producto(prod)
-                            .cantidad(qty)
-                            .build())
-                );
+        switch (tipo) {
+            case DESCUENTO_DIRECTO -> {
+                // Solo uno de los dos debe enviarse; prevalece porcentaje si ambos llegan
+                if (dto.getPorcentajeDescuento() != null) {
+                    p.setPorcentajeDescuento(dto.getPorcentajeDescuento());
+                } else {
+                    p.setMontoDescuento(dto.getMontoDescuento());
+                }
+                if (dto.getProductoId() != null) {
+                    productoRepository.findById(dto.getProductoId()).ifPresent(p::setProducto);
+                }
+            }
+            case VOLUMEN -> {
+                p.setCompraX(dto.getCompraX());
+                p.setLlevaY(dto.getLlevaY());
+                if (dto.getProductoId() != null) {
+                    productoRepository.findById(dto.getProductoId()).ifPresent(p::setProducto);
+                }
+            }
+            case COMBO -> {
+                p.setPrecioCombo(dto.getPrecioCombo());
+                // Imagen del combo
+                if (dto.getImagenComboFile() != null && !dto.getImagenComboFile().isEmpty()) {
+                    String ruta = imagenService.guardarImagenProducto("combos", dto.getImagenComboFile());
+                    p.setImagenCombo(ruta);
+                }
+                // Ítems del combo
+                p.getItems().clear();
+                List<Long>    ids  = dto.getComboProductoIds();
+                List<Integer> ctds = dto.getComboCantidades();
+                if (ids != null) {
+                    for (int i = 0; i < ids.size(); i++) {
+                        Long pId = ids.get(i);
+                        if (pId == null) continue;
+                        int qty = (ctds != null && i < ctds.size() && ctds.get(i) != null)
+                                ? ctds.get(i) : 1;
+                        productoRepository.findById(pId).ifPresent(prod ->
+                            p.getItems().add(ComboItem.builder()
+                                    .promocion(p).producto(prod).cantidad(qty).build())
+                        );
+                    }
+                }
             }
         }
         return p;

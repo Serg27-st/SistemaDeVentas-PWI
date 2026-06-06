@@ -189,11 +189,10 @@
               <span class="combo-badge"><i class="bi bi-box2-heart me-1"></i>Pack</span>
 
               <!-- Calcular ahorro si hay items -->
-              <span th:if="${combo.items != null and !combo.items.isEmpty() and combo.precioCombo != null}"
+              <span th:if="${combo.precioCombo != null and totalesNormales != null and totalesNormales[combo.id] != null and totalesNormales[combo.id] > combo.precioCombo}"
                     class="combo-save-badge"
-                    th:with="totalNormal=${combo.items.stream().mapToDouble(i -> i.cantidad * i.producto.precioVenta.doubleValue()).sum()},
-                             ahorro=${totalNormal - combo.precioCombo.doubleValue()}"
-                    th:text="${ahorro > 0} ? '-S/. ' + ${#numbers.formatDecimal(ahorro, 1, 2)} : 'Oferta'">
+                    th:with="ahorro=${totalesNormales[combo.id] - combo.precioCombo}"
+                    th:text="'-S/. ' + ${#numbers.formatDecimal(ahorro, 1, 2)}">
                 Ahorro
               </span>
 
@@ -215,7 +214,7 @@
 
               <!-- Ítems del combo -->
               <ul class="combo-items-list" th:if="${combo.items != null and !combo.items.isEmpty()}">
-                <li th:each="item : ${combo.items}">
+                <li th:each="item : ${combo.items}" th:if="${item.producto != null}">
                   <span class="qty-pill" th:text="${item.cantidad} + '×'">1×</span>
                   <span th:text="${item.producto.nombre}">Producto</span>
                   <span class="ms-auto text-muted" style="font-size:.78rem;"
@@ -230,9 +229,8 @@
                 <span class="combo-price"
                       th:text="'S/. ' + ${#numbers.formatDecimal(combo.precioCombo,1,2)}">S/. 0.00</span>
                 <span class="combo-price-normal"
-                      th:if="${combo.items != null and !combo.items.isEmpty()}"
-                      th:with="totalNormal=${combo.items.stream().mapToDouble(i -> i.cantidad * i.producto.precioVenta.doubleValue()).sum()}"
-                      th:text="'S/. ' + ${#numbers.formatDecimal(totalNormal,1,2)}">
+                      th:if="${totalesNormales != null and totalesNormales[combo.id] != null and totalesNormales[combo.id] > 0}"
+                      th:text="'S/. ' + ${#numbers.formatDecimal(totalesNormales[combo.id],1,2)}">
                   S/. 0.00
                 </span>
               </div>

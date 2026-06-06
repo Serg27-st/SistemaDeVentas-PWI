@@ -162,8 +162,8 @@
                                 </td>
 
                                 <td>
-                                    <span th:text="${p.volumenMl + ' ml'}"></span>
-                                    <small class="text-muted d-block" th:text="${p.gradoAlcohol + '° alc.'}"></small>
+                                    <span th:text="${p.cantidad != null ? (p.cantidad % 1 == 0 ? p.cantidad.intValue() : p.cantidad) + (p.unidadMedida != null ? ' ' + p.unidadMedida : '') : '-'}"></span>
+                                    <small class="text-muted d-block" th:text="${p.gradoAlcohol != null ? p.gradoAlcohol + '° alc.' : ''}"></small>
                                 </td>
 
                                 <td class="fw-semibold"

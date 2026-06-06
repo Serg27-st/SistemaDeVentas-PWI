@@ -141,7 +141,7 @@
                                 onchange="calcularFila(this)" required>
                                 <option value="">Selecciona producto</option>
                                 <option th:each="p : ${productos}" th:value="${p.id}"
-                                    th:text="${p.nombre + ' (' + p.volumenMl + 'ml)'}"
+                                    th:text="${p.nombre + (p.cantidad != null ? ' (' + (p.cantidad % 1 == 0 ? p.cantidad.intValue() : p.cantidad) + (p.unidadMedida != null ? ' ' + p.unidadMedida : '') + ')' : '')}"
                                     th:data-precio="${p.precioCompra}">
                                 </option>
                             </select>

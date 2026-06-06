@@ -30,8 +30,11 @@ public class ProductoRequestDTO {
     private String marca;
     private String paisOrigen;
 
-    // 💡 Mantenemos este nombre para tu HTML, pero asegúrate de mapearlo bien en el Service
-    private Integer volumenMl;
+    /** Cantidad/volumen del producto (ej: 750, 1, 355). Opcional. */
+    private Double cantidad;
+
+    /** Unidad de medida (ej: "ml", "L", "cl", "oz", "und"). Opcional. */
+    private String unidadMedida;
 
     // 🔑 CORREGIDO: Cambiado de BigDecimal a Double para evitar conflictos de tipo con la Entidad
     private BigDecimal gradoAlcohol;

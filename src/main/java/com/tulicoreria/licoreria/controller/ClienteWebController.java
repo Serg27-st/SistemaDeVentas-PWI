@@ -149,9 +149,10 @@ public class ClienteWebController {
                                    @RequestParam String nombre,
                                    @RequestParam String apellido,
                                    @RequestParam(required = false) String telefono,
+                                   @RequestParam(required = false) String dni,
                                    RedirectAttributes flash) {
         try {
-            clienteWebService.actualizarPerfil(auth.getName(), nombre, apellido, telefono);
+            clienteWebService.actualizarPerfil(auth.getName(), nombre, apellido, telefono, dni);
             flash.addFlashAttribute("exito", "Perfil actualizado correctamente.");
         } catch (RuntimeException e) {
             flash.addFlashAttribute("error", e.getMessage());

@@ -268,7 +268,10 @@
         ? `<span class="sd-producto-agotado">Agotado</span>`
         : `<span class="sd-producto-precio">S/. ${(+item.precioVenta).toFixed(2)}</span>`;
 
-      const sub = [item.marca, item.volumenMl ? item.volumenMl + 'ml' : '', item.categoriaNombre]
+      const volDisplay = item.cantidad != null
+        ? (item.cantidad % 1 === 0 ? item.cantidad : item.cantidad) + (item.unidadMedida ? ' ' + item.unidadMedida : '')
+        : '';
+      const sub = [item.marca, volDisplay, item.categoriaNombre]
         .filter(Boolean).join(' · ');
 
       html += `

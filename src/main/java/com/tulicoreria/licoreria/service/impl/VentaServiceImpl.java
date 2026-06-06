@@ -18,6 +18,8 @@ import com.tulicoreria.licoreria.dto.VentaResponseDTO;
 import com.tulicoreria.licoreria.model.Cliente;
 import com.tulicoreria.licoreria.model.DetalleVenta;
 import com.tulicoreria.licoreria.model.Kardex;
+import com.tulicoreria.licoreria.model.Pedido;
+import com.tulicoreria.licoreria.model.PedidoItem;
 import com.tulicoreria.licoreria.model.Producto;
 import com.tulicoreria.licoreria.model.Usuario;
 import com.tulicoreria.licoreria.model.Venta;
@@ -308,6 +310,119 @@ public class VentaServiceImpl implements VentaService {
 
     @Override
     @Transactional
+    public VentaResponseDTO crearDesdePedido(Pedido pedido) {
+        Usuario vendedor = usuarioRepository.findByUsername("tienda_online")
+                .orElseThrow(() -> new RuntimeException(
+                    "Usuario sistema 'tienda_online' no encontrado."));
+
+        List<DetalleVenta> detalles = new ArrayList<>();
+
+        for (PedidoItem item : pedido.getItems()) {
+            if (item.getProductoId() == null) continue;
+            Producto producto = productoRepository.findById(item.getProductoId()).orElse(null);
+            if (producto == null) continue;
+
+            // PedidoItem.descuento es monetario → convertir a porcentaje para DetalleVenta
+            BigDecimal bruto = item.getPrecioUnitario()
+                    .multiply(BigDecimal.valueOf(item.getCantidad()));
+            BigDecimal descuentoPct = BigDecimal.ZERO;
+            if (item.getDescuento() != null
+                    && item.getDescuento().compareTo(BigDecimal.ZERO) > 0
+                    && bruto.compareTo(BigDecimal.ZERO) > 0) {
+                descuentoPct = item.getDescuento()
+                        .divide(bruto, 4, RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(100));
+            }
+
+            detalles.add(DetalleVenta.builder()
+                    .producto(producto)
+                    .cantidad(item.getCantidad())
+                    .precioUnitario(item.getPrecioUnitario())
+                    .descuentoPorcentaje(descuentoPct)
+                    .subtotal(item.getSubtotal())
+                    .build());
+        }
+
+        // Pedido.MetodoPago → Venta.MetodoPago (CONTRA_ENTREGA no existe en Venta → EFECTIVO)
+        MetodoPago mp = MetodoPago.EFECTIVO;
+        if (pedido.getMetodoPago() != null) {
+            mp = switch (pedido.getMetodoPago()) {
+                case TARJETA -> MetodoPago.TARJETA;
+                case YAPE    -> MetodoPago.YAPE;
+                case PLIN    -> MetodoPago.PLIN;
+                default      -> MetodoPago.EFECTIVO;
+            };
+        }
+
+        // Pedido.TipoComprobante → Venta.TipoComprobante
+        TipoComprobante tc = (pedido.getTipoComprobante() == Pedido.TipoComprobante.FACTURA)
+                ? TipoComprobante.FACTURA : TipoComprobante.BOLETA;
+
+        // COMPLETADA si pagó online con tarjeta; PENDIENTE para contra-entrega/Yape/Plin
+        EstadoVenta estado = (pedido.getCulqiChargeId() != null && !pedido.getCulqiChargeId().isBlank())
+                ? EstadoVenta.COMPLETADA : EstadoVenta.PENDIENTE;
+
+        String nombre = pedido.getNombreCliente() != null ? pedido.getNombreCliente() : "";
+        String apellido = pedido.getApellidoCliente() != null ? pedido.getApellidoCliente() : "";
+        String obs = "Pedido web " + pedido.getNumeroPedido() + " — " + nombre + " " + apellido
+                + (pedido.getDistrito() != null && !pedido.getDistrito().isBlank()
+                   ? " | Envío: " + pedido.getDistrito() : "");
+
+        BigDecimal envio = pedido.getCostoEnvio() != null ? pedido.getCostoEnvio() : BigDecimal.ZERO;
+        String comprobante = generarNumeroComprobante(tc);
+
+        // Asociar la venta al cliente registrado cuando el pedido proviene de una cuenta web.
+        // Esto es clave para que `/mi-cuenta/pedidos` (que consulta por clienteId) funcione.
+        Cliente clienteAsociado = null;
+        if (pedido.getClienteWeb() != null) {
+            clienteAsociado = pedido.getClienteWeb().getCliente();
+        }
+
+        Venta venta = Venta.builder()
+                .numeroComprobante(comprobante)
+                .tipoComprobante(tc)
+                .fechaHora(pedido.getPagadoEn() != null ? pedido.getPagadoEn() : LocalDateTime.now())
+                .subtotal(pedido.getSubtotal())
+                .igv(pedido.getIgv())
+                .costoEnvio(envio)
+                .total(pedido.getTotal())
+                .estado(estado)
+                .metodoPago(mp)
+                .cliente(clienteAsociado)
+                .vendedor(vendedor)
+                .distritoEnvio(pedido.getDistrito())
+                .culqiChargeId(pedido.getCulqiChargeId())
+                .observaciones(obs)
+                .build();
+
+        for (DetalleVenta d : detalles) {
+            d.setVenta(venta);
+            venta.getDetalles().add(d);
+        }
+
+        Venta ventaGuardada = ventaRepository.save(venta);
+
+        // Kardex: el stock ya fue decrementado por PedidoService → reconstruir stockAnterior
+        for (DetalleVenta d : detalles) {
+            Producto p = d.getProducto();
+            kardexRepository.save(Kardex.builder()
+                    .tipo(Kardex.TipoMovimiento.SALIDA_VENTA)
+                    .producto(p)
+                    .cantidad(d.getCantidad())
+                    .stockAnterior(p.getStock() + d.getCantidad())
+                    .stockResultante(p.getStock())
+                    .fechaHora(LocalDateTime.now())
+                    .usuario(vendedor)
+                    .motivo("Venta web: " + comprobante + " | " + pedido.getNumeroPedido())
+                    .venta(ventaGuardada)
+                    .build());
+        }
+
+        return toDTO(ventaGuardada);
+    }
+
+    @Override
+    @Transactional
     public VentaResponseDTO completar(Long id) {
         Venta venta = ventaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Venta no encontrada con id: " + id));
@@ -395,7 +510,8 @@ public class VentaServiceImpl implements VentaService {
                         .productoNombre(d.getProducto().getNombre())
                         .productoCodigo(d.getProducto().getCodigo())
                         .productoMarca(d.getProducto().getMarca())
-                        .volumenMl(d.getProducto().getVolumenMl())
+                        .productoCantidad(d.getProducto().getCantidad())
+                        .productoUnidad(d.getProducto().getUnidadMedida())
                         .cantidad(d.getCantidad())
                         .precioUnitario(d.getPrecioUnitario())
                         .descuentoPorcentaje(d.getDescuentoPorcentaje())

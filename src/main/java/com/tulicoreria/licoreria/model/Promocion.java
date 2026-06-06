@@ -83,14 +83,16 @@ public class Promocion {
         return true;
     }
 
-    /** Etiqueta corta para mostrar en tarjetas: "−15 %", "2×1", "COMBO" */
+    /** Etiqueta corta para mostrar en tarjetas: "−15 %", "Lleva 2 paga 1", "Pack" */
     public String etiquetaCorta() {
         return switch (tipo) {
             case DESCUENTO_DIRECTO -> porcentajeDescuento != null
                     ? "−" + porcentajeDescuento.stripTrailingZeros().toPlainString() + " %"
-                    : "−S/." + (montoDescuento != null ? montoDescuento.toPlainString() : "?");
-            case VOLUMEN -> compraX + "×" + (compraX - llevaY + llevaY) + " paga " + llevaY;
-            case COMBO   -> "PACK";
+                    : (montoDescuento != null ? "−S/. " + montoDescuento.toPlainString() : "Descuento");
+            case VOLUMEN -> (compraX != null && llevaY != null)
+                    ? "Lleva " + compraX + " paga " + llevaY
+                    : "Volumen";
+            case COMBO   -> "Pack";
         };
     }
 

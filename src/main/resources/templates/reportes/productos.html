@@ -28,14 +28,14 @@
                 </div>
             </div>
 
-            <form th:action="@{/reportes/productos}" method="get" class="d-flex gap-2 align-items-center">
-                <select name="mes" class="form-select form-select-sm shadow-sm" style="width:130px">
+            <form th:action="@{/reportes/productos}" method="get" class="d-flex gap-2 align-items-center flex-wrap">
+                <select name="mes" class="form-select form-select-sm shadow-sm" style="width:140px">
                     <option th:each="m : ${#numbers.sequence(1,12)}" th:value="${m}" th:selected="${m == mes}"
-                        th:text="${#temporals.format(#temporals.create(2026,m,1),'MMMM')}">
+                        th:text="${#temporals.format(#temporals.create(anioActual,m,1),'MMMM')}">
                     </option>
                 </select>
                 <select name="anio" class="form-select form-select-sm shadow-sm" style="width:90px">
-                    <option th:each="a : ${#numbers.sequence(2024,2026)}" th:value="${a}" th:selected="${a == anio}"
+                    <option th:each="a : ${#numbers.sequence(anioActual - 3, anioActual + 1)}" th:value="${a}" th:selected="${a == anio}"
                         th:text="${a}">
                     </option>
                 </select>
@@ -43,6 +43,10 @@
                     style="background-color: var(--accent-blue); border:none;">
                     <i class="bi bi-search me-1"></i>Consultar
                 </button>
+                <a th:href="@{/reportes/productos/excel(mes=${mes}, anio=${anio})}"
+                   class="btn btn-success btn-sm fw-semibold shadow-sm">
+                    <i class="bi bi-file-earmark-excel me-1"></i>Excel
+                </a>
             </form>
         </div>
 
@@ -135,7 +139,7 @@
                                         <div class="fw-semibold" style="color: var(--text-main);"
                                             th:text="${prod.nombre}"></div>
                                         <small class="text-muted"
-                                            th:text="${prod.marca + ' · ' + prod.volumenMl + 'ml'}"></small>
+                                            th:text="${prod.marca + (prod.cantidad != null ? ' · ' + (prod.cantidad % 1 == 0 ? prod.cantidad.intValue() : prod.cantidad) + (prod.unidadMedida != null ? ' ' + prod.unidadMedida : '') : '')}"></small>
                                     </div>
                                 </div>
                             </td>
@@ -168,15 +172,11 @@
                                     <div class="progress flex-grow-1"
                                         style="height:6px; max-width:70px; background-color: #e2e8f0;">
                                         <div class="progress-bar bg-primary"
-                                            th:style="'width:' + ${reporte.totalIngresos.compareTo(T(java.math.BigDecimal).ZERO) > 0 ?
-                                             prod.ingresos.multiply(T(java.math.BigDecimal).valueOf(100))
-                                             .divide(reporte.totalIngresos,0,T(java.math.RoundingMode).HALF_UP) : 0} + '%'">
+                                            th:style="'width:' + ${prod.porcentaje} + '%'">
                                         </div>
                                     </div>
-                                    <small class="text-muted fw-semibold" style="min-width: 38px;" th:text="${reporte.totalIngresos.compareTo(T(java.math.BigDecimal).ZERO) > 0 ?
-                                           prod.ingresos.multiply(T(java.math.BigDecimal).valueOf(100))
-                                           .divide(reporte.totalIngresos,1,T(java.math.RoundingMode).HALF_UP) + '%'
-                                           : '0%'}">
+                                    <small class="text-muted fw-semibold" style="min-width: 38px;"
+                                           th:text="${prod.porcentaje + '%'}">
                                     </small>
                                 </div>
                             </td>

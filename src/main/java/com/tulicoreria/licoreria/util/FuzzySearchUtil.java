@@ -98,10 +98,18 @@ public final class FuzzySearchUtil {
         best = Math.max(best, scoreField(p.getPaisOrigen(), query) * 0.72);
         // Descripción — peso bajo (ayuda para palabras clave)
         best = Math.max(best, scoreField(p.getDescripcion(), query) * 0.55);
-        // Volumen en ml — ej: "750ml" o "1000ml"
-        if (p.getVolumenMl() != null) {
-            best = Math.max(best, scoreField(p.getVolumenMl() + "ml", query) * 0.60);
-            best = Math.max(best, scoreField(String.valueOf(p.getVolumenMl()), query) * 0.55);
+        // Cantidad + unidad — ej: "750ml", "750 ml", "1L", "1 L"
+        if (p.getCantidad() != null) {
+            String cantStr = p.getCantidad() % 1 == 0
+                    ? String.valueOf(p.getCantidad().intValue())
+                    : String.valueOf(p.getCantidad());
+            String unidad = p.getUnidadMedida() != null ? p.getUnidadMedida() : "";
+            best = Math.max(best, scoreField(cantStr + unidad,        query) * 0.60);
+            best = Math.max(best, scoreField(cantStr + " " + unidad,  query) * 0.60);
+            best = Math.max(best, scoreField(cantStr,                 query) * 0.55);
+            if (!unidad.isEmpty()) {
+                best = Math.max(best, scoreField(unidad, query) * 0.40);
+            }
         }
         return best;
     }

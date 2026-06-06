@@ -232,6 +232,8 @@
           <p class="text-muted small mb-3" style="max-width:280px;line-height:1.8;">
             Los mejores licores para cada ocasión. Variedad, calidad y los mejores precios del mercado.
           </p>
+
+          <!--falta completar con la info de las redes sociales q lo ponga daniel xd-->
           <div class="footer-social d-flex gap-2">
             <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
             <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
@@ -252,10 +254,10 @@
         <div class="col-lg-3 col-6">
           <h6 class="fw-semibold text-white mb-3">Información</h6>
           <ul class="list-unstyled mb-0">
-            <li><a href="#">Sobre nosotros</a></li>
-            <li><a href="#">Política de privacidad</a></li>
-            <li><a href="#">Términos y condiciones</a></li>
-            <li><a href="#">Preguntas frecuentes</a></li>
+            <li><a th:href="@{/nosotros}">Sobre nosotros</a></li>
+            <li><a th:href="@{/privacidad}">Política de privacidad</a></li>
+            <li><a th:href="@{/terminos}">Términos y condiciones</a></li>
+            <li><a th:href="@{/faq}">Preguntas frecuentes</a></li>
             <li>
               <a th:href="@{/reclamaciones}" style="color:rgba(201,162,39,.8)!important;">
                 <i class="bi bi-journal-text me-1"></i>Libro de Reclamaciones

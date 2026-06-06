@@ -131,6 +131,46 @@
                   <div class="form-text">Requerida para verificar mayoría de edad.</div>
                 </div>
 
+                <div class="col-sm-6">
+                  <label class="form-label">DNI</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-card-text"></i></span>
+                    <input type="text" name="dni" class="form-control"
+                           th:value="${dto?.dni}" placeholder="12345678" maxlength="12"
+                           pattern="[0-9A-Za-z]{6,12}"/>
+                  </div>
+                  <div class="form-text">Opcional. Puedes completarlo después en tu perfil.</div>
+                </div>
+
+                <!-- Dirección de envío (opcional) -->
+                <div class="col-12 mt-1">
+                  <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3"
+                          id="btnMostrarDir" onclick="toggleDir()">
+                    <i class="bi bi-plus me-1"></i>Agregar dirección de envío (opcional)
+                  </button>
+                </div>
+
+                <div id="seccionDireccion" style="display:none;" class="col-12">
+                  <div class="row g-3 p-3 rounded-3" style="background:#f9fafb;border:1px dashed #d1d5db;">
+                    <div class="col-12">
+                      <label class="form-label">Dirección completa</label>
+                      <input type="text" name="direccion" class="form-control"
+                             th:value="${dto?.direccion}"
+                             placeholder="Ej: Av. Larco 1234, Miraflores"/>
+                    </div>
+                    <div class="col-sm-6">
+                      <label class="form-label">Distrito</label>
+                      <input type="text" name="distrito" class="form-control"
+                             th:value="${dto?.distrito}" placeholder="Ej: Miraflores"/>
+                    </div>
+                    <div class="col-sm-6">
+                      <label class="form-label">Referencia</label>
+                      <input type="text" name="referencia" class="form-control"
+                             th:value="${dto?.referencia}" placeholder="Ej: Frente al parque"/>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="col-12 mt-2">
                   <button type="submit" class="btn-registrar">
                     <i class="bi bi-person-plus me-2"></i>Crear mi cuenta
@@ -156,13 +196,33 @@
 
 </th:block>
 <th:block th:fragment="scripts">
-  <script>
+  <script th:inline="javascript">
     function togglePass(inputId, iconId) {
       const i = document.getElementById(inputId);
       const ic = document.getElementById(iconId);
       i.type = i.type === 'password' ? 'text' : 'password';
       ic.className = i.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
     }
+
+    function toggleDir() {
+      const sec = document.getElementById('seccionDireccion');
+      const btn = document.getElementById('btnMostrarDir');
+      const visible = sec.style.display !== 'none';
+      sec.style.display = visible ? 'none' : '';
+      btn.innerHTML = visible
+        ? '<i class="bi bi-plus me-1"></i>Agregar dirección de envío (opcional)'
+        : '<i class="bi bi-dash me-1"></i>Ocultar dirección';
+    }
+
+    // Si hay datos de dirección (vuelta tras error), mostrar la sección
+    (function() {
+      const dir = /*[[${dto?.direccion}]]*/ '';
+      if (dir && dir.trim() !== '') {
+        document.getElementById('seccionDireccion').style.display = '';
+        document.getElementById('btnMostrarDir').innerHTML =
+          '<i class="bi bi-dash me-1"></i>Ocultar dirección';
+      }
+    })();
   </script>
 </th:block>
 </body>

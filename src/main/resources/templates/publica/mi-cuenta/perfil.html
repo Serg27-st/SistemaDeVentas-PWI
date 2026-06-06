@@ -100,6 +100,28 @@
             </div>
 
             <div class="col-sm-6">
+              <label class="form-label">DNI</label>
+              <div class="input-group"
+                   th:with="numDoc=${cliente.cliente != null ? cliente.cliente.numeroDocumento : null},
+                            esPlaceholder=${numDoc != null and #strings.startsWith(numDoc,'WEB-')}">
+                <span class="input-group-text"><i class="bi bi-card-text"></i></span>
+                <input type="text" name="dni" class="form-control"
+                       th:value="${esPlaceholder ? '' : numDoc}"
+                       placeholder="Ej: 12345678" maxlength="12"
+                       pattern="[0-9A-Za-z]{6,12}"/>
+                <span th:if="${!esPlaceholder and numDoc != null}"
+                      class="input-group-text text-success" title="DNI registrado">
+                  <i class="bi bi-check-circle-fill"></i>
+                </span>
+              </div>
+              <div class="form-text"
+                   th:if="${cliente.cliente != null and #strings.startsWith(cliente.cliente.numeroDocumento,'WEB-')}"
+                   style="color:#d97706;">
+                <i class="bi bi-exclamation-triangle me-1"></i>Aún no has registrado tu DNI.
+              </div>
+            </div>
+
+            <div class="col-sm-6">
               <label class="form-label">Fecha de nacimiento</label>
               <input type="text" class="form-control"
                      th:value="${cliente.fechaNacimiento != null ?

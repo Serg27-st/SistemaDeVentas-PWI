@@ -5,6 +5,7 @@ import java.util.List;
 import com.tulicoreria.licoreria.dto.ItemCarritoDTO;
 import com.tulicoreria.licoreria.dto.VentaRequestDTO;
 import com.tulicoreria.licoreria.dto.VentaResponseDTO;
+import com.tulicoreria.licoreria.model.Pedido;
 
 public interface VentaService {
 
@@ -20,6 +21,9 @@ public interface VentaService {
     VentaResponseDTO registrarDesdeCarrito(List<ItemCarritoDTO> items, String metodoPago, Long clienteId,
                                            java.math.BigDecimal costoEnvio, String distritoEnvio,
                                            String culqiChargeId);
+
+    /** Crea una Venta en el sistema admin a partir de un Pedido web ya confirmado. */
+    VentaResponseDTO crearDesdePedido(Pedido pedido);
 
     /** Marca un pedido PENDIENTE como COMPLETADA (entregado al cliente). */
     VentaResponseDTO completar(Long id);

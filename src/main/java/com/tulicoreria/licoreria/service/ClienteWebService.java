@@ -16,5 +16,5 @@ public interface ClienteWebService {
 
     void marcarDefaultDireccion(String email, Long direccionId);
 
-    void actualizarPerfil(String email, String nombre, String apellido, String telefono);
+    void actualizarPerfil(String email, String nombre, String apellido, String telefono, String dni);
 }

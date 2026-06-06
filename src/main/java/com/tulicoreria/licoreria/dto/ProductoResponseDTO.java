@@ -23,7 +23,8 @@ public class ProductoResponseDTO {
     private String descripcion; // 👈 ¡AÑADE ESTA LÍNEA AQUÍ!
     private String marca;
     private String paisOrigen;
-    private Integer volumenMl;
+    private Double cantidad;
+    private String unidadMedida;
     private BigDecimal gradoAlcohol;
     private BigDecimal precision;
     private BigDecimal precioCompra;

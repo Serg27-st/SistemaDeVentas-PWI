@@ -423,7 +423,7 @@
               <h6 class="card-nombre" th:text="${p.nombre}">Nombre del Producto</h6>
 
               <p class="card-marca-vol mb-0"
-                 th:text="|${p.marca} · ${p.volumenMl} ml|">Marca · Vol</p>
+                 th:text="${p.marca} + (p.cantidad != null ? ' · ' + (p.cantidad % 1 == 0 ? p.cantidad.intValue() : p.cantidad) + (p.unidadMedida != null ? ' ' + p.unidadMedida : '') : '')">Marca · Vol</p>
 
               <!-- Precio + botón Ver detalle -->
               <div class="mt-auto pt-3 d-flex justify-content-between align-items-end gap-2">
@@ -526,10 +526,9 @@
                 <i class="bi bi-box2-heart me-1"></i>Pack
               </span>
               <!-- Badge precio tachado -->
-              <span th:if="${combo.items != null and !combo.items.isEmpty()}"
+              <span th:if="${totalesNormales != null and totalesNormales[combo.id] != null and totalesNormales[combo.id] > 0}"
                     class="combo-save-pill"
-                    th:with="totalNormal=${combo.items.stream().mapToDouble(i -> i.cantidad * i.producto.precioVenta.doubleValue()).sum()}"
-                    th:text="'S/. ' + ${#numbers.formatDecimal(totalNormal,1,2)}">
+                    th:text="'S/. ' + ${#numbers.formatDecimal(totalesNormales[combo.id],1,2)}">
               </span>
 
               <img th:if="${combo.imagenCombo != null and !combo.imagenCombo.empty}"
@@ -562,10 +561,9 @@
               <div class="mt-auto d-flex align-items-baseline gap-2 mb-3">
                 <span style="font-size:1.25rem;font-weight:800;color:var(--color-gold);"
                       th:text="'S/. ' + ${#numbers.formatDecimal(combo.precioCombo,1,2)}">S/. 0</span>
-                <span th:if="${combo.items != null and !combo.items.isEmpty()}"
+                <span th:if="${totalesNormales != null and totalesNormales[combo.id] != null and totalesNormales[combo.id] > 0}"
                       style="font-size:.78rem;color:var(--color-text-muted);text-decoration:line-through;"
-                      th:with="totalNormal=${combo.items.stream().mapToDouble(i -> i.cantidad * i.producto.precioVenta.doubleValue()).sum()}"
-                      th:text="'S/. ' + ${#numbers.formatDecimal(totalNormal,1,2)}">
+                      th:text="'S/. ' + ${#numbers.formatDecimal(totalesNormales[combo.id],1,2)}">
                 </span>
               </div>
 

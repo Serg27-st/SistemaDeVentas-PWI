@@ -53,15 +53,24 @@ public class Producto {
     private String paisOrigen;
 
     /**
-     * Volumen en mililitros: 250, 500, 750, 1000, 1750
+     * Cantidad/volumen del producto (ej: 750, 1, 355).
+     * Se interpreta junto con unidadMedida. Opcional para productos sin volumen definido.
      */
-    @Column(nullable = false)
-    private Integer volumenMl;
+    @Column(nullable = true)
+    private Double cantidad;
 
     /**
-     * Grado alcohólico en porcentaje: 0.0 para bebidas sin alcohol
+     * Unidad de medida asociada a cantidad (ej: "ml", "L", "cl", "oz", "und").
+     * Opcional — null para productos sin unidad de medida.
      */
-    @Column(nullable = false, precision = 5, scale = 2)
+    @Column(nullable = true, length = 20)
+    private String unidadMedida;
+
+    /**
+     * Grado alcohólico en porcentaje: 0.0 para bebidas sin alcohol.
+     * Opcional — puede ser null para productos sin alcohol (ej: cigarros).
+     */
+    @Column(nullable = true, precision = 5, scale = 2)
     private BigDecimal gradoAlcohol;
 
     @Column(nullable = false, precision = 10, scale = 2)

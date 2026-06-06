@@ -14,6 +14,7 @@ import com.tulicoreria.licoreria.service.EnvioService;
 import com.tulicoreria.licoreria.service.NotificacionPedidoService;
 import com.tulicoreria.licoreria.service.PedidoService;
 import com.tulicoreria.licoreria.service.PromocionService;
+import com.tulicoreria.licoreria.service.VentaService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,13 +37,14 @@ public class PedidoServiceImpl implements PedidoService {
     private static final BigDecimal IGV_RATE = new BigDecimal("0.18");
     private static final int MINUTOS_EXPIRACION = 30;
 
-    private final PedidoRepository       pedidoRepository;
-    private final ProductoRepository      productoRepository;
-    private final ClienteWebRepository    clienteWebRepository;
-    private final PromocionService        promocionService;
-    private final CulqiService            culqiService;
-    private final EnvioService            envioService;
-    private final NotificacionPedidoService notificaciones;
+    private final PedidoRepository          pedidoRepository;
+    private final ProductoRepository         productoRepository;
+    private final ClienteWebRepository       clienteWebRepository;
+    private final PromocionService           promocionService;
+    private final CulqiService               culqiService;
+    private final EnvioService               envioService;
+    private final NotificacionPedidoService  notificaciones;
+    private final VentaService               ventaService;
 
     // ── Crear pedido ────────────────────────────────────────────────────────
 
@@ -199,6 +201,8 @@ public class PedidoServiceImpl implements PedidoService {
 
         Pedido guardado = pedidoRepository.save(pedido);
         notificaciones.enviarConfirmacion(guardado);
+        // Registrar en el sistema de ventas del admin
+        ventaService.crearDesdePedido(guardado);
         return guardado;
     }
 
@@ -222,6 +226,8 @@ public class PedidoServiceImpl implements PedidoService {
 
         Pedido guardado = pedidoRepository.save(pedido);
         notificaciones.enviarConfirmacion(guardado);
+        // Registrar en el sistema de ventas del admin
+        ventaService.crearDesdePedido(guardado);
         return guardado;
     }
 

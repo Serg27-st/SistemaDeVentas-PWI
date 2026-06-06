@@ -18,7 +18,9 @@ public class DetalleVentaResponseDTO {
     private String productoNombre;
     private String productoCodigo;
     private String productoMarca;
-    private Integer volumenMl;
+    /** Volumen/cantidad del producto (ej: 750). Distinto de la cantidad de unidades vendidas. */
+    private Double productoCantidad;
+    private String productoUnidad;
     private Integer cantidad;
     private BigDecimal precioUnitario;
     private BigDecimal descuentoPorcentaje;
