@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(
+          titulo='Nuevo Usuario | Licorería',
+          currentPage='usuarios',
+          content=~{::main-content},
+          extraHead=null,
+          extraScripts=~{::scripts})}">
+
+<head>
+    <title>Nuevo Usuario</title>
+</head>
+
+<body>
+    <th:block th:fragment="main-content">
+
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a th:href="@{/usuarios}" class="btn btn-light border btn-sm text-secondary shadow-sm">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h4 class="fw-bold mb-0" style="color: var(--text-main);">Nuevo Usuario</h4>
+                <p class="text-muted mb-0 small">Completa los datos para registrar al nuevo personal en la plataforma.
+                </p>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm bg-white mb-4">
+                    <div class="card-header border-0 py-3 bg-white"
+                        style="border-bottom: 1px solid var(--border-soft) !important;">
+                        <h6 class="mb-0 fw-bold" style="color: var(--text-main);">
+                            <i class="bi bi-person-plus me-2 text-primary"></i>Datos del Usuario
+                        </h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <form th:action="@{/usuarios/nuevo}" method="post" id="formUsuario" novalidate>
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small text-secondary">
+                                    Nombre completo <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="nombreCompleto" class="form-control bg-light border-0"
+                                    placeholder="Ej: Juan Pérez García"
+                                    th:value="${usuario != null ? usuario.nombreCompleto : ''}" required />
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold small text-secondary">
+                                        Nombre de usuario <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0 text-muted">@</span>
+                                        <input type="text" name="username" class="form-control bg-light border-0"
+                                            placeholder="nombre.apellido"
+                                            th:value="${usuario != null ? usuario.username : ''}" autocomplete="off"
+                                            required />
+                                    </div>
+                                    <small class="text-muted" style="font-size: 0.75rem;">Usa letras, números y
+                                        puntos.</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold small text-secondary">
+                                        Correo electrónico <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="email" name="correo" class="form-control bg-light border-0"
+                                        placeholder="correo@licoreria.com"
+                                        th:value="${usuario != null ? usuario.correo : ''}" required />
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold small text-secondary">
+                                        Contraseña <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="password" name="password" id="password"
+                                            class="form-control bg-light border-0" placeholder="Mínimo 6 caracteres"
+                                            minlength="6" required />
+                                        <button type="button" class="btn btn-light text-secondary border-0"
+                                            onclick="togglePass('password','icon1')">
+                                            <i class="bi bi-eye" id="icon1"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold small text-secondary">
+                                        Confirmar contraseña <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="password" id="confirmar" class="form-control bg-light border-0"
+                                            placeholder="Repite la contraseña" minlength="6" required />
+                                        <button type="button" class="btn btn-light text-secondary border-0"
+                                            onclick="togglePass('confirmar','icon2')">
+                                            <i class="bi bi-eye" id="icon2"></i>
+                                        </button>
+                                    </div>
+                                    <div id="msgConfirmar" class="text-danger small mt-1 d-none">
+                                        <i class="bi bi-exclamation-circle me-1"></i>Las contraseñas no coinciden.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold small text-secondary mb-1">
+                                    Asignar Rol de Acceso <span class="text-danger">*</span>
+                                </label>
+                                <p class="text-muted small mb-3">Selecciona los niveles de permisos adecuados para el
+                                    empleado.</p>
+
+                                <div class="row g-3">
+                                    <div th:each="rol : ${roles}" class="col-md-4">
+                                        <input type="checkbox" class="btn-check" name="rolIds" th:value="${rol.id}"
+                                            th:id="'rol-' + ${rol.id}" />
+                                        <label th:for="'rol-' + ${rol.id}"
+                                            class="btn btn-outline-light text-start w-100 p-3 h-100 shadow-sm border rounded-3 position-relative d-flex flex-column justify-content-between text-wrap"
+                                            style="transition: all 0.2s ease; cursor: pointer; min-height: 110px;">
+
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <div class="rounded-3 p-2 d-flex align-items-center justify-content-center"
+                                                    th:styleappend="${#strings.contains(rol.nombre,'ADMIN') ? 'background:#fef2f2;color:#ef4444;' : (#strings.contains(rol.nombre,'VENDEDOR') ? 'background:#f0fdf4;color:#22c55e;' : 'background:#fffbeb;color:#d97706;')}">
+                                                    <i
+                                                        th:class="${'bi fs-5 ' + (#strings.contains(rol.nombre,'ADMIN') ? 'bi-shield-fill-check' : (#strings.contains(rol.nombre,'VENDEDOR') ? 'bi-cart-check' : 'bi-box-seam'))}"></i>
+                                                </div>
+                                                <i
+                                                    class="bi bi-check-circle-fill text-primary d-none checked-icon fs-5"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark small"
+                                                    th:text="${#strings.replace(#strings.replace(#strings.replace(rol.nombre,'ROLE_ADMIN','Administrador'),'ROLE_VENDEDOR','Vendedor'),'ROLE_ALMACEN','Almacén')}">
+                                                </div>
+                                                <small class="text-muted d-block"
+                                                    style="font-size: 0.72rem; line-height: 1.2;"
+                                                    th:text="${rol.descripcion}"></small>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2 justify-content-end border-top pt-4"
+                                style="border-top: 1px solid var(--border-soft) !important;">
+                                <a th:href="@{/usuarios}"
+                                    class="btn btn-light border text-secondary fw-semibold btn-sm px-3">
+                                    Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary fw-semibold btn-sm px-4"
+                                    style="background-color: var(--accent-blue); border: none;">
+                                    <i class="bi bi-person-check me-1"></i> Registrar Usuario
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm"
+                    style="background-color: #fffbeb; border-left: 4px solid #f59e0b !important;">
+                    <div class="card-body p-3 d-flex align-items-start gap-3">
+                        <i class="bi bi-shield-exclamation text-warning fs-5"></i>
+                        <div>
+                            <strong style="color: #92400e; font-size: 0.9rem;">Información de seguridad</strong>
+                            <p class="mb-0 text-muted small" style="color: #78350f !important;">
+                                La contraseña ingresada será encriptada mediante un algoritmo hash unidireccional antes
+                                de guardarse en la base de datos.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .btn-check:checked+.btn-outline-light {
+                border-color: #3b82f6 !important;
+                background-color: #f0f7ff !important;
+            }
+
+            .btn-check:checked+.btn-outline-light .checked-icon {
+                display: block !important;
+            }
+
+            .btn-outline-light {
+                border-color: var(--border-soft) !important;
+            }
+
+            .btn-outline-light:hover {
+                background-color: #f8fafc !important;
+                border-color: #cbd5e1 !important;
+            }
+        </style>
+
+    </th:block>
+
+    <th:block th:fragment="scripts">
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+
+                // Toggle visibilidad contraseña
+                window.togglePass = function (inputId, iconId) {
+                    const input = document.getElementById(inputId);
+                    const icon = document.getElementById(iconId);
+                    const mostrar = input.type === 'password';
+                    input.type = mostrar ? 'text' : 'password';
+                    icon.className = mostrar ? 'bi bi-eye-slash' : 'bi bi-eye';
+                }
+
+                // Validar coincidencia de contraseñas
+                const passInput = document.getElementById('password');
+                const confirmar = document.getElementById('confirmar');
+                const msg = document.getElementById('msgConfirmar');
+
+                function validarPass() {
+                    if (confirmar.value && passInput.value !== confirmar.value) {
+                        confirmar.classList.add('is-invalid');
+                        msg.classList.remove('d-none');
+                    } else {
+                        confirmar.classList.remove('is-invalid');
+                        msg.classList.add('d-none');
+                    }
+                }
+
+                passInput.addEventListener('input', validarPass);
+                confirmar.addEventListener('input', validarPass);
+
+                // Enviar Formulario con validaciones robustas
+                document.getElementById('formUsuario').addEventListener('submit', function (e) {
+                    let valido = true;
+
+                    if (passInput.value !== confirmar.value) {
+                        valido = false;
+                        confirmar.classList.add('is-invalid');
+                        msg.classList.remove('d-none');
+                        confirmar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+
+                    // Verificar que al menos un rol esté seleccionado
+                    const rolesChecked = document.querySelectorAll('input[name="rolIds"]:checked');
+                    if (rolesChecked.length === 0) {
+                        valido = false;
+                        alert('Por favor, selecciona al menos un rol de acceso para el usuario.');
+                    }
+
+                    if (!valido) {
+                        e.preventDefault();
+                    }
+                });
+            });
+        </script>
+    </th:block>
+</body>
+
+</html>

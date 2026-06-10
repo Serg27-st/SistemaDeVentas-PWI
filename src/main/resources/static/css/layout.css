@@ -1,0 +1,256 @@
+/* Estilos base del layout administrativo - Versión Premium Clean */
+:root {
+    /* Paleta Oficial de la Imagen Corporativa */
+    --navy-main: #1e293b;
+    /* El azul marino oscuro del Sidebar */
+    --navy-hover: #0f172a;
+    /* Azul marino más profundo para hovers */
+    --navy-light: #334155;
+    /* Azul pizarra para textos secundarios del menú */
+
+    --bg-global: #f8fafc;
+    /* Gris/Azul ultra-limpio del fondo de las páginas */
+    --bg-card: #ffffff;
+    /* Blanco puro para tarjetas y tablas */
+    --bg-topbar: #ffffff;
+    /* Blanco puro para el topbar superior */
+
+    --border-soft: #e2e8f0;
+    /* Bordes claros y elegantes */
+    --border-dark: #334155;
+    /* Borde sutil interno del sidebar */
+
+    --text-main: #0f172a;
+    /* Texto principal oscuro de alta legibilidad */
+    --text-muted: #64748b;
+    /* Gris intermedio para etiquetas y placeholders */
+    --text-light: #94a3b8;
+    /* Gris claro para íconos u opacidades */
+
+    --accent-blue: #3b82f6;
+    /* Azul brillante de acento (ej. Botón nuevo o focus) */
+    --sidebar-w: 240px;
+}
+
+body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-global);
+    color: var(--text-main);
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── SIDEBAR (Fiel a la "Parte Administrativa") ── */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    background: var(--navy-main);
+    /* Cambiado al azul marino de la imagen */
+    border-right: 1px solid var(--navy-hover);
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.sidebar-brand {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    /* Línea divisoria muy sutil */
+}
+
+.sidebar-brand h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    color: #ffffff;
+    /* Texto "LICORERÍA" en blanco puro */
+    margin: 0;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+}
+
+.sidebar-brand small {
+    font-size: 0.72rem;
+    color: var(--text-light);
+    /* Subtítulo "Panel Administrativo" */
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    display: block;
+    margin-top: 2px;
+}
+
+.sidebar-section {
+    padding: 18px 20px 6px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-light);
+    opacity: 0.5;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    color: #cbd5e1;
+    /* Gris claro para enlaces inactivos */
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 500;
+    border-left: 4px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.sidebar-link:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.sidebar-link.active {
+    color: #ffffff;
+    background: var(--accent-blue);
+    /* Acento azul en menú seleccionado si aplica */
+    border-left-color: #ffffff;
+}
+
+.sidebar-link i {
+    font-size: 1.1rem;
+    width: 20px;
+    opacity: 0.8;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding: 16px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 0.8rem;
+    color: #cbd5e1;
+    background: var(--navy-hover);
+    /* Cierre de sesión más oscuro al fondo */
+}
+
+/* ── TOPBAR SUPERIOR ── */
+.topbar {
+    position: fixed;
+    top: 0;
+    left: var(--sidebar-w);
+    right: 0;
+    height: 60px;
+    background: var(--bg-topbar);
+    /* Blanco corporativo */
+    border-bottom: 1px solid var(--border-soft);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    z-index: 999;
+}
+
+.topbar-title {
+    font-family: 'DM Sans', sans-serif;
+    /* Cambiado a sans-serif para el saludo "Hola, Juan" */
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: var(--text-main);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* ── CONTENIDO PRINCIPAL Y TARJETAS (CARDS) ── */
+.main-content {
+    margin-left: var(--sidebar-w);
+    margin-top: 60px;
+    padding: 32px;
+    min-height: calc(100vh - 60px);
+}
+
+/* Tarjetas Generales y Contenedores de Tablas */
+.card-dark {
+    background: var(--bg-card);
+    /* Convertido a blanco puro */
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* Tarjetas Estadísticas del Dashboard (Ventas, Pedidos, etc.) */
+.stat-card {
+    background: var(--bg-card);
+    /* Convertido a blanco puro */
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+    border-color: var(--border-soft);
+}
+
+.stat-card .value {
+    font-family: 'DM Sans', sans-serif;
+    /* Cambiado a la fuente moderna del mockup */
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-main);
+    /* Números en negro/azul oscuro */
+    line-height: 1.2;
+}
+
+.stat-card .label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    /* Texto gris sutil abajo del valor */
+    text-transform: none;
+    letter-spacing: 0;
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+.stat-card .icon {
+    font-size: 1.5rem;
+    color: var(--text-muted);
+    background: #f1f5f9;
+    /* Círculo o fondo sutil para iconos si deseas agregarlo */
+    padding: 8px;
+    border-radius: 8px;
+    position: absolute;
+    top: 24px;
+    right: 24px;
+}
+
+/* ── SCROLLBAR PERSONALIZADA ── */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-global);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}

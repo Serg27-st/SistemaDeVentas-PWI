@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{publica/layout :: layout(
+        titulo='¡Pedido confirmado! | Tu Licorería',
+        paginaActual='',
+        contenido=~{::main-content},
+        estilosExtra=~{::estilos},
+        scriptsExtra=~{})}">
+<head><title>Confirmación</title>
+<th:block th:fragment="estilos">
+<style>
+  @keyframes check-pop {
+    0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
+    65%  { transform: scale(1.12) rotate(4deg); }
+    100% { transform: scale(1)  rotate(0deg);  opacity: 1; }
+  }
+  .check-anim { animation: check-pop .55s .15s both; display: inline-flex; }
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fade-up-1 { animation: fade-up .5s .35s both; }
+  .fade-up-2 { animation: fade-up .5s .50s both; }
+  .fade-up-3 { animation: fade-up .5s .65s both; }
+  .fade-up-4 { animation: fade-up .5s .80s both; }
+
+  .confirm-numero {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--color-gold);
+    letter-spacing: 3px;
+    font-family: var(--font-display);
+  }
+  .confirm-linea {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--color-border);
+    font-size: .85rem;
+  }
+  .confirm-linea:last-child { border-bottom: none; }
+  .confirm-linea .label { color: var(--color-text-muted); }
+  .confirm-linea .valor { font-weight: 700; color: var(--color-text-primary); }
+</style>
+</th:block>
+</head>
+<body>
+<th:block th:fragment="main-content">
+
+  <!-- Stepper completado -->
+  <div class="container pt-4 pb-1">
+    <div class="d-flex align-items-center justify-content-center mx-auto" style="max-width:560px;">
+      <div class="step text-center done">
+        <div class="stepper-circle"><i class="bi bi-check-lg" style="font-size:.8rem;"></i></div>
+        <span class="small text-muted d-block">Carrito</span>
+      </div>
+      <div class="stepper-line"></div>
+      <div class="step text-center done">
+        <div class="stepper-circle"><i class="bi bi-check-lg" style="font-size:.8rem;"></i></div>
+        <span class="small text-muted d-block">Datos</span>
+      </div>
+      <div class="stepper-line"></div>
+      <div class="step text-center done">
+        <div class="stepper-circle"><i class="bi bi-check-lg" style="font-size:.8rem;"></i></div>
+        <span class="small text-muted d-block">Pago</span>
+      </div>
+      <div class="stepper-line"></div>
+      <div class="step text-center active">
+        <div class="stepper-circle" style="background:var(--color-gold);color:var(--color-gold-text);">
+          <i class="bi bi-check-lg" style="font-size:.8rem;"></i>
+        </div>
+        <span class="small fw-bold d-block" style="color:var(--color-text-primary);">¡Listo!</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-9 col-lg-7 col-xl-6">
+
+        <!-- Card principal -->
+        <div class="bg-white rounded-4 shadow border p-4 p-md-5">
+
+          <!-- Ícono animado + título -->
+          <div class="text-center mb-4">
+            <div class="check-anim mb-3"
+                 style="width:88px;height:88px;border-radius:50%;background:rgba(255,193,7,.10);border:2px solid rgba(255,193,7,.25);align-items:center;justify-content:center;">
+              <i class="bi bi-bag-check-fill"
+                 style="font-size:2.6rem;color:var(--color-gold);"></i>
+            </div>
+
+            <h2 class="fade-up-1 fw-bold mb-1"
+                style="font-family:var(--font-display);color:var(--color-text-primary);">
+              <span th:if="${pedido.estado.name() == 'PAGADO'}">¡Pago confirmado!</span>
+              <span th:unless="${pedido.estado.name() == 'PAGADO'}">¡Pedido registrado!</span>
+            </h2>
+
+            <p class="fade-up-1 mb-0" style="color:var(--color-text-muted);font-size:.9rem;">
+              <span th:if="${pedido.estado.name() == 'PAGADO'}">
+                Tu pago fue procesado exitosamente 🎉
+              </span>
+              <span th:unless="${pedido.estado.name() == 'PAGADO'}">
+                Pagarás cuando el repartidor llegue a tu puerta 🚚
+              </span>
+            </p>
+          </div>
+
+          <!-- N° de pedido -->
+          <div class="fade-up-2 text-center p-3 rounded-3 mb-4"
+               style="background:var(--color-bg-public);border:1px solid var(--color-border);">
+            <div style="font-size:.68rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--color-text-muted);font-weight:700;margin-bottom:6px;">
+              Número de pedido
+            </div>
+            <div class="confirm-numero" th:text="${pedido.numeroPedido}">PED-000001</div>
+          </div>
+
+          <!-- Badge de estado -->
+          <div class="fade-up-2 text-center mb-4">
+            <span th:if="${pedido.estado.name() == 'PAGADO'}"
+                  class="status-badge pagado"
+                  style="font-size:.8rem;padding:6px 16px;">
+              <i class="bi bi-shield-check-fill"></i> Pago confirmado · Culqi
+            </span>
+            <span th:unless="${pedido.estado.name() == 'PAGADO'}"
+                  class="status-badge por-entregar"
+                  style="font-size:.8rem;padding:6px 16px;">
+              <i class="bi bi-truck"></i> Pagarás al recibir
+            </span>
+          </div>
+
+          <!-- Detalle del pedido -->
+          <div class="fade-up-3 rounded-3 border p-3 mb-4"
+               style="background:var(--color-bg-public);">
+            <div class="fw-bold mb-3 d-flex align-items-center gap-2"
+                 style="font-size:.88rem;color:var(--color-text-primary);">
+              <i class="bi bi-receipt-cutoff" style="color:var(--color-gold);"></i>
+              Resumen del pedido
+            </div>
+
+            <!-- Ítems -->
+            <div th:each="item : ${pedido.items}" class="confirm-linea">
+              <span class="label" th:text="${item.cantidad} + '× ' + ${item.productoNombre}">Item</span>
+              <span class="valor" th:text="'S/. ' + ${#numbers.formatDecimal(item.subtotal,1,2)}">S/. 0</span>
+            </div>
+
+            <!-- Totales -->
+            <div class="confirm-linea">
+              <span class="label">Subtotal</span>
+              <span class="valor" th:text="'S/. ' + ${#numbers.formatDecimal(pedido.subtotal,1,2)}">S/. 0</span>
+            </div>
+            <div class="confirm-linea">
+              <span class="label">IGV (18%)</span>
+              <span class="valor" th:text="'S/. ' + ${#numbers.formatDecimal(pedido.igv,1,2)}">S/. 0</span>
+            </div>
+            <div th:if="${pedido.costoEnvio != null and pedido.costoEnvio > 0}"
+                 class="confirm-linea">
+              <span class="label">Envío (<span th:text="${pedido.distrito}"></span>)</span>
+              <span class="valor" th:text="'S/. ' + ${#numbers.formatDecimal(pedido.costoEnvio,1,2)}">S/. 0</span>
+            </div>
+            <div class="confirm-linea" th:unless="${pedido.costoEnvio != null and pedido.costoEnvio > 0}">
+              <span class="label">Envío</span>
+              <span class="valor" style="color:#059669;">Gratis (recojo)</span>
+            </div>
+
+            <!-- Total final -->
+            <div class="d-flex justify-content-between align-items-center pt-3 mt-1">
+              <span class="fw-bold" style="color:var(--color-text-primary);">Total pagado</span>
+              <span style="font-size:1.4rem;font-weight:800;color:var(--color-gold);font-family:var(--font-display);"
+                    th:text="'S/. ' + ${#numbers.formatDecimal(pedido.total,1,2)}">S/. 0</span>
+            </div>
+          </div>
+
+          <!-- Dirección de entrega -->
+          <div th:if="${pedido.direccion != null}"
+               class="fade-up-3 d-flex align-items-start gap-3 p-3 rounded-3 mb-4"
+               style="background:rgba(255,193,7,.06);border:1px solid rgba(255,193,7,.18);">
+            <i class="bi bi-geo-alt-fill flex-shrink-0 mt-1"
+               style="color:var(--color-gold);font-size:1.1rem;"></i>
+            <div style="font-size:.85rem;color:var(--color-text-muted);">
+              <div class="fw-bold mb-1" style="color:var(--color-text-primary);">
+                Dirección de entrega
+              </div>
+              <span th:text="${pedido.direccion}">Calle</span>
+              <span th:if="${pedido.departamento != null and !pedido.departamento.empty}">
+                , <span th:text="${pedido.departamento}"></span>
+              </span>
+              — <span th:text="${pedido.distrito}">Distrito</span>
+              <div th:if="${pedido.referencia != null and !pedido.referencia.empty}"
+                   class="mt-1 d-flex align-items-start gap-1" style="font-size:.78rem;">
+                <i class="bi bi-info-circle flex-shrink-0 mt-1"></i>
+                <span th:text="${pedido.referencia}">Referencia</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Info de confirmación por email -->
+          <div class="fade-up-3 d-flex align-items-start gap-2 p-3 rounded-3 mb-4"
+               style="background:#d1fae5;border:1px solid #6ee7b7;font-size:.83rem;">
+            <i class="bi bi-envelope-check-fill flex-shrink-0 mt-1" style="color:#059669;"></i>
+            <span style="color:#065f46;">
+              Enviamos un resumen a
+              <strong th:text="${pedido.emailCliente}">correo</strong>.
+              Tiempo estimado de entrega: <strong>30–60 minutos</strong>.
+            </span>
+          </div>
+
+          <!-- Aviso de pago contra entrega -->
+          <div th:unless="${pedido.estado.name() == 'PAGADO'}"
+               class="fade-up-3 d-flex align-items-start gap-2 p-3 rounded-3 mb-4"
+               style="background:#dbeafe;border:1px solid #93c5fd;font-size:.83rem;">
+            <i class="bi bi-cash-coin flex-shrink-0 mt-1" style="color:#1d4ed8;"></i>
+            <span style="color:#1e3a8a;">
+              El repartidor lleva <strong>POS inalámbrico</strong>. También puedes pagar con
+              <strong>Yape o Plin</strong> al momento de la entrega.
+            </span>
+          </div>
+
+          <!-- Acciones -->
+          <div class="fade-up-4 d-flex flex-column gap-3">
+            <a th:href="@{/catalogo}" class="btn-hero-main justify-content-center">
+              <i class="bi bi-grid-3x3-gap-fill"></i> Seguir comprando
+            </a>
+            <a th:if="${pedido.clienteWeb != null}" th:href="@{/mi-cuenta/pedidos}"
+               class="btn-hero-outline justify-content-center"
+               style="color:var(--color-text-muted);border-color:var(--color-border);">
+              <i class="bi bi-bag-heart"></i> Ver mis pedidos
+            </a>
+            <a th:href="@{/inicio}"
+               class="btn-hero-outline justify-content-center"
+               style="color:var(--color-text-muted);border-color:var(--color-border);">
+              <i class="bi bi-house"></i> Volver al inicio
+            </a>
+          </div>
+
+          <!-- Footer de la card -->
+          <div class="text-center mt-4 pt-3 border-top">
+            <span style="font-size:.73rem;color:var(--color-text-light);">
+              <i class="bi bi-shield-check text-success me-1"></i>
+              Venta exclusiva para mayores de 18 años · Tu Licorería
+            </span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</th:block>
+</body>
+</html>

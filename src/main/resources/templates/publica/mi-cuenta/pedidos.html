@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{publica/layout :: layout(
+        titulo='Mis pedidos | Tu Licorería',
+        paginaActual='mi-cuenta',
+        contenido=~{::main-content},
+        estilosExtra=~{::estilos},
+        scriptsExtra=~{})}">
+<head><title>Mis pedidos</title>
+<th:block th:fragment="estilos">
+  <style>
+    .cuenta-sidebar {
+      background:#0d0d16; border-radius:16px; padding:1.5rem;
+    }
+    .cuenta-nav-link {
+      display:flex; align-items:center; gap:.75rem;
+      padding:.7rem 1rem; border-radius:8px;
+      color:rgba(255,255,255,.7); text-decoration:none;
+      font-weight:500; font-size:.9rem;
+      transition:background .2s,color .2s;
+    }
+    .cuenta-nav-link:hover, .cuenta-nav-link.active {
+      background:rgba(201,162,39,.12); color:#c9a227;
+    }
+    .cuenta-nav-link i { font-size:1.1rem; width:20px; text-align:center; }
+    .pedido-card {
+      background:#fff; border-radius:12px;
+      border:1px solid #f0f0f0;
+      transition:box-shadow .2s;
+    }
+    .pedido-card:hover { box-shadow:0 4px 16px rgba(0,0,0,.07); }
+    .badge-estado-PENDIENTE   { background:rgba(251,191,36,.15);  color:#b45309; }
+    .badge-estado-COMPLETADA  { background:rgba(16,185,129,.12);  color:#065f46; }
+    .badge-estado-ANULADA     { background:rgba(239,68,68,.1);    color:#991b1b; }
+  </style>
+</th:block>
+</head>
+<body>
+<th:block th:fragment="main-content">
+<div class="container py-5">
+  <div class="row g-4">
+
+    <!-- Sidebar -->
+    <div class="col-lg-3">
+      <div class="cuenta-sidebar">
+        <div class="text-center mb-4">
+          <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+               style="width:72px;height:72px;background:linear-gradient(135deg,#c9a227,#e8b93a);font-size:1.8rem;font-weight:700;color:#0d0d16;">
+            <span th:text="${#strings.substring(cliente.nombre,0,1).toUpperCase()}">U</span>
+          </div>
+          <div class="fw-bold text-white" th:text="${cliente.nombreCompleto}">Nombre</div>
+          <div class="small" style="color:rgba(255,255,255,.5);" th:text="${cliente.email}">email</div>
+        </div>
+        <nav class="d-flex flex-column gap-1">
+          <a th:href="@{/mi-cuenta}" class="cuenta-nav-link"><i class="bi bi-grid"></i> Panel</a>
+          <a th:href="@{/mi-cuenta/pedidos}" class="cuenta-nav-link active"><i class="bi bi-bag"></i> Mis pedidos</a>
+          <a th:href="@{/mi-cuenta/direcciones}" class="cuenta-nav-link"><i class="bi bi-geo-alt"></i> Direcciones</a>
+          <a th:href="@{/mi-cuenta/perfil}" class="cuenta-nav-link"><i class="bi bi-person-gear"></i> Mi perfil</a>
+          <hr style="border-color:rgba(255,255,255,.1);margin:.5rem 0;"/>
+          <form th:action="@{/logout}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="cuenta-nav-link w-100 border-0 text-start"
+                    style="background:none;color:rgba(255,100,100,.7);">
+              <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+            </button>
+          </form>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Pedidos -->
+    <div class="col-lg-9">
+      <div class="d-flex align-items-center justify-content-between mb-4">
+        <h4 class="fw-bold mb-0" style="font-family:'Playfair Display',serif;">Mis pedidos</h4>
+        <a th:href="@{/catalogo}" class="btn btn-sm"
+           style="background:#c9a227;color:#0d0d16;font-weight:600;border-radius:8px;">
+          <i class="bi bi-grid me-1"></i>Seguir comprando
+        </a>
+      </div>
+
+      <!-- Sin pedidos -->
+      <div th:if="${pedidos.isEmpty()}" class="text-center py-5">
+        <i class="bi bi-bag-x" style="font-size:3.5rem;color:#d1d5db;"></i>
+        <h5 class="mt-3 text-muted fw-semibold">Aún no tienes pedidos</h5>
+        <p class="text-muted small mb-4">Explora nuestro catálogo y realiza tu primera compra.</p>
+        <a th:href="@{/catalogo}" class="btn btn-sm px-4 py-2"
+           style="background:#c9a227;color:#0d0d16;font-weight:600;border-radius:8px;">
+          Ver catálogo
+        </a>
+      </div>
+
+      <!-- Lista de pedidos -->
+      <div class="d-flex flex-column gap-3" th:unless="${pedidos.isEmpty()}">
+        <div th:each="p : ${pedidos}" class="pedido-card p-4">
+
+          <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
+            <div>
+              <div class="fw-bold text-dark mb-1" th:text="${p.numeroComprobante}">TICKET-000001</div>
+              <div class="small text-muted"
+                   th:text="${#temporals.format(p.fechaHora,'dd/MM/yyyy HH:mm')}">01/01/2026</div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge rounded-pill px-3 py-2 fw-semibold"
+                    th:classappend="'badge-estado-' + ${p.estado}"
+                    th:text="${p.estado}">PENDIENTE</span>
+            </div>
+          </div>
+
+          <!-- Productos del pedido -->
+          <div class="bg-light rounded-2 p-3 mb-3">
+            <div th:each="d : ${p.detalles}" class="d-flex justify-content-between small mb-1">
+              <span>
+                <span class="fw-semibold" th:text="${d.productoNombre}">Producto</span>
+                <span class="text-muted ms-1" th:text="'x' + ${d.cantidad}">x1</span>
+              </span>
+              <span class="fw-semibold"
+                    th:text="'S/. ' + ${#numbers.formatDecimal(d.subtotal,1,2)}">S/. 0.00</span>
+            </div>
+          </div>
+
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div class="d-flex align-items-center gap-3 small text-muted">
+              <span>
+                <i class="bi bi-credit-card me-1"></i>
+                <span th:text="${p.metodoPago}">EFECTIVO</span>
+              </span>
+              <span th:switch="${p.estado}">
+                <span th:case="'PENDIENTE'"    style="color:#b45309;"><i class="bi bi-clock me-1"></i>En proceso</span>
+                <span th:case="'COMPLETADA'"   style="color:#065f46;"><i class="bi bi-check-circle me-1"></i>Entregado</span>
+                <span th:case="'ANULADA'"      style="color:#991b1b;"><i class="bi bi-x-circle me-1"></i>Anulado</span>
+              </span>
+            </div>
+            <div class="fw-bold" style="font-size:1.1rem;color:#c9a227;">
+              <span th:text="'S/. ' + ${#numbers.formatDecimal(p.total,1,2)}">S/. 0.00</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{admin/layout :: layout(
+          titulo='Dashboard',
+          currentPage='dashboard',
+          content=~{::main-content},
+          extraHead=~{::extra-head},
+          extraScripts=~{::extra-scripts})}">
+<head>
+<th:block th:fragment="extra-head">
+    <link th:href="@{/css/dashboard.css}" rel="stylesheet"/>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</th:block>
+</head>
+<body>
+<main th:fragment="main-content">
+
+    <!-- ── Saludo ──────────────────────────────────────────────── -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 style="font-family:'Playfair Display',serif; font-size:1.6rem; margin:0">
+                Hola, <span sec:authentication="name" style="color:var(--amber-light)">Admin</span> 👋
+            </h2>
+            <p style="color:var(--text-muted); font-size:0.85rem; margin:4px 0 0">
+                Resumen del sistema al día de hoy
+            </p>
+        </div>
+    </div>
+
+    <!-- ── Tarjetas de resumen ─────────────────────────────────── -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="value"
+                             th:text="'S/ ' + ${#numbers.formatDecimal(dashboard.totalVentasHoy, 1, 2)}">S/ 0.00</div>
+                        <div class="label">Ventas hoy</div>
+                    </div>
+                    <i class="bi bi-cash-coin icon"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="value" th:text="${dashboard.cantidadVentasHoy}">0</div>
+                        <div class="label">Ventas del día</div>
+                    </div>
+                    <i class="bi bi-receipt icon"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="value"
+                             th:text="'S/ ' + ${#numbers.formatDecimal(dashboard.totalVentasMes, 1, 2)}">S/ 0.00</div>
+                        <div class="label">Ventas del mes</div>
+                    </div>
+                    <i class="bi bi-graph-up-arrow icon"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="value" th:text="${dashboard.cantidadVentasMes}">0</div>
+                        <div class="label">Ventas del mes</div>
+                    </div>
+                    <i class="bi bi-bag-check icon"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Alertas de inventario ───────────────────────────────── -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4" th:if="${dashboard.productosConStockBajo > 0}">
+            <a th:href="@{/productos}" class="text-decoration-none">
+                <div class="stat-card d-flex align-items-center gap-3"
+                     style="border-color:#92400e;">
+                    <i class="bi bi-exclamation-triangle-fill"
+                       style="font-size:1.5rem;color:#fbbf24"></i>
+                    <div>
+                        <div class="value" style="color:#fbbf24"
+                             th:text="${dashboard.productosConStockBajo}">0</div>
+                        <div class="label">Stock bajo</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4" th:if="${dashboard.productosSinStock > 0}">
+            <a th:href="@{/productos}" class="text-decoration-none">
+                <div class="stat-card d-flex align-items-center gap-3"
+                     style="border-color:#991b1b;">
+                    <i class="bi bi-x-circle-fill"
+                       style="font-size:1.5rem;color:#f87171"></i>
+                    <div>
+                        <div class="value" style="color:#f87171"
+                             th:text="${dashboard.productosSinStock}">0</div>
+                        <div class="label">Sin stock</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4" th:if="${dashboard.ordenesPendientes > 0}">
+            <a th:href="@{/ordenes}" class="text-decoration-none">
+                <div class="stat-card d-flex align-items-center gap-3"
+                     style="border-color:#1e40af;">
+                    <i class="bi bi-truck"
+                       style="font-size:1.5rem;color:#60a5fa"></i>
+                    <div>
+                        <div class="value" style="color:#60a5fa"
+                             th:text="${dashboard.ordenesPendientes}">0</div>
+                        <div class="label">Órdenes pendientes</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- ── Gráficos ────────────────────────────────────────────── -->
+    <div class="row g-3 mb-4">
+        <!-- Ventas últimos 7 días -->
+        <div class="col-lg-7">
+            <div class="card-dark h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 style="margin:0;font-size:0.85rem;color:var(--text-muted);
+                               text-transform:uppercase;letter-spacing:1px">
+                        Ventas últimos 7 días
+                    </h6>
+                    <a th:href="@{/reportes/ventas-mes}" class="btn btn-outline-amber btn-sm">
+                        Ver reporte
+                    </a>
+                </div>
+                <canvas id="chartVentas" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Pedidos recientes -->
+        <div class="col-lg-5">
+            <div class="card-dark h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 style="margin:0;font-size:0.85rem;color:var(--text-muted);
+                               text-transform:uppercase;letter-spacing:1px">
+                        Accesos rápidos
+                    </h6>
+                </div>
+                <div class="d-grid gap-2">
+                    <a th:href="@{/ventas/nueva}"
+                       class="btn btn-amber d-flex align-items-center gap-2"
+                       sec:authorize="hasAnyRole('ADMIN','VENDEDOR')">
+                        <i class="bi bi-cart-plus-fill"></i> Nueva Venta
+                    </a>
+                    <a th:href="@{/ordenes/nueva}"
+                       class="btn btn-outline-amber d-flex align-items-center gap-2"
+                       sec:authorize="hasAnyRole('ADMIN','ALMACEN')">
+                        <i class="bi bi-truck"></i> Nueva Orden de Compra
+                    </a>
+                    <a th:href="@{/productos/nuevo}"
+                       class="btn btn-outline-amber d-flex align-items-center gap-2"
+                       sec:authorize="hasAnyRole('ADMIN','ALMACEN')">
+                        <i class="bi bi-plus-circle"></i> Nuevo Producto
+                    </a>
+                    <a th:href="@{/reportes}"
+                       class="btn btn-outline-amber d-flex align-items-center gap-2"
+                       sec:authorize="hasRole('ADMIN')">
+                        <i class="bi bi-bar-chart-fill"></i> Ver Reportes
+                    </a>
+                    <a th:href="@{/clientes/nuevo}"
+                       class="btn btn-outline-amber d-flex align-items-center gap-2"
+                       sec:authorize="hasAnyRole('ADMIN','VENDEDOR')">
+                        <i class="bi bi-person-plus"></i> Nuevo Cliente
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:fragment="extra-scripts">
+<script th:inline="javascript">
+    // Datos reales de ventas de los últimos 7 días desde el servidor
+    const ventasData = /*[[${dashboard.ventasUltimos7Dias}]]*/ [0,0,0,0,0,0,0];
+    const labels     = /*[[${dashboard.labelsUltimos7Dias}]]*/ ['','','','','','',''];
+
+    const ctx = document.getElementById('chartVentas').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Ventas (S/)',
+                data: ventasData,
+                borderColor: '#C8860A',
+                backgroundColor: 'rgba(200,134,10,0.08)',
+                borderWidth: 2,
+                pointBackgroundColor: '#F0A500',
+                pointRadius: 4,
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => 'S/ ' + parseFloat(ctx.parsed.y).toFixed(2)
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: { color: '#9A9590', font: { size: 11 } }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: {
+                        color: '#9A9590',
+                        font: { size: 11 },
+                        callback: v => 'S/ ' + v
+                    }
+                }
+            }
+        }
+    });
+</script>
+</th:block>
+</body>
+</html>

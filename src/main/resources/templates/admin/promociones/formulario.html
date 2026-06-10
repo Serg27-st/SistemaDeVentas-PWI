@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/layout :: layout(
+          titulo=${editando} ? 'Editar Promoción' : 'Nueva Promoción',
+          currentPage='promociones',
+          content=~{::page-content},
+          extraHead=~{::extra-head},
+          extraScripts=~{::extra-scripts})}">
+<body>
+
+<th:block th:fragment="extra-head">
+<style>
+  .tipo-card {
+    cursor:pointer; border:2px solid #dee2e6; border-radius:12px;
+    padding:1.1rem 1rem; text-align:center;
+    transition:border-color .18s, background .18s, transform .12s;
+    user-select:none;
+  }
+  .tipo-card:hover { transform:translateY(-2px); border-color:#adb5bd; }
+  .tipo-card.sel-d { border-color:#c9a227 !important; background:rgba(201,162,39,.08); }
+  .tipo-card.sel-v { border-color:#3b82f6 !important; background:rgba(59,130,246,.08); }
+  .tipo-card.sel-c { border-color:#8b5cf6 !important; background:rgba(139,92,246,.08); }
+
+  .seccion-tipo { display:none; }
+  .acc-gold   { border-left:4px solid #c9a227; }
+  .acc-blue   { border-left:4px solid #3b82f6; }
+  .acc-purple { border-left:4px solid #8b5cf6; }
+
+  .preview-pill    { display:inline-block; background:#1a1a2e; color:#fbbf24;
+                     border-radius:50px; padding:.25rem .85rem; font-size:.8rem; font-weight:700; }
+  .preview-tachado { text-decoration:line-through; color:#9ca3af; font-size:.9rem; }
+  .preview-final   { font-size:1.3rem; font-weight:800; color:#c9a227; }
+
+  .combo-row { background:#f8f9fa; border-radius:10px; padding:.6rem .8rem; }
+</style>
+</th:block>
+
+<th:block th:fragment="page-content">
+
+  <!-- Breadcrumb -->
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <a th:href="@{/promociones}"
+       class="btn btn-sm btn-outline-secondary"
+       style="width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:8px;">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <div>
+      <h4 class="fw-bold mb-0" th:text="${editando} ? 'Editar Promoción' : 'Nueva Promoción'">Nueva Promoción</h4>
+      <p class="text-muted mb-0 small">Configura el tipo, condiciones y vigencia.</p>
+    </div>
+  </div>
+
+  <!--
+    Select oculto usado como plantilla para generar filas de combo vía JS.
+    Se renderiza una sola vez con Thymeleaf y se clona en JS.
+  -->
+  <select id="tmplSelectProducto" class="d-none" aria-hidden="true">
+    <option value="">— Selecciona producto —</option>
+    <option th:each="prod : ${productos}"
+            th:value="${prod.id}"
+            th:data-precio="${prod.precioVenta}"
+            th:text="${prod.nombre + ' · ' + prod.marca + ' — S/. ' + #numbers.formatDecimal(prod.precioVenta,1,2)}">
+    </option>
+  </select>
+
+  <!-- FORMULARIO -->
+  <form th:action="${editando} ? @{/promociones/editar/{id}(id=${id})} : @{/promociones/nueva}"
+        method="post" enctype="multipart/form-data" id="promoForm" novalidate>
+
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+    <!-- ═══════════════════════════════════════════════════════
+         DATOS GENERALES
+    ═══════════════════════════════════════════════════════ -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-dark text-white border-0 py-3">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-info-circle me-2"></i>Datos Generales</h6>
+      </div>
+      <div class="card-body p-4">
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-8">
+            <label class="form-label fw-semibold">Nombre <span class="text-danger">*</span></label>
+            <input type="text" name="nombre" class="form-control" required maxlength="150"
+                   placeholder="Ej: Jack Daniel's −15 %, Pack Chilcanero…"
+                   th:value="${dto.nombre}"/>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Estado</label>
+            <div class="d-flex align-items-center gap-2 mt-2">
+              <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" name="activo"
+                       id="swActivo" value="true" role="switch"
+                       style="width:2.5rem;height:1.3rem;cursor:pointer;"
+                       th:checked="${dto.activo == null or dto.activo}"/>
+                <label class="form-check-label" for="swActivo">Activa</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">
+            Descripción <span class="text-muted fw-normal small">(opcional)</span>
+          </label>
+          <textarea name="descripcion" class="form-control" rows="2" maxlength="300"
+                    placeholder="Descripción visible al cliente…"
+                    th:text="${dto.descripcion}"></textarea>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Válida desde</label>
+            <input type="date" name="fechaInicio" class="form-control" th:value="${dto.fechaInicio}"/>
+            <div class="form-text">Sin fecha = válida desde ya.</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Válida hasta</label>
+            <input type="date" name="fechaFin" class="form-control" th:value="${dto.fechaFin}"/>
+            <div class="form-text">Sin fecha = sin vencimiento.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TIPO DE PROMOCIÓN
+    ═══════════════════════════════════════════════════════ -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-dark text-white border-0 py-3">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-tag me-2"></i>Tipo de Promoción <span class="text-warning">*</span></h6>
+      </div>
+      <div class="card-body p-4">
+
+        <!-- Radios ocultos que se envían con el form -->
+        <input type="radio" name="tipo" id="tipoDirect" value="DESCUENTO_DIRECTO" class="d-none"
+               th:checked="${dto.tipo == null or dto.tipo == 'DESCUENTO_DIRECTO'}"/>
+        <input type="radio" name="tipo" id="tipoVol"    value="VOLUMEN"           class="d-none"
+               th:checked="${dto.tipo != null and dto.tipo == 'VOLUMEN'}"/>
+        <input type="radio" name="tipo" id="tipoCombo"  value="COMBO"             class="d-none"
+               th:checked="${dto.tipo != null and dto.tipo == 'COMBO'}"/>
+
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="tipo-card h-100" id="cardD" onclick="selTipo('DESCUENTO_DIRECTO')">
+              <div style="font-size:2rem;color:#c9a227;"><i class="bi bi-percent-fill"></i></div>
+              <div class="fw-bold mt-1" style="color:#92620a;font-size:.85rem;text-transform:uppercase;letter-spacing:.4px;">Descuento Directo</div>
+              <div class="text-muted mt-1" style="font-size:.75rem;">Precio tachado en el catálogo</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="tipo-card h-100" id="cardV" onclick="selTipo('VOLUMEN')">
+              <div style="font-size:2rem;color:#3b82f6;"><i class="bi bi-layers-fill"></i></div>
+              <div class="fw-bold mt-1" style="color:#1d4ed8;font-size:.85rem;text-transform:uppercase;letter-spacing:.4px;">Por Volumen</div>
+              <div class="text-muted mt-1" style="font-size:.75rem;">Lleva X unidades, paga solo Y</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="tipo-card h-100" id="cardC" onclick="selTipo('COMBO')">
+              <div style="font-size:2rem;color:#8b5cf6;"><i class="bi bi-box2-heart-fill"></i></div>
+              <div class="fw-bold mt-1" style="color:#6d28d9;font-size:.85rem;text-transform:uppercase;letter-spacing:.4px;">Combo / Pack</div>
+              <div class="text-muted mt-1" style="font-size:.75rem;">Paquete con precio especial</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SECCIÓN DESCUENTO DIRECTO
+    ═══════════════════════════════════════════════════════ -->
+    <div class="card border-0 shadow-sm mb-4 acc-gold seccion-tipo" id="secD">
+      <div class="card-body p-4">
+        <h6 class="fw-semibold mb-1">
+          <i class="bi bi-percent me-2" style="color:#c9a227;"></i>Configuración del Descuento
+        </h6>
+        <p class="text-muted small mb-4">Porcentaje <b>o</b> monto fijo — no ambos. Si llenan los dos, prevalece el porcentaje.</p>
+
+        <div class="mb-4">
+          <label class="form-label fw-semibold">Producto al que aplica <span class="text-danger">*</span></label>
+          <select name="productoId" class="form-select" id="selProdD"
+                  onchange="calcPrevD()">
+            <option value="">— Selecciona un producto —</option>
+            <option th:each="prod : ${productos}"
+                    th:value="${prod.id}"
+                    th:data-precio="${prod.precioVenta}"
+                    th:text="${prod.nombre + ' · ' + prod.marca + ' — S/. ' + #numbers.formatDecimal(prod.precioVenta,1,2)}"
+                    th:selected="${dto.tipo == null or dto.tipo == 'DESCUENTO_DIRECTO' ? (dto.productoId != null and dto.productoId == prod.id) : false}">
+            </option>
+          </select>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Porcentaje de descuento</label>
+            <div class="input-group">
+              <input type="number" name="porcentajeDescuento" id="inpPct" class="form-control"
+                     min="1" max="99" step="0.01" placeholder="Ej: 15"
+                     th:value="${dto.porcentajeDescuento}"
+                     oninput="document.getElementById('inpMonto').value=''; calcPrevD()"/>
+              <span class="input-group-text">%</span>
+            </div>
+            <div class="form-text">Vacío si usas monto fijo.</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Monto fijo de descuento</label>
+            <div class="input-group">
+              <span class="input-group-text">S/.</span>
+              <input type="number" name="montoDescuento" id="inpMonto" class="form-control"
+                     min="0.01" step="0.01" placeholder="Ej: 20.00"
+                     th:value="${dto.montoDescuento}"
+                     oninput="document.getElementById('inpPct').value=''; calcPrevD()"/>
+            </div>
+            <div class="form-text">Vacío si usas porcentaje.</div>
+          </div>
+        </div>
+
+        <div id="prevD" class="p-3 rounded-3" style="background:#f8f9fa;border:1px solid #e9ecef;">
+          <span class="text-muted small"><i class="bi bi-eye me-1"></i>Completa los campos para ver la vista previa.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SECCIÓN VOLUMEN
+    ═══════════════════════════════════════════════════════ -->
+    <div class="card border-0 shadow-sm mb-4 acc-blue seccion-tipo" id="secV">
+      <div class="card-body p-4">
+        <h6 class="fw-semibold mb-1">
+          <i class="bi bi-layers me-2" style="color:#3b82f6;"></i>Configuración por Volumen
+        </h6>
+        <p class="text-muted small mb-4">El descuento se aplica automáticamente en el carrito.</p>
+
+        <div class="mb-4">
+          <label class="form-label fw-semibold">Producto al que aplica <span class="text-danger">*</span></label>
+          <select name="productoId" class="form-select" id="selProdV">
+            <option value="">— Selecciona un producto —</option>
+            <option th:each="prod : ${productos}"
+                    th:value="${prod.id}"
+                    th:data-precio="${prod.precioVenta}"
+                    th:text="${prod.nombre + ' · ' + prod.marca + ' — S/. ' + #numbers.formatDecimal(prod.precioVenta,1,2)}"
+                    th:selected="${dto.tipo != null and dto.tipo == 'VOLUMEN' and dto.productoId != null and dto.productoId == prod.id}">
+            </option>
+          </select>
+        </div>
+
+        <div class="row g-3 align-items-end mb-3">
+          <div class="col-md-5">
+            <label class="form-label fw-semibold">El cliente lleva <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <input type="number" name="compraX" id="inpX" class="form-control"
+                     min="2" placeholder="Ej: 2" th:value="${dto.compraX}"
+                     oninput="calcPrevV()"/>
+              <span class="input-group-text">unidades</span>
+            </div>
+          </div>
+          <div class="col-auto d-flex align-items-center pb-1 pt-3" style="font-size:1.4rem;">→</div>
+          <div class="col-md-5">
+            <label class="form-label fw-semibold">Y paga solo <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <input type="number" name="llevaY" id="inpY" class="form-control"
+                     min="1" placeholder="Ej: 1" th:value="${dto.llevaY}"
+                     oninput="calcPrevV()"/>
+              <span class="input-group-text">unidades</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="prevV" class="p-3 rounded-3" style="background:#f8f9fa;border:1px solid #e9ecef;">
+          <span class="text-muted small"><i class="bi bi-info-circle me-1"></i>Completa los campos para ver la vista previa.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SECCIÓN COMBO
+    ═══════════════════════════════════════════════════════ -->
+    <div class="card border-0 shadow-sm mb-4 acc-purple seccion-tipo" id="secC">
+      <div class="card-body p-4">
+        <h6 class="fw-semibold mb-1">
+          <i class="bi bi-box2-heart me-2" style="color:#8b5cf6;"></i>Configuración del Combo / Pack
+        </h6>
+        <p class="text-muted small mb-4">Crea un paquete de productos con precio especial.</p>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Precio del combo (S/.) <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text">S/.</span>
+              <input type="number" name="precioCombo" id="inpPrecioCombo" class="form-control"
+                     min="0.01" step="0.01" placeholder="Ej: 45.00"
+                     th:value="${dto.precioCombo}" oninput="calcPrevC()"/>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">
+              Imagen del combo <span class="text-muted fw-normal small">(opcional)</span>
+            </label>
+            <input type="file" name="imagenComboFile" class="form-control"
+                   accept="image/*" onchange="prevImgC(this)"/>
+            <div th:if="${editando != null and editando and dto.urlImagenCombo != null and !dto.urlImagenCombo.empty}" class="mt-2">
+              <img th:src="${dto.urlImagenCombo}" id="imgC"
+                   style="width:48px;height:48px;object-fit:cover;border-radius:8px;" alt="combo"/>
+            </div>
+            <div th:unless="${editando != null and editando and dto.urlImagenCombo != null and !dto.urlImagenCombo.empty}">
+              <img id="imgC" src="" alt=""
+                   style="width:48px;height:48px;object-fit:cover;border-radius:8px;display:none;"/>
+            </div>
+          </div>
+        </div>
+
+        <label class="form-label fw-semibold">Productos del combo <span class="text-danger">*</span></label>
+        <div id="comboItems" class="d-flex flex-column gap-2 mb-3">
+          <!-- Filas al EDITAR (comboProductoIds viene del ResponseDTO) -->
+          <th:block th:if="${dto.comboProductoIds != null and not #lists.isEmpty(dto.comboProductoIds)}">
+            <th:block th:each="pid, stat : ${dto.comboProductoIds}">
+              <div class="combo-row d-flex align-items-center gap-2">
+                <div class="flex-grow-1">
+                  <select name="comboProductoIds" class="form-select form-select-sm" onchange="calcPrevC()">
+                    <option value="">— Selecciona producto —</option>
+                    <option th:each="prod : ${productos}"
+                            th:value="${prod.id}"
+                            th:data-precio="${prod.precioVenta}"
+                            th:text="${prod.nombre + ' · ' + prod.marca + ' — S/. ' + #numbers.formatDecimal(prod.precioVenta,1,2)}"
+                            th:selected="${prod.id == pid}">
+                    </option>
+                  </select>
+                </div>
+                <div style="width:90px;">
+                  <input type="number" name="comboCantidades" class="form-control form-control-sm"
+                         min="1" oninput="calcPrevC()"
+                         th:value="${dto.comboCantidades != null and stat.index < #lists.size(dto.comboCantidades) ? dto.comboCantidades[stat.index] : 1}"/>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger"
+                        onclick="quitarFila(this)"><i class="bi bi-x-lg"></i></button>
+              </div>
+            </th:block>
+          </th:block>
+
+          <!-- Fila vacía inicial al CREAR -->
+          <th:block th:unless="${dto.comboProductoIds != null and not #lists.isEmpty(dto.comboProductoIds)}">
+            <div class="combo-row d-flex align-items-center gap-2">
+              <div class="flex-grow-1">
+                <select name="comboProductoIds" class="form-select form-select-sm" onchange="calcPrevC()">
+                  <option value="">— Selecciona producto —</option>
+                  <option th:each="prod : ${productos}"
+                          th:value="${prod.id}"
+                          th:data-precio="${prod.precioVenta}"
+                          th:text="${prod.nombre + ' · ' + prod.marca + ' — S/. ' + #numbers.formatDecimal(prod.precioVenta,1,2)}">
+                  </option>
+                </select>
+              </div>
+              <div style="width:90px;">
+                <input type="number" name="comboCantidades" class="form-control form-control-sm"
+                       min="1" value="1" oninput="calcPrevC()"/>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-danger"
+                      onclick="quitarFila(this)"><i class="bi bi-x-lg"></i></button>
+            </div>
+          </th:block>
+        </div>
+
+        <button type="button" class="btn btn-sm btn-outline-secondary mb-4" onclick="agregarFila()">
+          <i class="bi bi-plus-lg me-1"></i>Agregar producto al combo
+        </button>
+
+        <div id="resC" class="p-3 rounded-3 d-none" style="background:#f8f9fa;border:1px solid #e9ecef;">
+          <div class="d-flex justify-content-between small mb-1">
+            <span class="text-muted">Suma normal:</span><span id="rcN" class="fw-semibold">—</span>
+          </div>
+          <div class="d-flex justify-content-between small mb-1">
+            <span class="text-muted">Precio combo:</span><span id="rcC" class="fw-semibold text-success">—</span>
+          </div>
+          <div class="d-flex justify-content-between small" id="rcARow">
+            <span class="text-muted">Ahorro cliente:</span>
+            <span id="rcA" class="fw-bold" style="color:#dc2626;">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         BOTONES  —  SIEMPRE VISIBLES AL FONDO
+    ═══════════════════════════════════════════════════════ -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between">
+          <a th:href="@{/promociones}" class="btn btn-outline-secondary px-4">
+            <i class="bi bi-x me-1"></i>Cancelar
+          </a>
+          <button type="submit"
+                  class="btn btn-warning fw-bold px-5 py-2"
+                  style="font-size:1rem; border-radius:10px; min-width:200px;">
+            <i class="bi bi-check-lg me-2"></i>
+            <span th:text="${editando} ? 'Guardar cambios' : 'Crear Promoción'">Crear Promoción</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </form>
+
+</th:block>
+
+<th:block th:fragment="extra-scripts">
+<script>
+/* ────────────────────────────────────────────────
+   TIPO — mostrar / ocultar secciones
+───────────────────────────────────────────────── */
+function selTipo(tipo) {
+  // Marcar radio
+  var map = { DESCUENTO_DIRECTO:'tipoDirect', VOLUMEN:'tipoVol', COMBO:'tipoCombo' };
+  document.getElementById(map[tipo]).checked = true;
+
+  // Cards visuales
+  document.getElementById('cardD').className = 'tipo-card h-100' + (tipo==='DESCUENTO_DIRECTO'?' sel-d':'');
+  document.getElementById('cardV').className = 'tipo-card h-100' + (tipo==='VOLUMEN'?' sel-v':'');
+  document.getElementById('cardC').className = 'tipo-card h-100' + (tipo==='COMBO'?' sel-c':'');
+
+  // Secciones
+  ['secD','secV','secC'].forEach(function(id){ document.getElementById(id).style.display='none'; });
+  var secMap = { DESCUENTO_DIRECTO:'secD', VOLUMEN:'secV', COMBO:'secC' };
+  document.getElementById(secMap[tipo]).style.display = 'block';
+
+  // Required dinámico
+  document.getElementById('selProdD').required = (tipo==='DESCUENTO_DIRECTO');
+  document.getElementById('selProdV').required  = (tipo==='VOLUMEN');
+  document.getElementById('inpPrecioCombo').required = (tipo==='COMBO');
+}
+
+/* ────────────────────────────────────────────────
+   PREVIEW DESCUENTO DIRECTO
+───────────────────────────────────────────────── */
+function calcPrevD() {
+  var sel   = document.getElementById('selProdD');
+  var pct   = parseFloat(document.getElementById('inpPct').value) || 0;
+  var monto = parseFloat(document.getElementById('inpMonto').value) || 0;
+  var box   = document.getElementById('prevD');
+  var precio = sel.value ? parseFloat(sel.options[sel.selectedIndex].dataset.precio) || 0 : 0;
+
+  if (precio > 0 && (pct > 0 || monto > 0)) {
+    var fin = pct > 0 ? precio*(1-pct/100) : Math.max(0, precio-monto);
+    var badge = pct > 0 ? ('−'+pct+' %') : ('−S/. '+monto.toFixed(2));
+    box.innerHTML =
+      '<div class="d-flex align-items-center gap-3 flex-wrap">' +
+      '<span class="preview-pill">'+badge+'</span>' +
+      '<span class="preview-tachado me-1">S/. '+precio.toFixed(2)+'</span>' +
+      '<span class="preview-final">S/. '+fin.toFixed(2)+'</span>' +
+      '<span class="text-muted small">Ahorro: <b>S/. '+(precio-fin).toFixed(2)+'</b></span>' +
+      '</div>';
+  } else {
+    box.innerHTML = '<span class="text-muted small"><i class="bi bi-eye me-1"></i>Completa los campos para ver la vista previa.</span>';
+  }
+}
+
+/* ────────────────────────────────────────────────
+   PREVIEW VOLUMEN
+───────────────────────────────────────────────── */
+function calcPrevV() {
+  var x = parseInt(document.getElementById('inpX').value) || 0;
+  var y = parseInt(document.getElementById('inpY').value) || 0;
+  var box = document.getElementById('prevV');
+  if (x >= 2 && y >= 1 && y < x) {
+    var g = x-y;
+    box.innerHTML =
+      '<div class="d-flex align-items-center gap-3 flex-wrap">' +
+      '<span class="preview-pill">Lleva '+x+', paga '+y+'</span>' +
+      '<span class="text-muted small">→ '+g+' unidad'+(g>1?'es':'')+' gratis por cada '+x+'</span>' +
+      '</div>';
+    box.style.borderColor='#3b82f6';
+  } else {
+    box.innerHTML = '<span class="text-muted small"><i class="bi bi-info-circle me-1"></i>Completa los campos para ver la vista previa.</span>';
+    box.style.borderColor='#e9ecef';
+  }
+}
+
+/* ────────────────────────────────────────────────
+   PREVIEW / RESUMEN COMBO
+───────────────────────────────────────────────── */
+function calcPrevC() {
+  var sels = document.querySelectorAll('#comboItems select[name="comboProductoIds"]');
+  var ctds = document.querySelectorAll('#comboItems input[name="comboCantidades"]');
+  var pCombo = parseFloat(document.getElementById('inpPrecioCombo').value) || 0;
+  var totalN = 0;
+  sels.forEach(function(s,i){
+    if (!s.value) return;
+    var p = parseFloat(s.options[s.selectedIndex].dataset.precio)||0;
+    var c = parseInt(ctds[i] ? ctds[i].value : 1)||1;
+    totalN += p*c;
+  });
+  var box = document.getElementById('resC');
+  if (totalN > 0) {
+    box.classList.remove('d-none');
+    document.getElementById('rcN').textContent = 'S/. '+totalN.toFixed(2);
+    document.getElementById('rcC').textContent = pCombo>0 ? 'S/. '+pCombo.toFixed(2) : '(sin precio aún)';
+    var ah = totalN-pCombo;
+    var aRow = document.getElementById('rcARow');
+    if (pCombo>0 && ah>0.005) {
+      aRow.style.display='';
+      document.getElementById('rcA').textContent='S/. '+ah.toFixed(2);
+    } else { aRow.style.display='none'; }
+  } else { box.classList.add('d-none'); }
+}
+
+/* ────────────────────────────────────────────────
+   COMBO ROWS — agregar / quitar
+───────────────────────────────────────────────── */
+function agregarFila() {
+  // Clonar el select plantilla (oculto, ya renderizado por Thymeleaf)
+  var tmpl = document.getElementById('tmplSelectProducto');
+  var sel  = document.createElement('select');
+  sel.name = 'comboProductoIds';
+  sel.className = 'form-select form-select-sm';
+  sel.setAttribute('onchange','calcPrevC()');
+  sel.innerHTML = tmpl.innerHTML;
+
+  var div = document.createElement('div');
+  div.className = 'combo-row d-flex align-items-center gap-2';
+  div.innerHTML =
+    '<div class="flex-grow-1"></div>' +
+    '<div style="width:90px;"><input type="number" name="comboCantidades" class="form-control form-control-sm" min="1" value="1" oninput="calcPrevC()"/></div>' +
+    '<button type="button" class="btn btn-sm btn-outline-danger" onclick="quitarFila(this)"><i class="bi bi-x-lg"></i></button>';
+  div.querySelector('.flex-grow-1').appendChild(sel);
+  document.getElementById('comboItems').appendChild(div);
+}
+
+function quitarFila(btn) {
+  var rows = document.querySelectorAll('#comboItems .combo-row');
+  if (rows.length > 1) { btn.closest('.combo-row').remove(); calcPrevC(); }
+}
+
+function prevImgC(input) {
+  if (!input.files || !input.files[0]) return;
+  var img = document.getElementById('imgC');
+  img.src = URL.createObjectURL(input.files[0]);
+  img.style.display = '';
+}
+
+/* ────────────────────────────────────────────────
+   VALIDACIÓN Y SUBMIT
+───────────────────────────────────────────────── */
+document.getElementById('promoForm').addEventListener('submit', function(e) {
+  var tipo = (document.querySelector('input[name="tipo"]:checked') || {}).value;
+  if (!tipo) { e.preventDefault(); alert('Selecciona un tipo de promoción.'); return; }
+
+  // Deshabilitar selects de producto inactivos (evitar enviar duplicados)
+  if (tipo !== 'DESCUENTO_DIRECTO') document.getElementById('selProdD').disabled = true;
+  if (tipo !== 'VOLUMEN')           document.getElementById('selProdV').disabled  = true;
+
+  if (tipo === 'DESCUENTO_DIRECTO') {
+    var pct   = parseFloat(document.getElementById('inpPct').value)||0;
+    var monto = parseFloat(document.getElementById('inpMonto').value)||0;
+    if (!document.getElementById('selProdD').value) {
+      e.preventDefault(); alert('Selecciona el producto al que aplica el descuento.');
+      document.getElementById('selProdD').disabled=false; return;
+    }
+    if (pct <= 0 && monto <= 0) {
+      e.preventDefault(); alert('Ingresa un porcentaje o monto de descuento.');
+      document.getElementById('selProdD').disabled=false; return;
+    }
+  }
+
+  if (tipo === 'VOLUMEN') {
+    var x = parseInt(document.getElementById('inpX').value)||0;
+    var y = parseInt(document.getElementById('inpY').value)||0;
+    if (!document.getElementById('selProdV').value) {
+      e.preventDefault(); alert('Selecciona el producto al que aplica la promo por volumen.');
+      document.getElementById('selProdV').disabled=false; return;
+    }
+    if (!(x>=2 && y>=1 && y<x)) {
+      e.preventDefault(); alert('"Lleva" debe ser mayor que "Paga" (mínimo Lleva=2, Paga=1).');
+      document.getElementById('selProdV').disabled=false; return;
+    }
+  }
+
+  if (tipo === 'COMBO') {
+    var pCombo = parseFloat(document.getElementById('inpPrecioCombo').value)||0;
+    if (pCombo <= 0) {
+      e.preventDefault(); alert('Ingresa el precio del combo.');
+      document.getElementById('selProdD').disabled=false;
+      document.getElementById('selProdV').disabled=false; return;
+    }
+    var tieneProd = Array.from(
+      document.querySelectorAll('#comboItems select[name="comboProductoIds"]')
+    ).some(function(s){ return !!s.value; });
+    if (!tieneProd) {
+      e.preventDefault(); alert('Agrega al menos un producto al combo.');
+      document.getElementById('selProdD').disabled=false;
+      document.getElementById('selProdV').disabled=false; return;
+    }
+  }
+});
+
+/* ────────────────────────────────────────────────
+   INIT — leer el radio marcado por Thymeleaf
+───────────────────────────────────────────────── */
+(function init(){
+  var checked = document.querySelector('input[name="tipo"]:checked');
+  selTipo(checked ? checked.value : 'DESCUENTO_DIRECTO');
+  calcPrevD();
+  calcPrevV();
+  calcPrevC();
+})();
+</script>
+</th:block>
+
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+    th:replace="~{admin/layout :: layout(
+          titulo=${proveedor.id != null ? 'Editar Proveedor' : 'Nuevo Proveedor'},
+          currentPage='proveedores',
+          content=~{::main-content},
+          extraHead=~{},
+          extraScripts=~{::scripts})}">
+
+<head>
+</head>
+
+<body>
+    <main th:fragment="main-content">
+
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <h3 
+                    th:text="${proveedor.id != null ? '📝 Editar Proveedor' : '📦 Nuevo Proveedor'}"></h3>
+                <p class="text-muted small m-0">Completa la información oficial del proveedor para el control de
+                    inventario.</p>
+            </div>
+            <a th:href="@{/proveedores}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Regresar al listado
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-sm p-4">
+
+            <form
+                th:action="${proveedor.id != null} ? @{/proveedores/editar/{id}(id=${proveedor.id})} : @{/proveedores/nuevo}"
+                th:object="${proveedor}" method="post" class="row g-3 needs-validation" novalidate>
+
+                <div class="col-12">
+                    <div class="form-section-title"><i class="bi bi-building me-2"></i>Datos de la Empresa</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="mb-0 fw-semibold">Razón Social <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text input-group-text-dark"><i class="bi bi-pencil-square"></i></span>
+                        <input class="form-control form-control-dark" th:field="*{razonSocial}"
+                            placeholder="Ej: Distribuidora de Licores S.A.C." required />
+                        <div class="invalid-feedback">Por favor, ingresa la razón social.</div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="mb-0 fw-semibold">RUC <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text input-group-text-dark"><i class="bi bi-card-text"></i></span>
+                        <input class="form-control form-control-dark" th:field="*{ruc}" id="rucInput"
+                            placeholder="Ej: 20123456789" required autocomplete="off" />
+                        <div class="invalid-feedback">El número de RUC es obligatorio (11 dígitos).</div>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <label class="mb-0 fw-semibold">Dirección Fiscal</label>
+                    <div class="input-group">
+                        <span class="input-group-text input-group-text-dark"><i class="bi bi-geo-alt"></i></span>
+                        <input class="form-control form-control-dark" th:field="*{direccion}"
+                            placeholder="Ej: Av. Revolución 123, Villa El Salvador" />
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="form-section-title"><i class="bi bi-person-lines-fill me-2"></i>Información de Contacto
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="mb-0 fw-semibold">Nombre del Contacto</label>
+                    <div class="input-group">
+                        <span class="input-group-text input-group-text-dark"><i class="bi bi-person"></i></span>
+                        <input class="form-control form-control-dark" th:field="*{contactoNombre}"
+                            placeholder="Ej: Juan Pérez" />
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="mb-0 fw-semibold">Teléfono / Celular</label>
+                    <div class="input-group">
+                        <span class="input-group-text input-group-text-dark"><i class="bi bi-telephone"></i></span>
+                        <input type="tel" class="form-control form-control-dark" th:field="*{telefono}"
+                            placeholder="Ej: 987654321" />
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="mb-0 fw-semibold">Correo Electrónico</label>
+                    <div class="input-group">
+                        <span class="input-group-text input-group-text-dark"><i class="bi bi-envelope"></i></span>
+                        <input type="email" class="form-control form-control-dark" th:field="*{correo}"
+                            placeholder="Ej: contacto@proveedor.com" />
+                        <div class="invalid-feedback">Por favor, introduce un correo electrónico válido.</div>
+                    </div>
+                </div>
+
+                <div class="col-12 d-flex justify-content-end gap-2 mt-4 pt-3 border-top border-secondary">
+                    <a th:href="@{/proveedores}" class="btn btn-outline-secondary px-4">Cancelar</a>
+                    <button sec:authorize="hasAnyAuthority('ROLE_ADMIN','ROLE_ALMACEN')" type="submit"
+                        class="btn btn-warning fw-semibold px-4">
+                        <i class="bi bi-save me-2"></i>Guardar Proveedor
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <th:block th:fragment="scripts">
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                'use strict'
+
+                // 1. Validación de envío nativa de Bootstrap 5
+                const forms = document.querySelectorAll('.needs-validation');
+                Array.from(forms).forEach(form => {
+                    form.addEventListener('submit', event => {
+                        if (!form.checkValidity()) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+
+                // 2. Filtro dinámico para el campo de RUC
+                const rucInput = document.getElementById('rucInput');
+                if (rucInput) {
+                    rucInput.addEventListener('input', function (e) {
+                        this.value = this.value.replace(/[^0-9]/g, '');
+                        if (this.value.length > 11) {
+                            this.value = this.value.slice(0, 11);
+                        }
+                    });
+                }
+            });
+        </script>
+    </th:block>
+</body>
+
+</html>

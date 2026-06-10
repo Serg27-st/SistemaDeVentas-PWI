@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+    th:replace="~{admin/layout :: layout(titulo=${tituloAccion}, currentPage='productos', content=~{::main-content}, extraHead=~{}, extraScripts=~{::scripts})}">
+
+<head>
+    <title th:text="${tituloAccion}">Formulario de Producto</title>
+</head>
+
+<body>
+    <th:block th:fragment="main-content">
+
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a th:href="@{/productos}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h4 class="page-title mb-0" th:text="${producto.id != null ? 'Editar producto' : 'Nuevo producto'}">
+                </h4>
+                <p class="text-muted mb-0 small">Completa los datos del producto</p>
+            </div>
+        </div>
+
+        <form th:action="${producto.id != null ? '/productos/editar/' + producto.id : '/productos/nuevo'}"
+            th:object="${producto}" method="post" enctype="multipart/form-data" id="formProducto">
+
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+            <input type="hidden" th:field="*{id}" />
+
+            <div class="row g-4">
+
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-dark text-white border-0 py-3">
+                            <h6 class="mb-0 fw-semibold">
+                                <i class="bi bi-image me-2"></i>Imagen del producto
+                            </h6>
+                        </div>
+                        <div class="card-body p-4">
+
+                            <div class="imagen-preview-container mb-3">
+                                <img th:if="${producto.imagen != null}"
+                                    th:src="@{/images/{ruta}(ruta=${producto.imagen})}" th:alt="${producto.nombre}"
+                                    id="imgPreview" class="img-fluid rounded-3 w-100"
+                                    style="height:220px; object-fit:cover" />
+
+                                <div class="imagen-placeholder rounded-3 d-flex flex-column align-items-center justify-content-center"
+                                    th:if="${producto.imagen == null}" id="imgPlaceholder"
+                                    style="height:220px; background:#f8f9fa; border:2px dashed #dee2e6">
+                                    <i class="bi bi-image fs-1 text-muted"></i>
+                                    <small class="text-muted mt-2">Sin imagen</small>
+                                </div>
+
+                                <img id="imgNueva" src="" alt="Nueva imagen" class="img-fluid rounded-3 w-100 d-none"
+                                    style="height:220px; object-fit:cover" />
+                            </div>
+
+                            <label class="form-label fw-semibold small">
+                                <span th:text="${producto.imagen != null ? 'Cambiar imagen' : 'Subir imagen'}">
+                                </span>
+                            </label>
+                            <input type="file" name="imagenFile" id="inputImagen" class="form-control form-control-sm"
+                                accept="image/jpeg,image/png,image/webp" onchange="previewImagen(this)" />
+                            <small class="text-muted d-block mt-1">
+                                JPG, PNG o WEBP · Máx. 5MB
+                            </small>
+
+                            <div id="archivoSeleccionado" class="alert alert-success py-2 mt-2 small d-none">
+                                <i class="bi bi-check-circle me-1"></i>
+                                <span id="nombreArchivo"></span>
+                            </div>
+
+                            <div class="alert alert-info py-2 mt-3 small border-0">
+                                <i class="bi bi-folder me-1"></i>
+                                Se guardará en la raíz del proyecto:
+                                <code>images/<span id="previewRuta">{CATEGORIA}/producto_{id}.ext</span></code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-dark text-white border-0 py-3">
+                            <h6 class="mb-0 fw-semibold">
+                                <i class="bi bi-box-seam me-2"></i>Datos del producto
+                            </h6>
+                        </div>
+                        <div class="card-body p-4">
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">
+                                    Nombre <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" th:field="*{nombre}" class="form-control"
+                                    placeholder="Ej: Johnnie Walker Red Label" id="inputNombre"
+                                    oninput="actualizarRutaPreview()" required />
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Código</label>
+                                    <input type="text" th:field="*{codigo}" class="form-control"
+                                        placeholder="Código de barras" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        Marca <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" th:field="*{marca}" class="form-control"
+                                        placeholder="Ej: Johnnie Walker" required />
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        Categoría <span class="text-danger">*</span>
+                                    </label>
+                                    <select th:field="*{categoriaId}" class="form-select" id="selectCategoria" required>
+                                        <option value="">Selecciona...</option>
+                                        <option th:each="cat : ${categorias}" th:value="${cat.id}"
+                                            th:text="${cat.nombre}">
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        Proveedor <span class="text-danger">*</span>
+                                    </label>
+                                    <select th:field="*{proveedorId}" class="form-select" id="selectProveedor">
+                                        <option value="">— Selecciona un proveedor —</option>
+                                        <option th:each="prov : ${proveedores}" th:value="${prov.id}"
+                                            th:text="${prov.razonSocial}">
+                                        </option>
+                                    </select>
+                                    <div id="alertaProveedor" class="alert alert-warning py-2 mt-2 small d-none">
+                                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                        Debes seleccionar un proveedor antes de guardar.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Cantidad</label>
+                                    <input type="number" th:field="*{cantidad}" class="form-control"
+                                        placeholder="Ej: 750" step="any" min="0" />
+                                    <small class="text-muted">Opcional. Dejar en blanco si no aplica.</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Unidad de medida</label>
+                                    <select th:field="*{unidadMedida}" class="form-select">
+                                        <option value="">— Sin unidad —</option>
+                                        <option value="ml">ml</option>
+                                        <option value="L">L</option>
+                                        <option value="cl">cl</option>
+                                        <option value="oz">oz</option>
+                                        <option value="und">und</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Grado alcohol (%)</label>
+                                    <div class="input-group">
+                                        <input type="number" th:field="*{gradoAlcohol}" class="form-control"
+                                            placeholder="Ej: 40.0" step="0.1" min="0" max="100" />
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                    <small class="text-muted">Opcional. Dejar en blanco para cigarros.</small>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">País de origen</label>
+                                    <input type="text" th:field="*{paisOrigen}" class="form-control"
+                                        placeholder="Ej: Escocia" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Fecha de Vencimiento</label>
+                                    <input type="date" th:field="*{fechaVencimiento}" class="form-control" />
+                                    <small class="text-muted">Solo para productos perecibles o con caducidad.</small>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        Precio de compra (S/.) <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">S/.</span>
+                                        <input type="number" th:field="*{precioCompra}" class="form-control"
+                                            placeholder="0.00" step="0.01" min="0" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        Precio de venta (S/.) <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">S/.</span>
+                                        <input type="number" th:field="*{precioVenta}" class="form-control"
+                                            placeholder="0.00" step="0.01" min="0" required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+
+    <!-- STOCK -->
+    <div class="col-md-6">
+        <label class="form-label fw-semibold">
+            Stock <span class="text-danger">*</span>
+        </label>
+
+        <input type="number"
+               th:field="*{stock}"
+               class="form-control"
+               placeholder="20"
+               min="0"
+               required />
+
+        <small class="text-muted">
+            Cantidad actual disponible.
+        </small>
+    </div>
+
+    <!-- STOCK MÍNIMO -->
+    <div class="col-md-6">
+        <label class="form-label fw-semibold">
+            Stock mínimo <span class="text-danger">*</span>
+        </label>
+
+        <input type="number"
+               th:field="*{stockMinimo}"
+               class="form-control"
+               placeholder="5"
+               min="0"
+               required />
+
+        <small class="text-muted">
+            Se mostrará alerta cuando el stock llegue a este límite.
+        </small>
+    </div>
+
+</div>
+
+                            <div class="mb-0">
+                                <label class="form-label fw-semibold">Descripción</label>
+                                <textarea th:field="*{descripcion}" class="form-control" rows="3"
+                                    placeholder="Descripción del producto para el catálogo..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end mt-3">
+                        <a th:href="@{/productos}" class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-warning fw-semibold px-4">
+                            <i class="bi bi-check-lg me-2"></i>
+                            <span th:text="${producto.id != null ? 'Guardar cambios' : 'Registrar producto'}">
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+    </th:block>
+
+    <th:block th:fragment="scripts">
+        <script th:inline="javascript">
+            const listaCategoriasBackend = /*[[${categorias}]]*/[];
+            const categorias = {};
+            listaCategoriasBackend.forEach(cat => { categorias[cat.id] = cat.nombre; });
+
+            // ── Preview de imagen ─────────────────────────────────────────────────────
+            function previewImagen(input) {
+                const imgNueva    = document.getElementById('imgNueva');
+                const imgPreview  = document.getElementById('imgPreview');
+                const placeholder = document.getElementById('imgPlaceholder');
+                const infoArchivo = document.getElementById('archivoSeleccionado');
+                const nombreArchivo = document.getElementById('nombreArchivo');
+
+                if (!input.files || !input.files[0]) return;
+
+                const archivo = input.files[0];
+                const reader  = new FileReader();
+                reader.onload = e => {
+                    imgNueva.src = e.target.result;
+                    imgNueva.classList.remove('d-none');
+                    if (imgPreview)  imgPreview.style.display  = 'none';
+                    if (placeholder) placeholder.style.display = 'none';
+                };
+                reader.readAsDataURL(archivo);
+                nombreArchivo.textContent = archivo.name;
+                infoArchivo.classList.remove('d-none');
+                actualizarRutaPreview();
+            }
+
+            // ── Preview de ruta de almacenamiento ────────────────────────────────────
+            function actualizarRutaPreview() {
+                const categoriaSelect = document.getElementById('selectCategoria');
+                const previewRuta     = document.getElementById('previewRuta');
+                const productoId      = /*[[${producto.id}]]*/ null;
+                const categoriaId     = categoriaSelect ? categoriaSelect.value : '';
+
+                if (!categoriaId) {
+                    previewRuta.textContent = '{CATEGORIA}/producto_{id}.ext';
+                    return;
+                }
+
+                const categoriaNombre  = categorias[categoriaId] || '';
+                const carpetaCategoria = categoriaNombre.trim().toUpperCase().replace(/\s+/g, '_');
+                const idTexto          = productoId ? productoId : '{id_autogenerado}';
+                previewRuta.textContent = carpetaCategoria + '/producto_' + idTexto + '.jpg';
+            }
+
+            // ── Validación al enviar ──────────────────────────────────────────────────
+            document.getElementById('formProducto').addEventListener('submit', function (e) {
+                const selectProv = document.getElementById('selectProveedor');
+                const alerta     = document.getElementById('alertaProveedor');
+                let ok = true;
+
+                // Validar proveedor
+                if (!selectProv.value) {
+                    alerta.classList.remove('d-none');
+                    selectProv.classList.add('is-invalid');
+                    selectProv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    ok = false;
+                } else {
+                    alerta.classList.add('d-none');
+                    selectProv.classList.remove('is-invalid');
+                }
+
+                if (!ok) e.preventDefault();
+            });
+
+            // Ocultar alerta en cuanto el usuario elige un proveedor
+            document.getElementById('selectProveedor').addEventListener('change', function () {
+                if (this.value) {
+                    document.getElementById('alertaProveedor').classList.add('d-none');
+                    this.classList.remove('is-invalid');
+                }
+            });
+
+            // ── Inicializar ───────────────────────────────────────────────────────────
+            document.addEventListener('DOMContentLoaded', function () {
+                actualizarRutaPreview();
+                const selectCat = document.getElementById('selectCategoria');
+                if (selectCat) selectCat.addEventListener('change', actualizarRutaPreview);
+            });
+        </script>
+    </th:block>
+
+</body>
+
+</html>

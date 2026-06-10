@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+    th:replace="~{admin/layout :: layout(
+          titulo='Detalle de Producto | Licorería',
+          currentPage='productos',
+          content=~{::main-content},
+          extraHead=null,
+          extraScripts=~{})}">
+
+<head>
+    <title>Detalle del Producto</title>
+</head>
+
+<body>
+    <th:block th:fragment="main-content">
+
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center gap-3">
+                <a th:href="@{/productos}" class="btn btn-light border btn-sm text-secondary shadow-sm">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div>
+                    <h4 class="fw-bold mb-0" style="color: var(--text-main);" th:text="${producto.nombre}">Producto</h4>
+                    <p class="text-muted mb-0 small">
+                        Visualización detallada y métricas actuales del artículo en inventario.
+                    </p>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <a th:href="@{'/productos/editar/' + ${producto.id}}"
+                    class="btn btn-light border fw-semibold text-dark btn-sm px-3 shadow-sm"
+                    sec:authorize="hasAnyRole('ADMIN','ALMACEN')">
+                    <i class="bi bi-pencil text-primary me-1"></i> Editar
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-5">
+                <div class="card border-0 shadow-sm bg-white h-100">
+                    <div class="card-header border-0 py-3 bg-white"
+                        style="border-bottom: 1px solid var(--border-soft) !important;">
+                        <h6 class="mb-0 fw-bold" style="color: var(--text-main);">
+                            <i class="bi bi-image text-primary me-2"></i>Imagen del producto
+                        </h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div th:if="${producto.urlImagen != null}"
+                            class="rounded-4 overflow-hidden border bg-light">
+                            <img th:src="${producto.urlImagen}" th:alt="${producto.nombre}"
+                                class="img-fluid w-100" style="height: 320px; object-fit: cover;" />
+                        </div>
+
+                        <div th:if="${producto.urlImagen == null}"
+                            class="rounded-4 d-flex flex-column align-items-center justify-content-center border bg-light"
+                            style="height: 320px;">
+                            <i class="bi bi-image fs-1 text-muted"></i>
+                            <span class="text-muted small mt-2">Sin imagen registrada</span>
+                        </div>
+
+                        <div class="mt-3 small text-muted">
+                            <div>
+                                <strong>Ruta:</strong>
+                                <span th:text="${producto.urlImagen != null ? producto.urlImagen : 'N/D'}"></span>
+                            </div>
+                            <div>
+                                <strong>Categoría:</strong>
+                                <span th:text="${producto.categoriaNombre}"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-7">
+                <div class="card border-0 shadow-sm bg-white h-100">
+                    <div class="card-header border-0 py-3 bg-white"
+                        style="border-bottom: 1px solid var(--border-soft) !important;">
+                        <h6 class="mb-0 fw-bold" style="color: var(--text-main);">
+                            <i class="bi bi-info-circle text-primary me-2"></i>Especificaciones Técnicas
+                        </h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom"
+                            style="border-color: #f1f5f9 !important;">
+                            <span class="text-secondary fw-semibold small">Código de Barras / SKU</span>
+                            <span class="font-monospace text-dark fw-bold" th:text="${producto.codigo}">-</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom"
+                            style="border-color: #f1f5f9 !important;">
+                            <span class="text-secondary fw-semibold small">Categoría</span>
+                            <span class="text-dark" th:text="${producto.categoriaNombre}">-</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom"
+                            style="border-color: #f1f5f9 !important;">
+                            <span class="text-secondary fw-semibold small">Proveedor</span>
+                            <span class="text-dark fw-medium" th:text="${producto.proveedorRazonSocial}">-</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom"
+                            style="border-color: #f1f5f9 !important;">
+                            <span class="text-secondary fw-semibold small">Precio de Compra</span>
+                            <span class="text-dark"
+                                th:text="${producto.precioCompra != null ? 'S/ ' + #numbers.formatDecimal(producto.precioCompra, 1, 2) : 'S/ 0.00'}"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom"
+                            style="border-color: #f1f5f9 !important;">
+                            <span class="text-secondary fw-semibold small">Precio de Venta al Público</span>
+                            <span class="text-dark fw-bold" style="color: var(--accent-blue) !important;"
+                                th:text="${producto.precioVenta != null ? 'S/ ' + #numbers.formatDecimal(producto.precioVenta, 1, 2) : 'S/ 0.00'}"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom"
+                            style="border-color: #f1f5f9 !important;">
+                            <span class="text-secondary fw-semibold small">Volumen</span>
+                            <span class="text-dark" th:text="${producto.cantidad != null ? (producto.cantidad % 1 == 0 ? producto.cantidad.intValue() : producto.cantidad) + (producto.unidadMedida != null ? ' ' + producto.unidadMedida : '') : '-'}">-</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom"
+                            style="border-color: #f1f5f9 !important;">
+                            <span class="text-secondary fw-semibold small">Grado Alcohólico</span>
+                            <span class="text-dark" th:text="${producto.gradoAlcohol != null ? producto.gradoAlcohol + '%' : '-'}">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom"
+    style="border-color: #f1f5f9 !important;">
+
+    <span class="text-secondary fw-semibold small">
+        Fecha de Vencimiento
+    </span>
+
+    <span class="text-dark fw-medium"
+        th:text="${producto.fechaVencimiento != null 
+                    ? #temporals.format(producto.fechaVencimiento, 'dd/MM/yyyy') 
+                    : 'No registrada'}">
+        -
+    </span>
+</div>
+
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom"
+                            style="border-color: #f1f5f9 !important;">
+                            <span class="text-secondary fw-semibold small">Disponibilidad en Almacén</span>
+                            <span th:text="${producto.stock}"
+                                th:class="${producto.stock <= 5 ? 'badge bg-danger px-2 py-1' : 'badge bg-success px-2 py-1'}">0</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center py-2">
+                            <span class="text-secondary fw-semibold small">Estado Operativo</span>
+                            <span th:if="${producto.activo}"
+                                class="badge bg-light text-success border border-success-subtle px-3 py-1.5 fw-semibold">
+                                <i class="bi bi-check-circle-fill me-1"></i> Activo
+                            </span>
+                            <span th:if="${!producto.activo}"
+                                class="badge bg-light text-danger border border-danger-subtle px-3 py-1.5 fw-semibold">
+                                <i class="bi bi-x-circle-fill me-1"></i> Inactivo
+                            </span>
+                        </div>
+
+                        <div class="mt-4" th:if="${producto.descripcion != null and !#strings.isEmpty(producto.descripcion)}">
+                            <h6 class="fw-bold mb-2 text-dark">Descripción</h6>
+                            <p class="text-muted mb-0" th:text="${producto.descripcion}"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="card border-0 shadow-sm bg-white">
+                    <div class="card-body p-4 d-flex align-items-center gap-3">
+                        <div class="rounded-3 p-3 bg-light text-primary">
+                            <i class="bi bi-graph-up-arrow fs-4"></i>
+                        </div>
+                        <div>
+                            <span class="text-muted small d-block">Margen Bruto Estimado</span>
+                            <h4 class="fw-bold mb-0 text-dark"
+                                th:text="${producto.precioVenta != null and producto.precioCompra != null ? 'S/ ' + #numbers.formatDecimal(producto.precioVenta - producto.precioCompra, 1, 2) : 'S/ 0.00'}">
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12" sec:authorize="hasRole('ADMIN')">
+                <div class="card border-0 shadow-sm bg-white">
+                    <div class="card-header border-0 py-3 bg-white"
+                        style="border-bottom: 1px solid var(--border-soft) !important;">
+                        <h6 class="mb-0 fw-bold text-danger">
+                            <i class="bi bi-shield-slash me-2"></i>Acciones de Control
+                        </h6>
+                    </div>
+                    <div class="card-body p-4 d-flex flex-column justify-content-between">
+                        <p class="text-muted small">
+                            Al desactivar un producto, este ya no figurará disponible para las nuevas ventas o
+                            despachos, pero se mantendrá su historial en los reportes de inventario anteriores.
+                        </p>
+
+                        <form th:action="@{'/productos/desactivar/' + ${producto.id}}" method="post" class="mt-3">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                            <button type="submit" class="btn btn-outline-danger w-100 fw-semibold btn-sm py-2"
+                                onclick="return confirm('¿Estás completamente seguro de modificar el estado de este producto?')">
+                                <i class="bi bi-power me-1"></i> Cambiar Estado Comercial
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </th:block>
+</body>
+
+</html>

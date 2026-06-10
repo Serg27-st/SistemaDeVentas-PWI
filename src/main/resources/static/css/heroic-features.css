@@ -1,0 +1,220 @@
+/* ── CONFIGURACIÓN GENERAL Y TIPOGRAFÍA ── */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    background: #f8fafc;
+    /* Gris/Azul ultra-limpio del fondo general de la imagen */
+    font-family: 'DM Sans', sans-serif;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── LOGIN CARD (Fiel al estilo "Login Administrador") ── */
+.login-wrapper {
+    width: 100%;
+    max-width: 440px;
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.login-card {
+    background: #ffffff;
+    /* Fondo blanco puro */
+    border: 1px solid #e2e8f0;
+    /* Borde sutil gris claro */
+    border-radius: 16px;
+    /* Esquinas redondeadas ejecutivas */
+    padding: 3rem 2.5rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    /* Sombra suave idéntica al mockup */
+}
+
+/* Logo de la Licorería */
+.brand-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1e293b;
+    /* Azul marino corporativo del Sidebar */
+    letter-spacing: 1.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.brand-sub {
+    color: #64748b;
+    /* Gris intermedio */
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    font-weight: 500;
+    margin-top: 4px;
+}
+
+/* ── INPUTS Y FORMULARIOS MODERNOS ── */
+.form-label {
+    color: #475569;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.input-group {
+    box-shadow: none;
+}
+
+.input-group-text {
+    background: #f1f5f9;
+    /* Fondo gris claro suave para los iconos */
+    border: 1px solid #cbd5e1;
+    color: #64748b;
+    border-right: none;
+    transition: all 0.2s;
+}
+
+.form-control {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #1e293b;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control::placeholder {
+    color: #94a3b8;
+}
+
+/* Enfoque / Focus (Estilo azul premium) */
+.form-control:focus {
+    background: #ffffff;
+    border-color: #3b82f6;
+    /* Azul de enfoque */
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    color: #1e293b;
+}
+
+.input-group:focus-within .input-group-text {
+    border-color: #3b82f6;
+    color: #3b82f6;
+}
+
+.btn-ojo {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-left: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0 1rem;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.btn-ojo:hover {
+    color: #3b82f6;
+}
+
+.input-group:focus-within .btn-ojo {
+    border-color: #3b82f6;
+}
+
+/* ── BOTÓN PRINCIPAL (Azul Marino / Dark Navy del mockup) ── */
+.btn-ingresar {
+    background: #1e293b;
+    /* Azul oscuro del Sidebar */
+    border: none;
+    color: #ffffff;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 0.85rem;
+    font-size: 1rem;
+    width: 100%;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.btn-ingresar:hover {
+    background: #0f172a;
+    /* Tono más oscuro al pasar el cursor */
+    box-shadow: 0 4px 12px rgba(30, 41, 59, 0.2);
+}
+
+.btn-ingresar:active {
+    transform: scale(0.98);
+}
+
+/* ── ELEMENTOS COMPLEMENTARIOS ── */
+.divisor {
+    border-color: #e2e8f0;
+    margin: 1.75rem 0;
+}
+
+/* Alertas */
+.alerta-error {
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    color: #991b1b;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    padding: 0.8rem 1rem;
+}
+
+.alerta-exito {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    color: #166534;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    padding: 0.8rem 1rem;
+}
+
+/* Link recuperar / volver */
+.link-volver {
+    color: #3b82f6;
+    /* Color azul de acento */
+    font-size: 0.88rem;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.2s;
+}
+
+.link-volver:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+.pie {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+/* Corrección de bordes del Input Group de Bootstrap */
+.input-group .input-group-text {
+    border-radius: 8px 0 0 8px;
+}
+
+.input-group .form-control:not(:first-child):not(:last-child) {
+    border-radius: 0;
+}
+
+.input-group .form-control:last-child {
+    border-radius: 0 8px 8px 0;
+}
+
+.input-group .btn-ojo {
+    border-radius: 0 8px 8px 0;
+}

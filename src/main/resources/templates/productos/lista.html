@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+    th:replace="~{admin/layout :: layout(
+          titulo='Productos | Licorería',
+          currentPage='productos',
+          content=~{::main-content},
+          extraHead=~{},
+          extraScripts=~{::scripts})}">
+
+<head>
+    <title>Productos</title>
+</head>
+
+<body>
+    <th:block th:fragment="main-content">
+
+        <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+            <div>
+                <h4 class="page-title mb-1">Productos</h4>
+                <p class="text-muted mb-0 small">Gestiona el catálogo de la licorería</p>
+            </div>
+            <a th:href="@{/productos/nuevo}" class="btn btn-warning fw-semibold">
+                <i class="bi bi-plus-lg me-1"></i>Nuevo producto
+            </a>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-primary-soft">
+                        <i class="bi bi-box-seam text-primary"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value" th:text="${productos != null ? #lists.size(productos) : 0}">0</div>
+                        <div class="stat-label">Total</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-warning-soft">
+                        <i class="bi bi-exclamation-triangle text-warning"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value" th:text="${stockBajo != null ? #lists.size(stockBajo) : 0}">0</div>
+                        <div class="stat-label">Stock bajo</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-danger-soft">
+                        <i class="bi bi-x-circle text-danger"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value" th:text="${sinStockCount != null ? sinStockCount : 0}">0</div>
+                        <div class="stat-label">Sin stock</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-success-soft">
+                        <i class="bi bi-check-circle text-success"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value" th:text="${stockOkCount != null ? stockOkCount : 0}">0</div>
+                        <div class="stat-label">Stock OK</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${stockBajo != null && !#lists.isEmpty(stockBajo)}"
+            class="alert alert-warning alert-dismissible fade show mb-4 border-0 shadow-sm">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong th:text="${#lists.size(stockBajo)}"></strong> productos con stock bajo.
+            <a th:href="@{/ordenes/nueva}" class="alert-link ms-1 text-decoration-none">Crear orden de compra →</a>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body py-3">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-4">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-search text-muted"></i>
+                            </span>
+                            <input type="text" id="buscador" class="form-control border-start-0"
+                                placeholder="Nombre, marca o código..." />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="filtroCategoria" class="form-select form-select-sm">
+                            <option value="">Todas las categorías</option>
+                            <option th:each="cat : ${categorias}" th:value="${#strings.toLowerCase(cat.nombre)}"
+                                th:text="${cat.nombre}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="filtroStock" class="form-select form-select-sm">
+                            <option value="">Todos los estados</option>
+                            <option value="sin">Sin stock</option>
+                            <option value="bajo">Stock bajo</option>
+                            <option value="ok">Stock OK</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="limpiarFiltros()">
+                            <i class="bi bi-x me-1"></i>Limpiar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="tablaProductos">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="ps-4">Producto</th>
+                                <th>Categoría</th>
+                                <th>Volumen / Grado</th>
+                                <th>Precio venta</th>
+                                <th class="text-center">Stock</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-center pe-4">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="p : ${productos}"
+                                th:data-nombre="${p.nombre != null ? #strings.toLowerCase(p.nombre) : ''}"
+                                th:data-marca="${p.marca != null ? #strings.toLowerCase(p.marca) : ''}"
+                                th:data-codigo="${p.codigo != null ? #strings.toLowerCase(p.codigo) : ''}"
+                                th:data-categoria="${p.categoriaNombre != null ? #strings.toLowerCase(p.categoriaNombre) : ''}"
+                                th:data-estado="${p.sinStock ? 'sin' : (p.stockBajo ? 'bajo' : 'ok')}">
+
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="producto-thumb"
+                                            style="width: 40px; height: 40px; overflow: hidden; border-radius: 4px;">
+                                            <img th:src="${p.urlImagen}"
+                                                th:alt="${p.nombre}"
+                                                style="width: 100%; height: 100%; object-fit: cover;"
+                                                onerror="this.src='/images/producto-default.png'" />
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold" th:text="${p.nombre}"></div>
+                                            <small class="text-muted"
+                                                th:text="${p.marca + (p.codigo != null ? ' · ' + p.codigo : '')}">
+                                            </small>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-secondary-subtle text-secondary-emphasis"
+                                        th:text="${p.categoriaNombre}"></span>
+                                </td>
+
+                                <td>
+                                    <span th:text="${p.cantidad != null ? (p.cantidad % 1 == 0 ? p.cantidad.intValue() : p.cantidad) + (p.unidadMedida != null ? ' ' + p.unidadMedida : '') : '-'}"></span>
+                                    <small class="text-muted d-block" th:text="${p.gradoAlcohol != null ? p.gradoAlcohol + '° alc.' : ''}"></small>
+                                </td>
+
+                                <td class="fw-semibold"
+                                    th:text="|S/. ${#numbers.formatDecimal(p.precioVenta != null ? p.precioVenta : 0, 1, 'COMMA', 2, 'POINT')}|">
+                                </td>
+
+                                <td class="text-center">
+                                    <span th:text="${p.stock}"
+                                        th:class="${'fw-bold ' + (p.sinStock ? 'text-danger' : (p.stockBajo ? 'text-warning' : 'text-success'))}">
+                                    </span>
+                                    <small class="text-muted d-block" th:text="'mín. ' + ${p.stockMinimo}"></small>
+                                </td>
+
+                                <td class="text-center">
+                                    <span th:if="${p.sinStock}" class="badge bg-danger">Agotado</span>
+                                    <span th:if="${p.stockBajo and !p.sinStock}"
+                                        class="badge bg-warning text-dark">Stock bajo</span>
+                                    <span th:if="${!p.stockBajo and !p.sinStock}"
+                                        class="badge bg-success">Disponible</span>
+                                </td>
+
+                                <td class="text-center pe-4">
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <a th:href="@{/productos/{id}(id=${p.id})}"
+                                            class="btn btn-sm btn-outline-secondary" title="Ver">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a th:href="@{/productos/editar/{id}(id=${p.id})}"
+                                            class="btn btn-sm btn-outline-primary" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a th:href="@{/kardex/producto/{id}(id=${p.id})}"
+                                            class="btn btn-sm btn-outline-info" title="Kardex">
+                                            <i class="bi bi-journal-text"></i>
+                                        </a>
+                                        <form th:action="@{/productos/desactivar/{id}(id=${p.id})}" method="post"
+                                            class="d-inline"
+                                            onsubmit="return confirm('¿Está seguro de desactivar este producto del catálogo?')">
+                                            <input type="hidden" th:name="${_csrf.parameterName}"
+                                                th:value="${_csrf.token}" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                title="Desactivar">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <tr id="filaSinResultados" style="display:none">
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <i class="bi bi-search fs-2 d-block mb-2 text-secondary"></i>
+                                    No se encontraron productos que coincidan con los filtros.
+                                </td>
+                            </tr>
+
+                            <tr th:if="${#lists.isEmpty(productos)}">
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <i class="bi bi-box-seam fs-2 d-block mb-2 text-secondary"></i>
+                                    No hay productos registrados en el inventario.
+                                    <a th:href="@{/productos/nuevo}"
+                                        class="d-block mt-2 text-warning fw-semibold text-decoration-none">
+                                        Registrar primer producto
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <th:block th:fragment="scripts">
+        <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const buscador       = document.getElementById('buscador');
+            const filtroCategoria= document.getElementById('filtroCategoria');
+            const filtroStock    = document.getElementById('filtroStock');
+            const filas          = document.querySelectorAll('#tablaProductos tbody tr[data-nombre]');
+            const filaSinRes     = document.getElementById('filaSinResultados');
+
+            // Badge de búsqueda fuzzy
+            if (window.adminFuzzy) window.adminFuzzy.addFuzzyBadge('buscador');
+
+            function filtrar() {
+                const q   = (buscador.value || '').trim();
+                const cat = (filtroCategoria.value || '').toLowerCase();
+                const est = filtroStock.value || '';
+                let visibles = 0;
+
+                filas.forEach(function (fila) {
+                    const nombre    = fila.dataset.nombre    || '';
+                    const marca     = fila.dataset.marca     || '';
+                    const codigo    = fila.dataset.codigo    || '';
+                    const categoria = fila.dataset.categoria || '';
+                    const estado    = fila.dataset.estado    || '';
+
+                    // ✦ Búsqueda fuzzy en nombre, marca y código
+                    const okTexto = !q || (window.adminFuzzy
+                        ? window.adminFuzzy.matches(q, nombre, marca, codigo)
+                        : (nombre.includes(q.toLowerCase()) || marca.includes(q.toLowerCase()) || codigo.includes(q.toLowerCase())));
+
+                    const okCat   = !cat || categoria === cat;
+                    const okEst   = !est || estado    === est;
+
+                    const mostrar = okTexto && okCat && okEst;
+                    fila.style.display = mostrar ? '' : 'none';
+                    if (mostrar) visibles++;
+                });
+
+                filaSinRes.style.display = visibles === 0 ? '' : 'none';
+            }
+
+            window.limpiarFiltros = function () {
+                buscador.value = filtroCategoria.value = filtroStock.value = '';
+                filtrar();
+            };
+
+            buscador.addEventListener('input', filtrar);
+            filtroCategoria.addEventListener('change', filtrar);
+            filtroStock.addEventListener('change', filtrar);
+        });
+        </script>
+    </th:block>
+</body>
+
+</html>

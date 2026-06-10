@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{publica/layout :: layout(
+        titulo='Mi cuenta | Tu Licorería',
+        paginaActual='mi-cuenta',
+        contenido=~{::main-content},
+        estilosExtra=~{::estilos},
+        scriptsExtra=~{})}">
+<head><title>Mi Cuenta</title>
+<th:block th:fragment="estilos">
+  <style>
+    .cuenta-sidebar {
+      background: #0d0d16;
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+    .cuenta-nav-link {
+      display: flex; align-items: center; gap: .75rem;
+      padding: .7rem 1rem;
+      border-radius: 8px;
+      color: rgba(255,255,255,.7);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: .9rem;
+      transition: background .2s, color .2s;
+    }
+    .cuenta-nav-link:hover, .cuenta-nav-link.active {
+      background: rgba(201,162,39,.12);
+      color: #c9a227;
+    }
+    .cuenta-nav-link i { font-size: 1.1rem; width: 20px; text-align: center; }
+    .stat-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid #f0f0f0;
+      transition: box-shadow .2s;
+    }
+    .stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+    .stat-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+    }
+  </style>
+</th:block>
+</head>
+<body>
+<th:block th:fragment="main-content">
+<div class="container py-5">
+  <div class="row g-4">
+
+    <!-- Sidebar -->
+    <div class="col-lg-3">
+      <div class="cuenta-sidebar">
+        <div class="text-center mb-4">
+          <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+               style="width:72px;height:72px;background:linear-gradient(135deg,#c9a227,#e8b93a);font-size:1.8rem;font-weight:700;color:#0d0d16;">
+            <span th:text="${#strings.substring(cliente.nombre,0,1).toUpperCase()}">U</span>
+          </div>
+          <div class="fw-bold text-white" th:text="${cliente.nombreCompleto}">Nombre</div>
+          <div class="small" style="color:rgba(255,255,255,.5);" th:text="${cliente.email}">email</div>
+        </div>
+        <nav class="d-flex flex-column gap-1">
+          <a th:href="@{/mi-cuenta}" class="cuenta-nav-link active">
+            <i class="bi bi-grid"></i> Panel
+          </a>
+          <a th:href="@{/mi-cuenta/pedidos}" class="cuenta-nav-link">
+            <i class="bi bi-bag"></i> Mis pedidos
+          </a>
+          <a th:href="@{/mi-cuenta/direcciones}" class="cuenta-nav-link">
+            <i class="bi bi-geo-alt"></i> Direcciones
+          </a>
+          <a th:href="@{/mi-cuenta/perfil}" class="cuenta-nav-link">
+            <i class="bi bi-person-gear"></i> Mi perfil
+          </a>
+          <hr style="border-color:rgba(255,255,255,.1);margin:.5rem 0;"/>
+          <form th:action="@{/logout}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="cuenta-nav-link w-100 border-0 text-start"
+                    style="background:none;color:rgba(255,100,100,.7);">
+              <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+            </button>
+          </form>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="col-lg-9">
+
+      <!-- Bienvenida -->
+      <div class="mb-4">
+        <h4 class="fw-bold mb-1" style="font-family:'Playfair Display',serif;">
+          ¡Bienvenido, <span th:text="${cliente.nombre}">Usuario</span>!
+        </h4>
+        <p class="text-muted mb-0">Aquí tienes un resumen de tu cuenta.</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="row g-3 mb-4">
+        <div class="col-sm-4">
+          <div class="stat-card">
+            <div class="d-flex align-items-center gap-3">
+              <div class="stat-icon" style="background:rgba(201,162,39,.12);">
+                <i class="bi bi-bag-check" style="color:#c9a227;"></i>
+              </div>
+              <div>
+                <div class="fw-bold fs-4" th:text="${totalPedidos}">0</div>
+                <div class="small text-muted">Pedidos realizados</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <div class="stat-card">
+            <div class="d-flex align-items-center gap-3">
+              <div class="stat-icon" style="background:rgba(59,130,246,.1);">
+                <i class="bi bi-geo-alt" style="color:#3b82f6;"></i>
+              </div>
+              <div>
+                <div class="fw-bold fs-4" th:text="${totalDirecciones}">0</div>
+                <div class="small text-muted">Direcciones guardadas</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <div class="stat-card">
+            <div class="d-flex align-items-center gap-3">
+              <div class="stat-icon" style="background:rgba(16,185,129,.1);">
+                <i class="bi bi-shield-check" style="color:#10b981;"></i>
+              </div>
+              <div>
+                <div class="fw-bold" style="font-size:.9rem;"
+                     th:text="${#temporals.format(cliente.fechaRegistro,'dd/MM/yyyy')}">01/01/2026</div>
+                <div class="small text-muted">Miembro desde</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alerta si falta el DNI -->
+      <div th:if="${cliente.cliente != null and #strings.startsWith(cliente.cliente.numeroDocumento,'WEB-')}"
+           class="alert d-flex align-items-center gap-3 mb-4 py-3"
+           style="background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.25);border-radius:12px;">
+        <i class="bi bi-exclamation-triangle-fill" style="color:#d97706;font-size:1.3rem;flex-shrink:0;"></i>
+        <div>
+          <div class="fw-semibold small" style="color:#92400e;">Completa tu perfil</div>
+          <div class="small" style="color:#78350f;">
+            Aún no has registrado tu DNI.
+            <a th:href="@{/mi-cuenta/perfil}" style="color:#c9a227;font-weight:600;">Ir a mi perfil →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Accesos rápidos -->
+      <div class="row g-3">
+        <div class="col-sm-6">
+          <a th:href="@{/mi-cuenta/pedidos}" class="text-decoration-none">
+            <div class="stat-card d-flex align-items-center gap-3">
+              <div class="stat-icon" style="background:rgba(201,162,39,.12);">
+                <i class="bi bi-clock-history" style="color:#c9a227;"></i>
+              </div>
+              <div>
+                <div class="fw-semibold text-dark">Historial de pedidos</div>
+                <div class="small text-muted">Ver todos mis pedidos</div>
+              </div>
+              <i class="bi bi-chevron-right ms-auto text-muted"></i>
+            </div>
+          </a>
+        </div>
+        <div class="col-sm-6">
+          <a th:href="@{/mi-cuenta/direcciones}" class="text-decoration-none">
+            <div class="stat-card d-flex align-items-center gap-3">
+              <div class="stat-icon" style="background:rgba(59,130,246,.1);">
+                <i class="bi bi-pin-map" style="color:#3b82f6;"></i>
+              </div>
+              <div>
+                <div class="fw-semibold text-dark">Mis direcciones</div>
+                <div class="small text-muted">Gestionar direcciones de envío</div>
+              </div>
+              <i class="bi bi-chevron-right ms-auto text-muted"></i>
+            </div>
+          </a>
+        </div>
+        <div class="col-sm-6">
+          <a th:href="@{/mi-cuenta/perfil}" class="text-decoration-none">
+            <div class="stat-card d-flex align-items-center gap-3">
+              <div class="stat-icon" style="background:rgba(139,92,246,.1);">
+                <i class="bi bi-person-circle" style="color:#8b5cf6;"></i>
+              </div>
+              <div>
+                <div class="fw-semibold text-dark">Editar perfil</div>
+                <div class="small text-muted">Actualizar mis datos personales</div>
+              </div>
+              <i class="bi bi-chevron-right ms-auto text-muted"></i>
+            </div>
+          </a>
+        </div>
+        <div class="col-sm-6">
+          <a th:href="@{/catalogo}" class="text-decoration-none">
+            <div class="stat-card d-flex align-items-center gap-3">
+              <div class="stat-icon" style="background:rgba(239,68,68,.1);">
+                <i class="bi bi-grid-3x3-gap" style="color:#ef4444;"></i>
+              </div>
+              <div>
+                <div class="fw-semibold text-dark">Ir al catálogo</div>
+                <div class="small text-muted">Explorar productos</div>
+              </div>
+              <i class="bi bi-chevron-right ms-auto text-muted"></i>
+            </div>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</th:block>
+</body>
+</html>

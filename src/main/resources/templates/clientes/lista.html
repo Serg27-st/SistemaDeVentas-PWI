@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/layout :: layout(
+          titulo='Lista de Clientes | Licorería',
+          currentPage='clientes',
+          content=~{::main-content},
+          extraHead=~{},
+          extraScripts=~{})}">
+<head><title>Clientes</title></head>
+<body>
+<th:block th:fragment="main-content">
+
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+        <div>
+            <h4 class="page-title mb-1">Clientes</h4>
+            <p class="text-muted mb-0 small">
+                Gestiona los clientes registrados en el sistema
+            </p>
+        </div>
+        <a th:href="@{/clientes/nuevo}" class="btn btn-warning fw-semibold">
+            <i class="bi bi-person-plus me-1"></i>Nuevo cliente
+        </a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-primary-soft">
+                    <i class="bi bi-people text-primary"></i>
+                </div>
+                <div>
+                    <div class="stat-value" th:text="${clientes != null ? #lists.size(clientes) : 0}">0</div>
+                    <div class="stat-label">Total clientes</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-success-soft">
+                    <i class="bi bi-person-check text-success"></i>
+                </div>
+                <div>
+                    <div class="stat-value"
+                         th:text="${clientes != null ? clientes.?[mayorDeEdad].size() : 0}">
+                        0
+                    </div>
+                    <div class="stat-label">Mayores de edad</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-danger-soft">
+                    <i class="bi bi-person-x text-danger"></i>
+                </div>
+                <div>
+                    <div class="stat-value"
+                         th:text="${clientes != null ? clientes.?[!mayorDeEdad].size() : 0}">
+                        0
+                    </div>
+                    <div class="stat-label">Menores de edad</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-warning-soft">
+                    <i class="bi bi-cart-check text-warning"></i>
+                </div>
+                <div>
+                    <div class="stat-value"
+                         th:text="${clientes != null ? clientes.?[totalVentas > 0].size() : 0}">
+                        0
+                    </div>
+                    <div class="stat-label">Con compras</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body py-3">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-4">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input type="text" id="buscador"
+                               class="form-control border-start-0"
+                               placeholder="Nombre, apellido o documento..."/>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select id="filtroDoc" class="form-select form-select-sm">
+                        <option value="">Tipo de documento</option>
+                        <option value="DNI">DNI</option>
+                        <option value="CE">CE</option>
+                        <option value="PASAPORTE">Pasaporte</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select id="filtroEdad" class="form-select form-select-sm">
+                        <option value="">Todos</option>
+                        <option value="mayor">Mayores de edad</option>
+                        <option value="menor">Menores de edad</option>
+                    </select>
+                </div>
+                <div class="col-md-2 text-end">
+                    <button class="btn btn-outline-secondary btn-sm"
+                            onclick="limpiarFiltros()">
+                        <i class="bi bi-x me-1"></i>Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0"
+                       id="tablaClientes">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="ps-4">Cliente</th>
+                            <th>Documento</th>
+                            <th>Teléfono</th>
+                            <th class="text-center">Edad</th>
+                            <th class="text-center">Compras</th>
+                            <th class="text-center pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="c : ${clientes}"
+                            th:data-nombre="${c.nombreCompleto != null ? #strings.toLowerCase(c.nombreCompleto) : ''}"
+                            th:data-doc="${c.numeroDocumento != null ? #strings.toLowerCase(c.numeroDocumento) : ''}"
+                            th:data-tipo="${c.tipoDocumento}"
+                            th:data-edad="${c.mayorDeEdad ? 'mayor' : 'menor'}">
+
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="user-avatar-sm"
+                                         th:style="${'background:' + (c.mayorDeEdad ? '#0d6efd' : '#dc3545')}">
+                                        <span th:text="${c.nombre != null && !#strings.isEmpty(c.nombre) ? #strings.substring(c.nombre,0,1).toUpperCase() : 'C'}">
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold"
+                                             th:text="${c.nombreCompleto}"></div>
+                                        <small class="text-muted"
+                                               th:text="${c.correo ?: '—'}"></small>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="badge bg-light text-dark border"
+                                      th:text="${c.tipoDocumento}"></span>
+                                <span class="ms-1"
+                                      th:text="${c.numeroDocumento}"></span>
+                            </td>
+
+                            <td th:text="${c.telefono ?: '—'}"></td>
+
+                            <td class="text-center">
+                                <span th:if="${c.mayorDeEdad}"
+                                      class="badge bg-success-subtle text-success-emphasis">
+                                    <i class="bi bi-check me-1"></i>Mayor de edad
+                                </span>
+                                <span th:if="${!c.mayorDeEdad}"
+                                      class="badge bg-danger-subtle text-danger-emphasis">
+                                    <i class="bi bi-x me-1"></i>Menor de edad
+                                </span>
+                            </td>
+
+                            <td class="text-center">
+                                <span class="badge bg-primary-subtle text-primary-emphasis"
+                                      th:text="${(c.totalVentas != null ? c.totalVentas : 0) + ' compras'}"></span>
+                            </td>
+
+                            <td class="text-center pe-4">
+                                <div class="d-flex gap-1 justify-content-center">
+                                    <a th:href="@{/clientes/{id}(id=${c.id})}"
+                                       class="btn btn-sm btn-outline-secondary"
+                                       title="Ver detalle">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a th:href="@{/clientes/editar/{id}(id=${c.id})}"
+                                       class="btn btn-sm btn-outline-primary"
+                                       title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr id="filaSinResultados" style="display:none">
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-search fs-2 d-block mb-2 text-secondary"></i>
+                                No se encontraron clientes que coincidan con la búsqueda.
+                            </td>
+                        </tr>
+
+                        <tr th:if="${#lists.isEmpty(clientes)}">
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-people fs-2 d-block mb-2 text-secondary"></i>
+                                No hay clientes registrados.
+                                <a th:href="@{/clientes/nuevo}"
+                                   class="d-block mt-2 text-warning fw-semibold text-decoration-none">
+                                    Registrar primer cliente
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</th:block>
+
+<th:block th:fragment="scripts">
+<script>
+const buscador  = document.getElementById('buscador');
+const filtroDoc = document.getElementById('filtroDoc');
+const filtroEd  = document.getElementById('filtroEdad');
+const filas     = document.querySelectorAll('#tablaClientes tbody tr[data-nombre]');
+const filaSin   = document.getElementById('filaSinResultados');
+
+function filtrar() {
+    const q   = buscador.value.toLowerCase().trim();
+    const doc = filtroDoc.value;
+    const edad = filtroEd.value;
+    let visible = 0;
+
+    filas.forEach(fila => {
+        const matchQ    = !q    || fila.dataset.nombre.includes(q)
+                                || fila.dataset.doc.includes(q);
+        const matchDoc  = !doc  || fila.dataset.tipo === doc;
+        const matchEdad = !edad || fila.dataset.edad === edad;
+        const mostrar   = matchQ && matchDoc && matchEdad;
+        
+        fila.style.display = mostrar ? '' : 'none';
+        if (mostrar) visible++;
+    });
+
+    filaSin.style.display = visible === 0 ? '' : 'none';
+}
+
+function limpiarFiltros() {
+    buscador.value = filtroDoc.value = filtroEd.value = '';
+    filtrar();
+}
+
+buscador.addEventListener('input', filtrar);
+[filtroDoc, filtroEd].forEach(s => s.addEventListener('change', filtrar));
+</script>
+</th:block>
+</body>
+</html>

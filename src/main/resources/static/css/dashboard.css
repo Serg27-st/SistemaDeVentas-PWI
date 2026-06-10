@@ -1,0 +1,11 @@
+/* Estilos específicos de dashboard */
+
+/* Mantener compatibilidad con el layout existente */
+.card-dark h6 {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+

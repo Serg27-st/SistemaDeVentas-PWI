@@ -1,0 +1,107 @@
+package com.tulicoreria.licoreria.service.impl;
+
+import com.tulicoreria.licoreria.dto.ClienteRequestDTO;
+import com.tulicoreria.licoreria.dto.ClienteResponseDTO;
+import com.tulicoreria.licoreria.model.Cliente;
+import com.tulicoreria.licoreria.repository.ClienteRepository;
+import com.tulicoreria.licoreria.service.ClienteService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class ClienteServiceImpl implements ClienteService {
+
+    private final ClienteRepository clienteRepository;
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ClienteResponseDTO> listarTodos() {
+        return clienteRepository.findAll().stream()
+                .map(this::toDTO).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ClienteResponseDTO buscarPorId(Long id) {
+        return toDTO(clienteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con id: " + id)));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ClienteResponseDTO buscarPorDocumento(String numeroDocumento) {
+        return toDTO(clienteRepository.findByNumeroDocumento(numeroDocumento)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con documento: " + numeroDocumento)));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ClienteResponseDTO> buscarPorNombre(String nombre) {
+        return clienteRepository
+                .findByNombreContainingIgnoreCaseOrApellidoContainingIgnoreCase(nombre, nombre)
+                .stream().map(this::toDTO).toList();
+    }
+
+    @Override
+    @Transactional
+    public ClienteResponseDTO crear(ClienteRequestDTO dto) {
+        if (clienteRepository.existsByNumeroDocumento(dto.getNumeroDocumento())) {
+            throw new RuntimeException("Ya existe un cliente con el documento: " + dto.getNumeroDocumento());
+        }
+        Cliente cliente = Cliente.builder()
+                .nombre(dto.getNombre())
+                .apellido(dto.getApellido())
+                .tipoDocumento(dto.getTipoDocumento())
+                .numeroDocumento(dto.getNumeroDocumento())
+                .fechaNacimiento(dto.getFechaNacimiento())
+                .telefono(dto.getTelefono())
+                .correo(dto.getCorreo())
+                .direccion(dto.getDireccion())
+                .build();
+        return toDTO(clienteRepository.save(cliente));
+    }
+
+    @Override
+    @Transactional
+    public ClienteResponseDTO actualizar(Long id, ClienteRequestDTO dto) {
+        Cliente cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con id: " + id));
+        cliente.setNombre(dto.getNombre());
+        cliente.setApellido(dto.getApellido());
+        cliente.setTipoDocumento(dto.getTipoDocumento());
+        cliente.setNumeroDocumento(dto.getNumeroDocumento());
+        cliente.setFechaNacimiento(dto.getFechaNacimiento());
+        cliente.setTelefono(dto.getTelefono());
+        cliente.setCorreo(dto.getCorreo());
+        cliente.setDireccion(dto.getDireccion());
+        return toDTO(clienteRepository.save(cliente));
+    }
+
+    @Override
+    public Cliente obtenerEntidad(Long id) {
+        return clienteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con id: " + id));
+    }
+
+    @Override
+    public ClienteResponseDTO toDTO(Cliente c) {
+        return ClienteResponseDTO.builder()
+                .id(c.getId())
+                .nombre(c.getNombre())
+                .apellido(c.getApellido())
+                .nombreCompleto(c.getNombre() + " " + c.getApellido())
+                .tipoDocumento(c.getTipoDocumento())
+                .numeroDocumento(c.getNumeroDocumento())
+                .fechaNacimiento(c.getFechaNacimiento())
+                .telefono(c.getTelefono())
+                .correo(c.getCorreo())
+                .direccion(c.getDireccion())
+                .mayorDeEdad(c.esMayorDeEdad())
+                .totalVentas(c.getVentas().size())
+                .build();
+    }
+}

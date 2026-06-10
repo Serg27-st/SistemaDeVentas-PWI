@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{publica/layout :: layout(
+        titulo='Preguntas Frecuentes | Tu Licorería',
+        paginaActual='',
+        contenido=~{::main-content},
+        estilosExtra=~{::estilos},
+        scriptsExtra=~{::scripts})}">
+<head><title>Preguntas Frecuentes</title>
+<th:block th:fragment="estilos">
+<style>
+  .info-hero {
+    background: linear-gradient(135deg, #0d0d16 0%, #1a1025 60%, #2d1b4e 100%);
+    padding: 3.5rem 0 2.5rem;
+    border-bottom: 1px solid rgba(201,162,39,.15);
+  }
+  .faq-cat-btn {
+    border: 2px solid #e5e7eb;
+    border-radius: 50px;
+    padding: .45rem 1.1rem;
+    font-size: .85rem;
+    font-weight: 600;
+    color: #6b7280;
+    background: #fff;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .faq-cat-btn:hover, .faq-cat-btn.active {
+    border-color: #c9a227;
+    color: #92620a;
+    background: rgba(201,162,39,.08);
+  }
+  .faq-accordion .accordion-button {
+    font-weight: 600;
+    font-size: .95rem;
+    color: #1a1a2e;
+    background: #fff;
+  }
+  .faq-accordion .accordion-button:not(.collapsed) {
+    color: #92620a;
+    background: rgba(201,162,39,.05);
+    box-shadow: none;
+  }
+  .faq-accordion .accordion-button::after {
+    filter: none;
+  }
+  .faq-accordion .accordion-button:not(.collapsed)::after {
+    filter: sepia(1) saturate(3) hue-rotate(5deg);
+  }
+  .faq-accordion .accordion-item {
+    border: 1px solid #f0f0f2;
+    border-radius: 10px !important;
+    margin-bottom: .75rem;
+    overflow: hidden;
+  }
+  .faq-accordion .accordion-body {
+    color: #4b5563;
+    line-height: 1.8;
+    font-size: .9rem;
+    padding-top: .5rem;
+  }
+  .faq-group { display: none; }
+  .faq-group.active { display: block; }
+  .contact-cta {
+    background: linear-gradient(135deg, #0d0d16, #1a1025);
+    border-radius: 16px;
+    padding: 2.5rem;
+    text-align: center;
+  }
+</style>
+</th:block>
+</head>
+<body>
+<th:block th:fragment="main-content">
+
+  <!-- Hero -->
+  <section class="info-hero">
+    <div class="container text-center text-white">
+      <div class="mb-3">
+        <span style="background:rgba(201,162,39,.15);color:#c9a227;padding:.35rem 1.1rem;border-radius:50px;font-size:.8rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;">
+          <i class="bi bi-question-circle me-1"></i>Ayuda
+        </span>
+      </div>
+      <h1 class="fw-bold mb-3" style="font-size:2.4rem;font-family:'Playfair Display',serif;">
+        Preguntas <span style="color:#c9a227;">Frecuentes</span>
+      </h1>
+      <p class="mb-0 mx-auto" style="color:rgba(255,255,255,.65);max-width:520px;line-height:1.7;">
+        Resolvemos tus dudas más comunes sobre pedidos, pagos, delivery y más.
+      </p>
+    </div>
+  </section>
+
+  <!-- Breadcrumb -->
+  <div style="background:#f8f8fb;border-bottom:1px solid #ececf1;">
+    <div class="container py-2">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0 small">
+          <li class="breadcrumb-item"><a th:href="@{/inicio}" style="color:#c9a227;">Inicio</a></li>
+          <li class="breadcrumb-item active">Preguntas frecuentes</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <section class="py-5">
+    <div class="container" style="max-width:860px;">
+
+      <!-- Filtros por categoría -->
+      <div class="d-flex flex-wrap gap-2 mb-5 justify-content-center">
+        <button class="faq-cat-btn active" onclick="mostrarGrupo('pedidos', this)">
+          <i class="bi bi-bag me-1"></i>Pedidos
+        </button>
+        <button class="faq-cat-btn" onclick="mostrarGrupo('pagos', this)">
+          <i class="bi bi-credit-card me-1"></i>Pagos
+        </button>
+        <button class="faq-cat-btn" onclick="mostrarGrupo('delivery', this)">
+          <i class="bi bi-truck me-1"></i>Delivery
+        </button>
+        <button class="faq-cat-btn" onclick="mostrarGrupo('productos', this)">
+          <i class="bi bi-box-seam me-1"></i>Productos
+        </button>
+        <button class="faq-cat-btn" onclick="mostrarGrupo('cuenta', this)">
+          <i class="bi bi-person me-1"></i>Mi cuenta
+        </button>
+      </div>
+
+      <!-- Pedidos -->
+      <div class="faq-group active" id="grupo-pedidos">
+        <div class="accordion faq-accordion" id="faqPedidos">
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#p1">
+                ¿Cómo realizo un pedido?
+              </button>
+            </h2>
+            <div id="p1" class="accordion-collapse collapse show" data-bs-parent="#faqPedidos">
+              <div class="accordion-body">
+                Elige los productos que deseas en nuestro catálogo y agrégalos al carrito. Luego procede al checkout, ingresa tus datos de entrega y selecciona tu método de pago. Recibirás una confirmación por correo electrónico una vez confirmado el pedido.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#p2">
+                ¿Puedo modificar o cancelar mi pedido?
+              </button>
+            </h2>
+            <div id="p2" class="accordion-collapse collapse" data-bs-parent="#faqPedidos">
+              <div class="accordion-body">
+                Puedes modificar o cancelar tu pedido siempre que aún no haya sido despachado. Contáctanos por WhatsApp al <strong>+51 977 968 942</strong> lo antes posible. Una vez que el repartidor haya salido, no podremos cancelar el pedido.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#p3">
+                ¿Hay un monto mínimo de pedido?
+              </button>
+            </h2>
+            <div id="p3" class="accordion-collapse collapse" data-bs-parent="#faqPedidos">
+              <div class="accordion-body">
+                Sí, el monto mínimo de pedido es de S/. 50.00. Este monto puede variar en fechas especiales o por promociones activas.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#p4">
+                ¿Cómo sé si mi pedido fue confirmado?
+              </button>
+            </h2>
+            <div id="p4" class="accordion-collapse collapse" data-bs-parent="#faqPedidos">
+              <div class="accordion-body">
+                Al completar el checkout verás una pantalla de confirmación con el número de pedido. Además, recibirás un mensaje de confirmación al correo que registraste. Si tienes dudas, escríbenos por WhatsApp.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Pagos -->
+      <div class="faq-group" id="grupo-pagos">
+        <div class="accordion faq-accordion" id="faqPagos">
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#pg1">
+                ¿Qué métodos de pago aceptan?
+              </button>
+            </h2>
+            <div id="pg1" class="accordion-collapse collapse show" data-bs-parent="#faqPagos">
+              <div class="accordion-body">
+                Aceptamos los siguientes métodos de pago:
+                <ul class="mt-2 mb-0">
+                  <li><strong>Yape</strong> — al número +51 977 968 942</li>
+                  <li><strong>Plin</strong> — al mismo número</li>
+                  <li><strong>Efectivo</strong> — el repartidor cobra al entregar (contraentrega)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#pg2">
+                ¿Es seguro pagar por Yape?
+              </button>
+            </h2>
+            <div id="pg2" class="accordion-collapse collapse" data-bs-parent="#faqPagos">
+              <div class="accordion-body">
+                Sí, el pago por Yape es completamente seguro. Yapea directamente al número registrado a nombre de <strong>Tu Licorería</strong> y envíanos la captura de pantalla por WhatsApp para confirmar tu pago.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#pg3">
+                ¿Puedo pagar en efectivo?
+              </button>
+            </h2>
+            <div id="pg3" class="accordion-collapse collapse" data-bs-parent="#faqPagos">
+              <div class="accordion-body">
+                Sí, aceptamos efectivo contraentrega. El repartidor lleva cambio, pero te recomendamos preparar el monto exacto para agilizar la entrega.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#pg4">
+                ¿Emiten boleta o factura?
+              </button>
+            </h2>
+            <div id="pg4" class="accordion-collapse collapse" data-bs-parent="#faqPagos">
+              <div class="accordion-body">
+                Sí. Durante el checkout puedes elegir entre <strong>Boleta de Venta</strong> o <strong>Factura</strong>. Para factura deberás ingresar tu RUC y razón social.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Delivery -->
+      <div class="faq-group" id="grupo-delivery">
+        <div class="accordion faq-accordion" id="faqDelivery">
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#d1">
+                ¿A qué distritos hacen delivery?
+              </button>
+            </h2>
+            <div id="d1" class="accordion-collapse collapse show" data-bs-parent="#faqDelivery">
+              <div class="accordion-body">
+                Realizamos delivery a múltiples distritos de Lima. Al momento de hacer tu pedido, podrás ver el listado de distritos disponibles y el costo de envío a cada uno. Si tu distrito no aparece, contáctanos y lo evaluamos.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#d2">
+                ¿Cuánto cuesta el delivery?
+              </button>
+            </h2>
+            <div id="d2" class="accordion-collapse collapse" data-bs-parent="#faqDelivery">
+              <div class="accordion-body">
+                El costo de delivery varía según el distrito de entrega. Puedes ver el costo exacto al seleccionar tu distrito durante el checkout. Algunos distritos pueden tener delivery gratuito en pedidos que superen cierto monto.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#d3">
+                ¿Cuánto demora el delivery?
+              </button>
+            </h2>
+            <div id="d3" class="accordion-collapse collapse" data-bs-parent="#faqDelivery">
+              <div class="accordion-body">
+                El tiempo estimado de entrega es de <strong>30 a 90 minutos</strong> dependiendo de tu ubicación y la demanda del momento. En fechas especiales como Año Nuevo, Fiestas Patrias o navidad, los tiempos pueden ser mayores.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#d4">
+                ¿El repartidor pide DNI al entregar?
+              </button>
+            </h2>
+            <div id="d4" class="accordion-collapse collapse" data-bs-parent="#faqDelivery">
+              <div class="accordion-body">
+                Sí. Por ley, el repartidor puede solicitar tu DNI para verificar que eres mayor de 18 años antes de entregar el pedido. Ten tu documento a la mano al momento de la entrega.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Productos -->
+      <div class="faq-group" id="grupo-productos">
+        <div class="accordion faq-accordion" id="faqProductos">
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#pr1">
+                ¿Los productos son originales y sellados?
+              </button>
+            </h2>
+            <div id="pr1" class="accordion-collapse collapse show" data-bs-parent="#faqProductos">
+              <div class="accordion-body">
+                Sí. Todos nuestros productos son 100% originales, sellados de fábrica y provienen de distribuidores oficiales autorizados. Garantizamos la autenticidad de cada producto que vendemos.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#pr2">
+                ¿Qué hago si recibo un producto dañado?
+              </button>
+            </h2>
+            <div id="pr2" class="accordion-collapse collapse" data-bs-parent="#faqProductos">
+              <div class="accordion-body">
+                Si recibes un producto roto, defectuoso o diferente al solicitado, comunícate con nosotros dentro de las <strong>24 horas</strong> de recibido el pedido. Envíanos una foto del producto y coordinamos el cambio o reembolso sin costo alguno.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#pr3">
+                ¿Puedo pedir un producto que no está en el catálogo?
+              </button>
+            </h2>
+            <div id="pr3" class="accordion-collapse collapse" data-bs-parent="#faqProductos">
+              <div class="accordion-body">
+                ¡Claro! Escríbenos por WhatsApp con el nombre del producto que buscas y gestionamos su disponibilidad. También puedes consultar por licores importados, ediciones limitadas y pedidos especiales para eventos.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Cuenta -->
+      <div class="faq-group" id="grupo-cuenta">
+        <div class="accordion faq-accordion" id="faqCuenta">
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#c1">
+                ¿Es obligatorio crear una cuenta para comprar?
+              </button>
+            </h2>
+            <div id="c1" class="accordion-collapse collapse show" data-bs-parent="#faqCuenta">
+              <div class="accordion-body">
+                No es obligatorio. Puedes comprar como invitado ingresando solo tu correo electrónico. Sin embargo, al crear una cuenta podrás ver tu historial de pedidos, guardar tus direcciones y acceder a beneficios exclusivos.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#c2">
+                Olvidé mi contraseña, ¿qué hago?
+              </button>
+            </h2>
+            <div id="c2" class="accordion-collapse collapse" data-bs-parent="#faqCuenta">
+              <div class="accordion-body">
+                Por el momento, si olvidaste tu contraseña contáctanos por WhatsApp al <strong>+51 977 968 942</strong> con tu correo registrado y te ayudaremos a recuperar el acceso.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#c3">
+                ¿Cómo puedo ver mi historial de pedidos?
+              </button>
+            </h2>
+            <div id="c3" class="accordion-collapse collapse" data-bs-parent="#faqCuenta">
+              <div class="accordion-body">
+                Inicia sesión en tu cuenta y accede a la sección <strong>"Mis pedidos"</strong> desde el menú de tu cuenta. Ahí encontrarás el detalle de todas tus compras anteriores.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#c4">
+                ¿Cómo elimino mi cuenta?
+              </button>
+            </h2>
+            <div id="c4" class="accordion-collapse collapse" data-bs-parent="#faqCuenta">
+              <div class="accordion-body">
+                Para eliminar tu cuenta y todos tus datos, contáctanos por correo a <strong>privacidad@tulicoreria.com</strong>. Procesaremos tu solicitud en un plazo máximo de 5 días hábiles.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ¿No encontraste respuesta? -->
+      <div class="contact-cta mt-5">
+        <i class="bi bi-headset d-block mb-3" style="font-size:2.5rem;color:#c9a227;"></i>
+        <h5 class="fw-bold text-white mb-2">¿No encontraste lo que buscabas?</h5>
+        <p class="mb-4" style="color:rgba(255,255,255,.6);">
+          Nuestro equipo está disponible de lunes a domingo de 9am a 10pm.
+        </p>
+        <a href="https://wa.me/51977968942" target="_blank" rel="noopener"
+           class="btn rounded-pill px-4 py-2 fw-semibold me-2"
+           style="background:#c9a227;color:#0d0d16;">
+          <i class="bi bi-whatsapp me-1"></i>WhatsApp
+        </a>
+        <a href="mailto:info@tulicoreria.com"
+           class="btn btn-outline-light rounded-pill px-4 py-2 fw-semibold">
+          <i class="bi bi-envelope me-1"></i>Correo
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+</th:block>
+<th:block th:fragment="scripts">
+<script>
+  function mostrarGrupo(grupo, btn) {
+    // Ocultar todos los grupos
+    document.querySelectorAll('.faq-group').forEach(g => g.classList.remove('active'));
+    // Desactivar todos los botones
+    document.querySelectorAll('.faq-cat-btn').forEach(b => b.classList.remove('active'));
+    // Mostrar el grupo seleccionado
+    document.getElementById('grupo-' + grupo).classList.add('active');
+    // Activar el botón
+    btn.classList.add('active');
+  }
+</script>
+</th:block>
+</body>
+</html>
