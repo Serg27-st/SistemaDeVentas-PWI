@@ -40,10 +40,10 @@ public class Promocion {
     private BigDecimal montoDescuento;
 
     // ── VOLUMEN (2×1, 3×2, etc.) ─────────────────────────────────────────────
-    /** Cantidad que el cliente debe comprar. Ej. 2 para una promo 2×1. */
+    /** Unidades que el cliente SE LLEVA en total. Ej. 3 para una promo 3×2 (lleva 3). Debe ser mayor que llevaY. */
     private Integer compraX;
 
-    /** Unidades que el cliente paga. Ej. 1 para una promo 2×1 (paga 1, lleva 2). */
+    /** Unidades que el cliente efectivamente PAGA. Ej. 2 para una promo 3×2 (paga 2, lleva 3). Debe ser menor que compraX. */
     private Integer llevaY;
 
     // ── COMBO ────────────────────────────────────────────────────────────────

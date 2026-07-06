@@ -292,8 +292,19 @@ public class PromocionServiceImpl implements PromocionService {
                 }
             }
             case VOLUMEN -> {
-                p.setCompraX(dto.getCompraX());
-                p.setLlevaY(dto.getLlevaY());
+                Integer compraX = dto.getCompraX();
+                Integer llevaY = dto.getLlevaY();
+                if (compraX == null || llevaY == null || compraX <= 0 || llevaY <= 0) {
+                    throw new RuntimeException(
+                        "Promoción por volumen inválida: debes indicar cuántas unidades se llevan y cuántas se pagan.");
+                }
+                if (llevaY >= compraX) {
+                    throw new RuntimeException(
+                        "Promoción por volumen inválida: el cliente debe pagar menos unidades ("
+                        + llevaY + ") de las que se lleva (" + compraX + ").");
+                }
+                p.setCompraX(compraX);
+                p.setLlevaY(llevaY);
                 if (dto.getProductoId() != null) {
                     productoRepository.findById(dto.getProductoId()).ifPresent(p::setProducto);
                 }

@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavbarScroll();
     initToast();
     animateCartBadge();
-    initCatalogViewToggle();
     initScrollReveal();
     initSearchExpand();
 });
@@ -44,57 +43,6 @@ function animateCartBadge() {
     if (parseInt(badge.textContent, 10) > 0) {
         badge.classList.add('bump');
         setTimeout(() => badge.classList.remove('bump'), 500);
-    }
-}
-
-/* ── Toggle grid / lista en catálogo ─────────────────────────── */
-function initCatalogViewToggle() {
-    const btnGrid = document.getElementById('btn-grid');
-    const btnList = document.getElementById('btn-list');
-    const grid    = document.getElementById('productos-grid');
-    if (!btnGrid || !btnList || !grid) return;
-
-    const GRID_CLASSES = ['col-6', 'col-md-4'];
-    const LIST_CLASS   = 'col-12';
-    let currentView    = 'grid';
-
-    btnGrid.addEventListener('click', () => {
-        if (currentView === 'grid') return;
-        currentView = 'grid';
-        setView('grid');
-        btnGrid.classList.add('active');
-        btnList.classList.remove('active');
-    });
-
-    btnList.addEventListener('click', () => {
-        if (currentView === 'list') return;
-        currentView = 'list';
-        setView('list');
-        btnList.classList.add('active');
-        btnGrid.classList.remove('active');
-    });
-
-    function setView(mode) {
-        const cols = grid.querySelectorAll('[class*="col-"]');
-        cols.forEach(col => {
-            if (mode === 'list') {
-                GRID_CLASSES.forEach(c => col.classList.remove(c));
-                col.classList.add(LIST_CLASS);
-
-                const card   = col.querySelector('.card-producto');
-                const imgBox = col.querySelector('.card-img-container');
-                if (card)   { card.style.flexDirection = 'row'; card.style.maxHeight = '160px'; }
-                if (imgBox) { imgBox.style.width = '130px'; imgBox.style.flexShrink = '0'; imgBox.style.height = '100%'; }
-            } else {
-                col.classList.remove(LIST_CLASS);
-                GRID_CLASSES.forEach(c => col.classList.add(c));
-
-                const card   = col.querySelector('.card-producto');
-                const imgBox = col.querySelector('.card-img-container');
-                if (card)   { card.style.flexDirection = ''; card.style.maxHeight = ''; }
-                if (imgBox) { imgBox.style.width = ''; imgBox.style.flexShrink = ''; imgBox.style.height = ''; }
-            }
-        });
     }
 }
 

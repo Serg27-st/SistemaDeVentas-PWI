@@ -155,7 +155,7 @@
           </span>
           <span class="spec-badge" th:if="${producto.cantidad != null}">
             <i class="bi bi-box-seam-fill"></i>
-            <span th:text="${producto.cantidad % 1 == 0 ? producto.cantidad.intValue() : producto.cantidad} + (producto.unidadMedida != null ? ' ' + producto.unidadMedida : '')">Vol</span>
+            <span th:text="${(producto.cantidad % 1 == 0 ? producto.cantidad.intValue() : producto.cantidad) + (producto.unidadMedida != null ? ' ' + producto.unidadMedida : '')}">Vol</span>
           </span>
           <span class="spec-badge" th:if="${producto.stockBajo and !producto.sinStock}"
                 style="border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.06);">
@@ -165,7 +165,7 @@
         </div>
 
         <!-- PRECIO -->
-        <div class="mb-4 pb-4 border-bottom">
+        <div class="detalle-precio-box mb-4">
           <div class="d-flex align-items-baseline gap-3 flex-wrap">
             <!-- Precio original tachado -->
             <del th:if="${producto.precioOriginal != null}"
@@ -191,7 +191,10 @@
         </div>
 
         <!-- Descripción (clamp 3 líneas + "ver más") -->
-        <div th:if="${producto.descripcion != null and !producto.descripcion.empty}" class="mb-4">
+        <div th:if="${producto.descripcion != null and !producto.descripcion.empty}" class="mb-4 pb-4 border-bottom">
+          <h6 class="fw-bold mb-2" style="font-size:.8rem;letter-spacing:.5px;text-transform:uppercase;color:var(--color-text-light);">
+            Descripción
+          </h6>
           <p id="desc-text" class="desc-clamp"
              style="color:var(--color-text-muted);line-height:1.8;font-size:.92rem;"
              th:text="${producto.descripcion}"></p>
@@ -204,7 +207,7 @@
         </div>
 
         <!-- AGREGAR AL CARRITO -->
-        <div th:if="${!producto.sinStock}" class="mb-4">
+        <div th:if="${!producto.sinStock}" class="detalle-buybox mb-4">
 
           <!-- Indicador de stock -->
           <div class="d-flex align-items-center justify-content-between mb-2">
@@ -258,7 +261,7 @@
         </div>
 
         <!-- Estado agotado -->
-        <div th:if="${producto.sinStock}" class="mb-4">
+        <div th:if="${producto.sinStock}" class="detalle-buybox mb-4">
           <div class="d-flex align-items-center gap-3 p-3 rounded-3"
                style="background:#fee2e2;border:1px solid #fca5a5;">
             <i class="bi bi-x-circle-fill fs-4" style="color:#dc2626;flex-shrink:0;"></i>

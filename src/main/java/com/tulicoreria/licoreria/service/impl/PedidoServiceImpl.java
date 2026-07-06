@@ -54,14 +54,16 @@ public class PedidoServiceImpl implements PedidoService {
                         Map<Long, Integer> combosCarrito,
                         Long clienteWebId, String emailInvitado) {
 
-        if (items == null || items.isEmpty()) {
-            throw new RuntimeException("El carrito está vacío");
-        }
-
         // Expandir combos
         List<ItemCarritoDTO> comboItems = promocionService.expandirCombos(combosCarrito);
-        List<ItemCarritoDTO> todosLosItems =
-                Stream.concat(items.stream(), comboItems.stream()).toList();
+        List<ItemCarritoDTO> todosLosItems = Stream.concat(
+                items != null ? items.stream() : Stream.empty(),
+                comboItems.stream()
+        ).toList();
+
+        if (todosLosItems.isEmpty()) {
+            throw new RuntimeException("El carrito está vacío");
+        }
 
         // Validar stock
         for (ItemCarritoDTO it : todosLosItems) {
@@ -154,6 +156,19 @@ public class PedidoServiceImpl implements PedidoService {
 
         TipoComprobante tc = "FACTURA".equalsIgnoreCase(dto.getTipoComprobante())
                 ? TipoComprobante.FACTURA : TipoComprobante.BOLETA;
+
+        if (tc == TipoComprobante.FACTURA) {
+            String ruc = dto.getRuc() != null ? dto.getRuc().trim() : "";
+            if (!ruc.matches("(10|15|16|17|20)\\d{9}")) {
+                throw new RuntimeException(
+                    "El RUC debe tener 11 dígitos y empezar con 10, 15, 16, 17 o 20.");
+            }
+            if (dto.getRazonSocial() == null || dto.getRazonSocial().isBlank()) {
+                throw new RuntimeException("La razón social es obligatoria para facturación.");
+            }
+            dto.setRuc(ruc);
+        }
+
         pedido.setTipoComprobante(tc);
         pedido.setRucCliente(dto.getRuc());
         pedido.setRazonSocial(dto.getRazonSocial());

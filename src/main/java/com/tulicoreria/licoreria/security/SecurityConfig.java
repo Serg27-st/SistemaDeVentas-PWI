@@ -2,14 +2,14 @@ package com.tulicoreria.licoreria.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 
 import com.tulicoreria.licoreria.service.impl.UsuarioServiceImpl;
 
@@ -33,7 +33,15 @@ public class SecurityConfig {
                 // Los endpoints /api/** son AJAX de mismo origen — excluimos CSRF
                 // para que fetch() funcione sin necesidad de token en header/body
                 .ignoringRequestMatchers("/api/**")
+                // Resolución síncrona del token (en vez del DeferredCsrfToken por
+                // defecto desde Security 6.4+), porque las vistas Thymeleaf leen
+                // ${_csrf.parameterName} en GET sin haber forzado antes la carga
+                .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
             )
+            // Fuerza la resolución del token CSRF diferido justo después del
+            // CsrfFilter, antes de que Thymeleaf empiece a hacer streaming del
+            // HTML (ver CsrfCookieFilter para el motivo)
+            .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class)
             .authenticationProvider(authenticationProvider())
             .authenticationProvider(clienteAuthProvider())
             .authorizeHttpRequests(auth -> auth
@@ -97,11 +105,5 @@ public class SecurityConfig {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(clienteWebUserDetailsService);
         provider.setPasswordEncoder(this.passwordEncoder);
         return provider;
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
     }
 }

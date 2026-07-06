@@ -87,7 +87,7 @@
         <a th:href="@{/carrito}" class="btn-carrito me-3">
           <i class="bi bi-cart3"></i>
           <span class="badge-carrito"
-                th:text="${session.carrito != null} ? ${session.carrito.size()} : 0">0</span>
+                th:text="${(session.carrito != null ? session.carrito.size() : 0) + (session.combosCarrito != null ? session.combosCarrito.size() : 0)}">0</span>
         </a>
 
         <!-- Menú usuario autenticado -->

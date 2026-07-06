@@ -289,7 +289,8 @@
 
                 <div class="col-4 col-sm-2 text-center">
                   <span th:if="${item.etiquetaPromo != null and item.etiquetaPromo.startsWith('Pack')}"
-                    class="badge bg-light text-dark border" th:text="${item.cantidad} + '×'">1×</span>
+                    class="badge bg-light text-dark border qty-fija" th:data-qty="${item.cantidad}"
+                    th:text="${item.cantidad} + '×'">1×</span>
 
                   <div th:unless="${item.etiquetaPromo != null and item.etiquetaPromo.startsWith('Pack')}"
                     class="d-inline-flex align-items-center gap-1">
@@ -558,10 +559,13 @@
         // Recorrer cada elemento de producto presente en la pantalla
         document.querySelectorAll('.item-row').forEach(row => {
           const inputQty = row.querySelector('.qty-display');
+          const qtyFija = row.querySelector('.qty-fija');
           const inputPrecioUnitario = row.querySelector('.raw-precio-unitario');
 
-          if (inputQty && inputPrecioUnitario) {
-            const cantidad = parseInt(inputQty.value) || 0;
+          if ((inputQty || qtyFija) && inputPrecioUnitario) {
+            const cantidad = inputQty
+              ? (parseInt(inputQty.value) || 0)
+              : (parseInt(qtyFija.getAttribute('data-qty')) || 0);
             const precioUnit = parseFloat(inputPrecioUnitario.getAttribute('data-precio-u')) || 0;
 
             // Multiplicación limpia de la línea de venta

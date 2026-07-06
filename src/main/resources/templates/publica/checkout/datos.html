@@ -198,12 +198,15 @@
               <div class="row g-3 pt-2">
                 <div class="col-sm-4">
                   <label class="checkout-label">RUC <span class="campo-requerido">*</span></label>
-                  <input type="text" th:field="*{ruc}" class="checkout-input form-control"
-                         placeholder="20123456789" maxlength="11"/>
+                  <input type="text" th:field="*{ruc}" id="rucInput" class="checkout-input form-control"
+                         placeholder="20123456789" maxlength="11" minlength="11"
+                         pattern="(10|15|16|17|20)[0-9]{9}" inputmode="numeric"
+                         title="11 dígitos, debe empezar con 10, 15, 16, 17 o 20"/>
+                  <div class="form-text">Empieza con 10, 15, 16, 17 o 20.</div>
                 </div>
                 <div class="col-sm-8">
                   <label class="checkout-label">Razón Social <span class="campo-requerido">*</span></label>
-                  <input type="text" th:field="*{razonSocial}" class="checkout-input form-control"
+                  <input type="text" th:field="*{razonSocial}" id="razonSocialInput" class="checkout-input form-control"
                          placeholder="Mi Empresa S.A.C."/>
                 </div>
               </div>
@@ -283,10 +286,9 @@
 </th:block>
 <th:block th:fragment="scripts">
 <script th:inline="javascript">
-  const tarifas = {};
-  /*[# th:each="entry : ${tarifasEnvio}"]*/
-  tarifas[/*[[${entry.key}]]*/ ''] = /*[[${entry.value}]]*/ 0;
-  /*[/]*/
+  // Nota: NO usar th:each con tarifas[/*[[key]]*/] — Thymeleaf 3.1 falla
+  // al parsear "[/*[[" (confunde el "[" con inicio de expresión inline).
+  const tarifas = /*[[${tarifasEnvio}]]*/ {};
   const subtotalPedido = parseFloat(/*[[${pedido.subtotal}]]*/ '0');
   const igvPedido      = parseFloat(/*[[${pedido.igv}]]*/ '0');
 
@@ -314,6 +316,15 @@
     document.getElementById('btnFactura').classList.toggle('activo', esFact);
     const campos = document.getElementById('facturaCampos');
     campos.classList.toggle('show', esFact);
+
+    // RUC y Razón Social sólo son obligatorios cuando se factura
+    const ruc = document.getElementById('rucInput');
+    const razonSocial = document.getElementById('razonSocialInput');
+    [ruc, razonSocial].forEach(input => {
+      if (!input) return;
+      input.required = esFact;
+      if (!esFact) input.classList.remove('is-invalid');
+    });
   }
 
   // Validación bootstrap

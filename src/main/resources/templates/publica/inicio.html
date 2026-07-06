@@ -423,7 +423,7 @@
               <h6 class="card-nombre" th:text="${p.nombre}">Nombre del Producto</h6>
 
               <p class="card-marca-vol mb-0"
-                 th:text="${p.marca} + (p.cantidad != null ? ' · ' + (p.cantidad % 1 == 0 ? p.cantidad.intValue() : p.cantidad) + (p.unidadMedida != null ? ' ' + p.unidadMedida : '') : '')">Marca · Vol</p>
+                 th:text="${(p.marca != null ? p.marca : '') + (p.cantidad != null ? ' · ' + (p.cantidad % 1 == 0 ? p.cantidad.intValue() : p.cantidad) + (p.unidadMedida != null ? ' ' + p.unidadMedida : '') : '')}">Marca · Vol</p>
 
               <!-- Precio + botón Ver detalle -->
               <div class="mt-auto pt-3 d-flex justify-content-between align-items-end gap-2">
