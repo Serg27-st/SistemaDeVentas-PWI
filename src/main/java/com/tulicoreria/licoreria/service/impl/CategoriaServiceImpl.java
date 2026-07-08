@@ -1,5 +1,7 @@
 package com.tulicoreria.licoreria.service.impl;
 
+import com.tulicoreria.licoreria.exception.RecursoNoEncontradoException;
+import com.tulicoreria.licoreria.exception.ReglaDeNegocioException;
 import com.tulicoreria.licoreria.dto.CategoriaRequestDTO;
 import com.tulicoreria.licoreria.dto.CategoriaResponseDTO;
 import com.tulicoreria.licoreria.model.Categoria;
@@ -35,14 +37,14 @@ public class CategoriaServiceImpl implements CategoriaService {
     @Transactional(readOnly = true)
     public CategoriaResponseDTO buscarPorId(Long id) {
         return toDTO(categoriaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con id: " + id)));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada con id: " + id)));
     }
 
     @Override
     @Transactional
     public CategoriaResponseDTO crear(CategoriaRequestDTO dto) {
         if (categoriaRepository.existsByNombre(dto.getNombre())) {
-            throw new RuntimeException("Ya existe una categoría con el nombre: " + dto.getNombre());
+            throw new ReglaDeNegocioException("Ya existe una categoría con el nombre: " + dto.getNombre());
         }
         Categoria categoria = Categoria.builder()
                 .nombre(dto.getNombre())
@@ -56,7 +58,7 @@ public class CategoriaServiceImpl implements CategoriaService {
     @Transactional
     public CategoriaResponseDTO actualizar(Long id, CategoriaRequestDTO dto) {
         Categoria categoria = categoriaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con id: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada con id: " + id));
         categoria.setNombre(dto.getNombre());
         categoria.setDescripcion(dto.getDescripcion());
         return toDTO(categoriaRepository.save(categoria));
@@ -66,7 +68,7 @@ public class CategoriaServiceImpl implements CategoriaService {
     @Transactional
     public void desactivar(Long id) {
         Categoria categoria = categoriaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con id: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada con id: " + id));
         categoria.setActivo(false);
         categoriaRepository.save(categoria);
     }

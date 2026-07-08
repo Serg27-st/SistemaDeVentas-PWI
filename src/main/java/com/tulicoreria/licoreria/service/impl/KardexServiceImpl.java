@@ -1,5 +1,6 @@
 package com.tulicoreria.licoreria.service.impl;
 
+import com.tulicoreria.licoreria.exception.RecursoNoEncontradoException;
 import com.tulicoreria.licoreria.dto.KardexResponseDTO;
 import com.tulicoreria.licoreria.model.Kardex;
 import com.tulicoreria.licoreria.model.Producto;
@@ -24,7 +25,7 @@ public class KardexServiceImpl implements KardexService {
     @Transactional(readOnly = true)
     public List<KardexResponseDTO> historialPorProducto(Long productoId) {
         Producto producto = productoRepository.findById(productoId)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado con id: " + productoId));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado con id: " + productoId));
         return kardexRepository.findByProductoOrderByFechaHoraDesc(producto)
                 .stream().map(this::toDTO).toList();
     }
@@ -33,7 +34,7 @@ public class KardexServiceImpl implements KardexService {
     @Transactional(readOnly = true)
     public List<KardexResponseDTO> ultimosMovimientos(Long productoId) {
         Producto producto = productoRepository.findById(productoId)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado con id: " + productoId));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado con id: " + productoId));
         return kardexRepository.findTop10ByProductoOrderByFechaHoraDesc(producto)
                 .stream().map(this::toDTO).toList();
     }

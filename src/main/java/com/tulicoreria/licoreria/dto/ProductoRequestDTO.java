@@ -36,7 +36,6 @@ public class ProductoRequestDTO {
     /** Unidad de medida (ej: "ml", "L", "cl", "oz", "und"). Opcional. */
     private String unidadMedida;
 
-    // 🔑 CORREGIDO: Cambiado de BigDecimal a Double para evitar conflictos de tipo con la Entidad
     private BigDecimal gradoAlcohol;
 
     private BigDecimal precioCompra;

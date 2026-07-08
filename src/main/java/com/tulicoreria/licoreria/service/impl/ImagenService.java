@@ -1,5 +1,6 @@
 package com.tulicoreria.licoreria.service.impl;
 
+import com.tulicoreria.licoreria.exception.ReglaDeNegocioException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -90,7 +91,7 @@ public class ImagenService {
     private void validarArchivo(MultipartFile archivo) {
         String nombre = archivo.getOriginalFilename();
         if (nombre == null) {
-            throw new RuntimeException("El archivo cargado no es válido.");
+            throw new ReglaDeNegocioException("El archivo cargado no es válido.");
         }
 
         String ext = obtenerExtension(nombre);
@@ -103,11 +104,11 @@ public class ImagenService {
         }
 
         if (!esValida) {
-            throw new RuntimeException("Formato no permitido. Solo se aceptan: JPG, JPEG, PNG o WEBP.");
+            throw new ReglaDeNegocioException("Formato no permitido. Solo se aceptan: JPG, JPEG, PNG o WEBP.");
         }
 
         if (archivo.getSize() > 5 * 1024 * 1024) {
-            throw new RuntimeException("La imagen excede el límite permitido de 5MB.");
+            throw new ReglaDeNegocioException("La imagen excede el límite permitido de 5MB.");
         }
     }
 }

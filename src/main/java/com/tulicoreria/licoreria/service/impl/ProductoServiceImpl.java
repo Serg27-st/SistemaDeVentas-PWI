@@ -1,5 +1,7 @@
 package com.tulicoreria.licoreria.service.impl;
 
+import com.tulicoreria.licoreria.exception.RecursoNoEncontradoException;
+import com.tulicoreria.licoreria.exception.ReglaDeNegocioException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -46,14 +48,14 @@ public class ProductoServiceImpl implements ProductoService {
     @Transactional(readOnly = true)
     public ProductoResponseDTO buscarPorId(Long id) {
         return toDTO(productoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado con id: " + id)));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado con id: " + id)));
     }
 
     @Override
     @Transactional(readOnly = true)
     public ProductoResponseDTO buscarPorCodigo(String codigo) {
         return toDTO(productoRepository.findByCodigo(codigo)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado con código: " + codigo)));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado con código: " + codigo)));
     }
 
     @Override
@@ -81,12 +83,12 @@ public class ProductoServiceImpl implements ProductoService {
     @Transactional
     public ProductoResponseDTO crear(ProductoRequestDTO dto) {
         if (dto.getCodigo() != null && productoRepository.existsByCodigo(dto.getCodigo())) {
-            throw new RuntimeException("Ya existe un producto con el código: " + dto.getCodigo());
+            throw new ReglaDeNegocioException("Ya existe un producto con el código: " + dto.getCodigo());
         }
         Categoria categoria = categoriaRepository.findById(dto.getCategoriaId())
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada"));
         Proveedor proveedor = proveedorRepository.findById(dto.getProveedorId())
-                .orElseThrow(() -> new RuntimeException("Proveedor no encontrado"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Proveedor no encontrado"));
 
         String imagenRuta = null;
         if (dto.getImagenFile() != null && !dto.getImagenFile().isEmpty()) {
@@ -120,11 +122,11 @@ public class ProductoServiceImpl implements ProductoService {
     @Transactional
     public ProductoResponseDTO actualizar(Long id, ProductoRequestDTO dto) {
         Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado con id: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado con id: " + id));
         Categoria categoria = categoriaRepository.findById(dto.getCategoriaId())
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada"));
         Proveedor proveedor = proveedorRepository.findById(dto.getProveedorId())
-                .orElseThrow(() -> new RuntimeException("Proveedor no encontrado"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Proveedor no encontrado"));
 
         producto.setNombre(dto.getNombre());
         producto.setCodigo(dto.getCodigo());
@@ -160,7 +162,7 @@ public class ProductoServiceImpl implements ProductoService {
     @Transactional
     public void desactivar(Long id) {
         Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado con id: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado con id: " + id));
         producto.setActivo(false);
         productoRepository.save(producto);
     }
@@ -169,7 +171,7 @@ public class ProductoServiceImpl implements ProductoService {
     @Transactional(readOnly = true)
     public Producto obtenerEntidad(Long id) {
         return productoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado con id: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado con id: " + id));
     }
 
     @Override
@@ -242,7 +244,7 @@ public class ProductoServiceImpl implements ProductoService {
     @Transactional
     public void actualizarImagen(Long id, String ruta) {
         Producto p = productoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado"));
         p.setImagen(ruta);
         productoRepository.save(p);
     }

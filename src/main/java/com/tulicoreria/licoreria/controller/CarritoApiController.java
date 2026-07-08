@@ -4,6 +4,7 @@ import com.tulicoreria.licoreria.dto.ItemCarritoDTO;
 import com.tulicoreria.licoreria.dto.ProductoResponseDTO;
 import com.tulicoreria.licoreria.service.ProductoService;
 import com.tulicoreria.licoreria.service.PromocionService;
+import com.tulicoreria.licoreria.util.TarifasFiscales;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,10 +27,7 @@ public class CarritoApiController {
 
     private final ProductoService  productoService;
     private final PromocionService promocionService;
-
-    private static final String CARRITO_KEY  = "carrito";
-    private static final String COMBOS_KEY   = "combosCarrito";
-    private static final BigDecimal IGV_RATE = new BigDecimal("0.18");
+    private final CarritoSessionHelper carritoSession;
 
     @Value("${app.carrito.pedido-minimo:50.00}")
     private BigDecimal pedidoMinimo;
@@ -42,7 +40,7 @@ public class CarritoApiController {
             @RequestParam int cantidad,
             HttpSession session) {
 
-        Map<Long, ItemCarritoDTO> carrito = getCarrito(session);
+        Map<Long, ItemCarritoDTO> carrito = carritoSession.getCarrito(session);
         Map<String, Object> resp = new LinkedHashMap<>();
 
         try {
@@ -70,8 +68,8 @@ public class CarritoApiController {
             String mensajeStock = null;
 
             if (cantidad > 0 && carrito.containsKey(productoId)) {
-                ItemCarritoDTO copia = copiarItem(carrito.get(productoId));
-                promocionService.aplicarDescuentoVolumen(copia);
+                ItemCarritoDTO copia = CarritoSessionHelper.copiarItem(carrito.get(productoId));
+                promocionService.aplicarDescuentoVolumen(List.of(copia));
                 subtotalItem  = copia.getSubtotal();
                 descuentoItem = copia.getDescuentoAplicado() != null ? copia.getDescuentoAplicado() : BigDecimal.ZERO;
 
@@ -106,7 +104,7 @@ public class CarritoApiController {
             @RequestParam Long productoId,
             HttpSession session) {
 
-        getCarrito(session).remove(productoId);
+        carritoSession.getCarrito(session).remove(productoId);
         Map<String, Object> totales = calcularTotales(session);
         totales.put("ok", true);
         return ResponseEntity.ok(totales);
@@ -116,7 +114,7 @@ public class CarritoApiController {
 
     @GetMapping("/validar")
     public ResponseEntity<Map<String, Object>> validar(HttpSession session) {
-        Map<Long, ItemCarritoDTO> carrito = getCarrito(session);
+        Map<Long, ItemCarritoDTO> carrito = carritoSession.getCarrito(session);
         List<Map<String, Object>> problemas = new ArrayList<>();
 
         for (ItemCarritoDTO item : carrito.values()) {
@@ -144,7 +142,7 @@ public class CarritoApiController {
 
     @GetMapping("/sugerencias")
     public ResponseEntity<List<Map<String, Object>>> sugerencias(HttpSession session) {
-        Map<Long, ItemCarritoDTO> carrito = getCarrito(session);
+        Map<Long, ItemCarritoDTO> carrito = carritoSession.getCarrito(session);
         Set<Long>  enCarrito = carrito.keySet();
 
         // Palabras clave de los ítems en el carrito
@@ -214,15 +212,14 @@ public class CarritoApiController {
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private Map<String, Object> calcularTotales(HttpSession session) {
-        Map<Long, ItemCarritoDTO> carrito = getCarrito(session);
+        Map<Long, ItemCarritoDTO> carrito = carritoSession.getCarrito(session);
 
-        List<ItemCarritoDTO> items = carrito.values().stream().map(orig -> {
-            ItemCarritoDTO copia = copiarItem(orig);
-            promocionService.aplicarDescuentoVolumen(copia);
-            return copia;
-        }).toList();
+        List<ItemCarritoDTO> items = carrito.values().stream()
+                .map(CarritoSessionHelper::copiarItem)
+                .toList();
+        promocionService.aplicarDescuentoVolumen(items);
 
-        Map<Long, Integer> combosCarrito = getCombosCarrito(session);
+        Map<Long, Integer> combosCarrito = carritoSession.getCombosCarrito(session);
         List<ItemCarritoDTO> comboItems  = promocionService.expandirCombos(combosCarrito);
 
         List<ItemCarritoDTO> todos = Stream.concat(items.stream(), comboItems.stream()).toList();
@@ -232,7 +229,7 @@ public class CarritoApiController {
                 .filter(i -> i.getDescuentoAplicado() != null)
                 .map(ItemCarritoDTO::getDescuentoAplicado)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal igv   = subtotal.multiply(IGV_RATE).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal igv   = subtotal.multiply(TarifasFiscales.IGV_RATE).setScale(2, RoundingMode.HALF_UP);
         BigDecimal total = subtotal.add(igv);
 
         // Progreso para pedido mínimo
@@ -258,33 +255,8 @@ public class CarritoApiController {
         return m;
     }
 
-    private static ItemCarritoDTO copiarItem(ItemCarritoDTO orig) {
-        return ItemCarritoDTO.builder()
-                .productoId(orig.getProductoId())
-                .nombre(orig.getNombre())
-                .marca(orig.getMarca())
-                .urlImagen(orig.getUrlImagen())
-                .precioUnitario(orig.getPrecioUnitario())
-                .cantidad(orig.getCantidad())
-                .build();
-    }
-
     private static boolean containsAny(String text, String... keywords) {
         for (String kw : keywords) if (text.contains(kw)) return true;
         return false;
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<Long, ItemCarritoDTO> getCarrito(HttpSession session) {
-        Map<Long, ItemCarritoDTO> c = (Map<Long, ItemCarritoDTO>) session.getAttribute(CARRITO_KEY);
-        if (c == null) { c = new LinkedHashMap<>(); session.setAttribute(CARRITO_KEY, c); }
-        return c;
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<Long, Integer> getCombosCarrito(HttpSession session) {
-        Map<Long, Integer> c = (Map<Long, Integer>) session.getAttribute(COMBOS_KEY);
-        if (c == null) { c = new LinkedHashMap<>(); session.setAttribute(COMBOS_KEY, c); }
-        return c;
     }
 }

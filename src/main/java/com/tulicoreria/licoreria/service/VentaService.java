@@ -11,12 +11,6 @@ public interface VentaService {
 
     VentaResponseDTO registrar(VentaRequestDTO dto);
 
-    /** Registra una venta originada desde el carrito (anónimo). */
-    VentaResponseDTO registrarDesdeCarrito(List<ItemCarritoDTO> items, String metodoPago);
-
-    /** Registra una venta del carrito vinculada a un cliente registrado. */
-    VentaResponseDTO registrarDesdeCarrito(List<ItemCarritoDTO> items, String metodoPago, Long clienteId);
-
     /** Registra una venta del carrito con envío y, opcionalmente, cargo Culqi ya procesado. */
     VentaResponseDTO registrarDesdeCarrito(List<ItemCarritoDTO> items, String metodoPago, Long clienteId,
                                            java.math.BigDecimal costoEnvio, String distritoEnvio,

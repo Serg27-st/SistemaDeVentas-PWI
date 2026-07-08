@@ -1,5 +1,6 @@
 package com.tulicoreria.licoreria.service.impl;
 
+import com.tulicoreria.licoreria.exception.RecursoNoEncontradoException;
 import com.tulicoreria.licoreria.dto.ReclamacionRequestDTO;
 import com.tulicoreria.licoreria.dto.ReclamacionResponseDTO;
 import com.tulicoreria.licoreria.model.Reclamacion;
@@ -62,7 +63,7 @@ public class ReclamacionServiceImpl implements ReclamacionService {
     @Transactional
     public ReclamacionResponseDTO atender(Long id) {
         Reclamacion r = reclamacionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Reclamación no encontrada: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Reclamación no encontrada: " + id));
         r.setEstado(EstadoReclamo.ATENDIDO);
         return toDTO(reclamacionRepository.save(r));
     }

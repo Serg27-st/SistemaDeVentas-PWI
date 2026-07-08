@@ -1,5 +1,7 @@
 package com.tulicoreria.licoreria.service.impl;
 
+import com.tulicoreria.licoreria.exception.RecursoNoEncontradoException;
+import com.tulicoreria.licoreria.exception.ReglaDeNegocioException;
 import com.tulicoreria.licoreria.dto.ProveedorRequestDTO;
 import com.tulicoreria.licoreria.dto.ProveedorResponseDTO;
 import com.tulicoreria.licoreria.model.Proveedor;
@@ -35,14 +37,14 @@ public class ProveedorServiceImpl implements ProveedorService {
     @Transactional(readOnly = true)
     public ProveedorResponseDTO buscarPorId(Long id) {
         return toDTO(proveedorRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Proveedor no encontrado con id: " + id)));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Proveedor no encontrado con id: " + id)));
     }
 
     @Override
     @Transactional
     public ProveedorResponseDTO crear(ProveedorRequestDTO dto) {
         if (proveedorRepository.existsByRuc(dto.getRuc())) {
-            throw new RuntimeException("Ya existe un proveedor con el RUC: " + dto.getRuc());
+            throw new ReglaDeNegocioException("Ya existe un proveedor con el RUC: " + dto.getRuc());
         }
         Proveedor proveedor = Proveedor.builder()
                 .razonSocial(dto.getRazonSocial())
@@ -60,7 +62,7 @@ public class ProveedorServiceImpl implements ProveedorService {
     @Transactional
     public ProveedorResponseDTO actualizar(Long id, ProveedorRequestDTO dto) {
         Proveedor proveedor = proveedorRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Proveedor no encontrado con id: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Proveedor no encontrado con id: " + id));
         proveedor.setRazonSocial(dto.getRazonSocial());
         proveedor.setRuc(dto.getRuc());
         proveedor.setDireccion(dto.getDireccion());
@@ -73,7 +75,7 @@ public class ProveedorServiceImpl implements ProveedorService {
     @Override
     @Transactional
     public void desactivar(Long id) {
-        Proveedor proveedor = proveedorRepository.findById(id).orElseThrow(() -> new RuntimeException("Proveedor no encontrado con id: " + id));
+        Proveedor proveedor = proveedorRepository.findById(id).orElseThrow(() -> new RecursoNoEncontradoException("Proveedor no encontrado con id: " + id));
         proveedor.setActivo(false);
         proveedorRepository.save(proveedor);
     }

@@ -26,15 +26,6 @@
       }
       .inicio-promo-strip-track:hover { animation-play-state: paused; }
 
-      /* ── Hero visual realzado ────────────────────────────────── */
-      .hero-bottle-float {
-        animation: bottleFloat 4s ease-in-out infinite;
-      }
-      @keyframes bottleFloat {
-        0%, 100% { transform: translateY(0) rotate(-1deg); }
-        50%       { transform: translateY(-14px) rotate(1deg); }
-      }
-
       /* ── Sección heading helpers ─────────────────────────────── */
       .section-label {
         font-size: 0.68rem;
@@ -199,8 +190,8 @@
     <div class="container position-relative" style="z-index:1;">
       <div class="row align-items-center gy-5">
 
-        <!-- Texto -->
-        <div class="col-lg-6 col-xl-5 py-4 py-lg-5">
+        <!-- Texto (la imagen de licores ahora es el fondo de la sección) -->
+        <div class="col-lg-7 col-xl-6 py-4 py-lg-5">
 
           <div class="hero-eyebrow">
             <i class="bi bi-stars"></i> Colección 2026 — Licores premium
@@ -241,15 +232,6 @@
             </div>
           </div>
 
-        </div>
-
-        <!-- Imagen decorativa (si existe) -->
-        <div class="col-lg-6 col-xl-7 d-none d-lg-flex justify-content-center align-items-center">
-          <img th:src="@{/images/hero-bottle.png}"
-               th:onerror="this.parentElement.style.display='none'"
-               alt="Licores premium Tu Licorería"
-               class="hero-bottle-float"
-               style="max-height:480px;filter:drop-shadow(0 24px 60px rgba(255,193,7,.18));"/>
         </div>
 
       </div>

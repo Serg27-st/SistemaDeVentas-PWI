@@ -30,14 +30,14 @@ public class CategoriaController {
     }
 
     @GetMapping("/nueva")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')") // 🔑 CORREGIDO: matches exact DB value "ROLE_ADMIN"
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public String nuevaForm(Model model) {
         model.addAttribute("categoria", new CategoriaRequestDTO());
         return "categorias/formulario";
     }
 
     @PostMapping("/nueva")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')") // 🔑 CORREGIDO
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public String crear(@ModelAttribute("categoria") CategoriaRequestDTO dto,
             Model model,
             RedirectAttributes flash) {
@@ -53,12 +53,11 @@ public class CategoriaController {
     }
 
     @GetMapping("/editar/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')") // 🔑 CORREGIDO
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public String editarForm(@PathVariable Long id, Model model) {
-        // Obtenemos el DTO de respuesta que viene de la base de datos
         CategoriaResponseDTO responseDTO = categoriaService.buscarPorId(id);
 
-        // 🛠️ CORREGIDO: Construimos el RequestDTO mapeando explícitamente el ID que Thymeleaf necesita evaluar
+        // Mapeo explícito a RequestDTO (con id) porque el formulario de Thymeleaf lo necesita
         CategoriaRequestDTO requestDTO = CategoriaRequestDTO.builder()
                 .id(responseDTO.getId())
                 .nombre(responseDTO.getNombre())
@@ -70,7 +69,7 @@ public class CategoriaController {
     }
 
     @PostMapping("/editar/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')") // 🔑 CORREGIDO
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public String actualizar(@PathVariable Long id,
             @ModelAttribute("categoria") CategoriaRequestDTO dto,
             Model model,
@@ -86,7 +85,7 @@ public class CategoriaController {
     }
 
     @PostMapping("/desactivar/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')") // 🔑 CORREGIDO
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public String desactivar(@PathVariable Long id, RedirectAttributes flash) {
         try {
             categoriaService.desactivar(id);

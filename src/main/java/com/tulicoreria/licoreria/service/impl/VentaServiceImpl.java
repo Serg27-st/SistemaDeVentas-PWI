@@ -1,5 +1,7 @@
 package com.tulicoreria.licoreria.service.impl;
 
+import com.tulicoreria.licoreria.exception.RecursoNoEncontradoException;
+import com.tulicoreria.licoreria.exception.ReglaDeNegocioException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -32,10 +34,11 @@ import com.tulicoreria.licoreria.repository.ProductoRepository;
 import com.tulicoreria.licoreria.repository.UsuarioRepository;
 import com.tulicoreria.licoreria.repository.VentaRepository;
 import com.tulicoreria.licoreria.service.VentaService;
+import com.tulicoreria.licoreria.util.GeneradorCorrelativo;
+import com.tulicoreria.licoreria.util.TarifasFiscales;
 
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
-@Data
+
 @Service
 @RequiredArgsConstructor
 public class VentaServiceImpl implements VentaService {
@@ -46,8 +49,6 @@ public class VentaServiceImpl implements VentaService {
     private final UsuarioRepository usuarioRepository;
     private final KardexRepository kardexRepository;
 
-    private static final BigDecimal IGV = new BigDecimal("0.18");
-
     @Override
     @Transactional
     public VentaResponseDTO registrar(VentaRequestDTO dto) {
@@ -55,17 +56,17 @@ public class VentaServiceImpl implements VentaService {
         // 1. Vendedor actual desde Spring Security
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Usuario vendedor = usuarioRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Vendedor no encontrado"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Vendedor no encontrado"));
 
         // 2. Cliente opcional
         Cliente cliente = null;
         if (dto.getClienteId() != null) {
             cliente = clienteRepository.findById(dto.getClienteId())
-                    .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado"));
 
             // 3. Verificar mayoría de edad
             if (!cliente.esMayorDeEdad()) {
-                throw new RuntimeException(
+                throw new ReglaDeNegocioException(
                     "El cliente " + cliente.getNombre() + " es menor de edad. " +
                     "No se puede realizar la venta de alcohol."
                 );
@@ -78,12 +79,12 @@ public class VentaServiceImpl implements VentaService {
 
         for (DetalleVentaRequestDTO detalleDTO : dto.getDetalles()) {
             Producto producto = productoRepository.findById(detalleDTO.getProductoId())
-                    .orElseThrow(() -> new RuntimeException(
+                    .orElseThrow(() -> new RecursoNoEncontradoException(
                         "Producto no encontrado con id: " + detalleDTO.getProductoId()));
 
             // 5. Validar stock disponible
             if (producto.getStock() < detalleDTO.getCantidad()) {
-                throw new RuntimeException(
+                throw new ReglaDeNegocioException(
                     "Stock insuficiente para: " + producto.getNombre() +
                     ". Disponible: " + producto.getStock() +
                     ", solicitado: " + detalleDTO.getCantidad()
@@ -119,7 +120,7 @@ public class VentaServiceImpl implements VentaService {
         }
 
         // 8. Calcular IGV y total
-        BigDecimal igvVenta = subtotalVenta.multiply(IGV).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal igvVenta = subtotalVenta.multiply(TarifasFiscales.IGV_RATE).setScale(2, RoundingMode.HALF_UP);
         BigDecimal totalVenta = subtotalVenta.add(igvVenta).setScale(2, RoundingMode.HALF_UP);
 
         // 9. Generar número de comprobante
@@ -150,34 +151,9 @@ public class VentaServiceImpl implements VentaService {
         Venta ventaGuardada = ventaRepository.save(venta);
 
         // 12. Registrar en Kardex
-        for (DetalleVenta detalle : detalles) {
-            Producto producto = detalle.getProducto();
-            kardexRepository.save(Kardex.builder()
-                    .tipo(Kardex.TipoMovimiento.SALIDA_VENTA)
-                    .producto(producto)
-                    .cantidad(detalle.getCantidad())
-                    .stockAnterior(producto.getStock() + detalle.getCantidad())
-                    .stockResultante(producto.getStock())
-                    .fechaHora(LocalDateTime.now())
-                    .usuario(vendedor)
-                    .motivo("Venta: " + numeroComprobante)
-                    .venta(ventaGuardada)
-                    .build());
-        }
+        registrarSalidasKardex(detalles, vendedor, ventaGuardada, "Venta: " + numeroComprobante);
 
         return toDTO(ventaGuardada);
-    }
-
-    @Override
-    @Transactional
-    public VentaResponseDTO registrarDesdeCarrito(List<ItemCarritoDTO> items, String metodoPago) {
-        return registrarDesdeCarrito(items, metodoPago, null, BigDecimal.ZERO, null, null);
-    }
-
-    @Override
-    @Transactional
-    public VentaResponseDTO registrarDesdeCarrito(List<ItemCarritoDTO> items, String metodoPago, Long clienteId) {
-        return registrarDesdeCarrito(items, metodoPago, clienteId, BigDecimal.ZERO, null, null);
     }
 
     @Override
@@ -186,12 +162,12 @@ public class VentaServiceImpl implements VentaService {
                                                    BigDecimal costoEnvio, String distritoEnvio, String culqiChargeId) {
 
         if (items == null || items.isEmpty()) {
-            throw new RuntimeException("El carrito está vacío");
+            throw new ReglaDeNegocioException("El carrito está vacío");
         }
 
         // Vendedor sistema que representa el canal web
         Usuario vendedor = usuarioRepository.findByUsername("tienda_online")
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new RecursoNoEncontradoException(
                     "Usuario sistema 'tienda_online' no encontrado. " +
                     "Reinicia la aplicación para que sea creado automáticamente."));
 
@@ -206,11 +182,11 @@ public class VentaServiceImpl implements VentaService {
 
         for (ItemCarritoDTO item : items) {
             Producto producto = productoRepository.findById(item.getProductoId())
-                    .orElseThrow(() -> new RuntimeException(
+                    .orElseThrow(() -> new RecursoNoEncontradoException(
                         "Producto no encontrado: " + item.getProductoId()));
 
             if (producto.getStock() < item.getCantidad()) {
-                throw new RuntimeException(
+                throw new ReglaDeNegocioException(
                     "Stock insuficiente para \"" + producto.getNombre() + "\". " +
                     "Disponible: " + producto.getStock() +
                     ", solicitado: " + item.getCantidad());
@@ -244,7 +220,7 @@ public class VentaServiceImpl implements VentaService {
         }
 
         BigDecimal envio       = (costoEnvio != null) ? costoEnvio : BigDecimal.ZERO;
-        BigDecimal igvVenta    = subtotalVenta.multiply(IGV).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal igvVenta    = subtotalVenta.multiply(TarifasFiscales.IGV_RATE).setScale(2, RoundingMode.HALF_UP);
         BigDecimal totalVenta  = subtotalVenta.add(igvVenta).add(envio).setScale(2, RoundingMode.HALF_UP);
         String     comprobante = generarNumeroComprobante(TipoComprobante.TICKET);
 
@@ -290,20 +266,7 @@ public class VentaServiceImpl implements VentaService {
         Venta ventaGuardada = ventaRepository.save(venta);
 
         // Registrar salidas en Kardex
-        for (DetalleVenta d : detalles) {
-            Producto p = d.getProducto();
-            kardexRepository.save(Kardex.builder()
-                    .tipo(Kardex.TipoMovimiento.SALIDA_VENTA)
-                    .producto(p)
-                    .cantidad(d.getCantidad())
-                    .stockAnterior(p.getStock() + d.getCantidad())
-                    .stockResultante(p.getStock())
-                    .fechaHora(LocalDateTime.now())
-                    .usuario(vendedor)
-                    .motivo("Venta web: " + comprobante)
-                    .venta(ventaGuardada)
-                    .build());
-        }
+        registrarSalidasKardex(detalles, vendedor, ventaGuardada, "Venta web: " + comprobante);
 
         return toDTO(ventaGuardada);
     }
@@ -312,7 +275,7 @@ public class VentaServiceImpl implements VentaService {
     @Transactional
     public VentaResponseDTO crearDesdePedido(Pedido pedido) {
         Usuario vendedor = usuarioRepository.findByUsername("tienda_online")
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new RecursoNoEncontradoException(
                     "Usuario sistema 'tienda_online' no encontrado."));
 
         List<DetalleVenta> detalles = new ArrayList<>();
@@ -403,20 +366,8 @@ public class VentaServiceImpl implements VentaService {
         Venta ventaGuardada = ventaRepository.save(venta);
 
         // Kardex: el stock ya fue decrementado por PedidoService → reconstruir stockAnterior
-        for (DetalleVenta d : detalles) {
-            Producto p = d.getProducto();
-            kardexRepository.save(Kardex.builder()
-                    .tipo(Kardex.TipoMovimiento.SALIDA_VENTA)
-                    .producto(p)
-                    .cantidad(d.getCantidad())
-                    .stockAnterior(p.getStock() + d.getCantidad())
-                    .stockResultante(p.getStock())
-                    .fechaHora(LocalDateTime.now())
-                    .usuario(vendedor)
-                    .motivo("Venta web: " + comprobante + " | " + pedido.getNumeroPedido())
-                    .venta(ventaGuardada)
-                    .build());
-        }
+        registrarSalidasKardex(detalles, vendedor, ventaGuardada,
+                "Venta web: " + comprobante + " | " + pedido.getNumeroPedido());
 
         return toDTO(ventaGuardada);
     }
@@ -425,10 +376,10 @@ public class VentaServiceImpl implements VentaService {
     @Transactional
     public VentaResponseDTO completar(Long id) {
         Venta venta = ventaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Venta no encontrada con id: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Venta no encontrada con id: " + id));
 
         if (venta.getEstado() != EstadoVenta.PENDIENTE) {
-            throw new RuntimeException("Solo se pueden completar ventas en estado PENDIENTE");
+            throw new ReglaDeNegocioException("Solo se pueden completar ventas en estado PENDIENTE");
         }
 
         venta.setEstado(EstadoVenta.COMPLETADA);
@@ -439,15 +390,15 @@ public class VentaServiceImpl implements VentaService {
     @Transactional
     public VentaResponseDTO anular(Long id) {
         Venta venta = ventaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Venta no encontrada con id: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Venta no encontrada con id: " + id));
 
         if (venta.getEstado() == EstadoVenta.ANULADA) {
-            throw new RuntimeException("La venta ya se encuentra anulada");
+            throw new ReglaDeNegocioException("La venta ya se encuentra anulada");
         }
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Usuario usuario = usuarioRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
 
         // Devolver stock y registrar en Kardex
         for (DetalleVenta detalle : venta.getDetalles()) {
@@ -483,23 +434,36 @@ public class VentaServiceImpl implements VentaService {
     @Transactional(readOnly = true)
     public VentaResponseDTO buscarPorId(Long id) {
         return toDTO(ventaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Venta no encontrada con id: " + id)));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Venta no encontrada con id: " + id)));
     }
 
     @Override
     @Transactional(readOnly = true)
     public VentaResponseDTO buscarPorComprobante(String numeroComprobante) {
         return toDTO(ventaRepository.findByNumeroComprobante(numeroComprobante)
-                .orElseThrow(() -> new RuntimeException("Comprobante no encontrado: " + numeroComprobante)));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Comprobante no encontrado: " + numeroComprobante)));
     }
 
     private String generarNumeroComprobante(TipoComprobante tipo) {
-        String ultimo = ventaRepository.findUltimoNumeroComprobante(tipo);
-        int siguiente = 1;
-        if (ultimo != null) {
-            siguiente = Integer.parseInt(ultimo.split("-")[1]) + 1;
+        return GeneradorCorrelativo.siguiente(tipo.name(), ventaRepository.findUltimoNumeroComprobante(tipo));
+    }
+
+    /** Registra una salida de Kardex (venta) por cada detalle, usando el stock ya actualizado del producto. */
+    private void registrarSalidasKardex(List<DetalleVenta> detalles, Usuario vendedor, Venta ventaGuardada, String motivo) {
+        for (DetalleVenta detalle : detalles) {
+            Producto producto = detalle.getProducto();
+            kardexRepository.save(Kardex.builder()
+                    .tipo(Kardex.TipoMovimiento.SALIDA_VENTA)
+                    .producto(producto)
+                    .cantidad(detalle.getCantidad())
+                    .stockAnterior(producto.getStock() + detalle.getCantidad())
+                    .stockResultante(producto.getStock())
+                    .fechaHora(LocalDateTime.now())
+                    .usuario(vendedor)
+                    .motivo(motivo)
+                    .venta(ventaGuardada)
+                    .build());
         }
-        return tipo.name() + "-" + String.format("%06d", siguiente);
     }
 
     @Override

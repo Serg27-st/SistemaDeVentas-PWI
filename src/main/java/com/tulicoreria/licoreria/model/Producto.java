@@ -33,10 +33,7 @@ public class Producto {
     @Column(length = 300)
     private String descripcion;
 
-    /**
-     * 🔄 CORREGIDO: Se eliminó el campo 'rutaImagen' duplicado. Aquí se guarda
-     * la ruta relativa exacta (Ej: "RON/uuid.jpg").
-     */
+    /** Ruta relativa de la imagen (ej: "RON/uuid.jpg"), resuelta contra app.imagenes.ruta. */
     @Column(length = 255)
     private String imagen;
 

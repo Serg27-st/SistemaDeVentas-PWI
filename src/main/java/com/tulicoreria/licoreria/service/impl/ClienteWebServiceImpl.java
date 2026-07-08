@@ -1,5 +1,7 @@
 package com.tulicoreria.licoreria.service.impl;
 
+import com.tulicoreria.licoreria.exception.RecursoNoEncontradoException;
+import com.tulicoreria.licoreria.exception.ReglaDeNegocioException;
 import com.tulicoreria.licoreria.dto.RegistroClienteWebDTO;
 import com.tulicoreria.licoreria.model.Cliente;
 import com.tulicoreria.licoreria.model.ClienteWeb;
@@ -28,16 +30,16 @@ public class ClienteWebServiceImpl implements ClienteWebService {
     @Transactional
     public ClienteWeb registrar(RegistroClienteWebDTO dto) {
         if (clienteWebRepository.existsByEmail(dto.getEmail())) {
-            throw new RuntimeException("El correo ya está registrado: " + dto.getEmail());
+            throw new ReglaDeNegocioException("El correo ya está registrado: " + dto.getEmail());
         }
         if (!dto.getPassword().equals(dto.getConfirmarPassword())) {
-            throw new RuntimeException("Las contraseñas no coinciden.");
+            throw new ReglaDeNegocioException("Las contraseñas no coinciden.");
         }
 
         // Determinar número de documento
         boolean tieneDni = dto.getDni() != null && !dto.getDni().isBlank();
         if (tieneDni && clienteRepository.existsByNumeroDocumento(dto.getDni().trim())) {
-            throw new RuntimeException("El DNI " + dto.getDni().trim() + " ya está registrado en el sistema.");
+            throw new ReglaDeNegocioException("El DNI " + dto.getDni().trim() + " ya está registrado en el sistema.");
         }
         String numDoc = tieneDni ? dto.getDni().trim() : "WEB-" + System.currentTimeMillis();
 
@@ -86,7 +88,7 @@ public class ClienteWebServiceImpl implements ClienteWebService {
     @Transactional(readOnly = true)
     public ClienteWeb findByEmail(String email) {
         return clienteWebRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Cliente web no encontrado: " + email));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cliente web no encontrado: " + email));
     }
 
     @Override
@@ -108,10 +110,10 @@ public class ClienteWebServiceImpl implements ClienteWebService {
     public void eliminarDireccion(String email, Long direccionId) {
         ClienteWeb cw = findByEmail(email);
         DireccionEnvio dir = direccionEnvioRepository.findById(direccionId)
-                .orElseThrow(() -> new RuntimeException("Dirección no encontrada"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Dirección no encontrada"));
 
         if (!dir.getClienteWeb().getId().equals(cw.getId())) {
-            throw new RuntimeException("No tienes permiso para eliminar esta dirección.");
+            throw new ReglaDeNegocioException("No tienes permiso para eliminar esta dirección.");
         }
 
         boolean eraDefault = dir.isEsDefault();
@@ -130,10 +132,8 @@ public class ClienteWebServiceImpl implements ClienteWebService {
     @Transactional
     public void marcarDefaultDireccion(String email, Long direccionId) {
         ClienteWeb cw = findByEmail(email);
-        cw.getDirecciones().forEach(d -> {
-            d.setEsDefault(d.getId().equals(direccionId));
-            direccionEnvioRepository.save(d);
-        });
+        cw.getDirecciones().forEach(d -> d.setEsDefault(d.getId().equals(direccionId)));
+        direccionEnvioRepository.saveAll(cw.getDirecciones());
     }
 
     @Override
@@ -157,7 +157,7 @@ public class ClienteWebServiceImpl implements ClienteWebService {
                 // Solo actualizar si cambió
                 if (!dniNuevo.equals(dniActual)) {
                     if (clienteRepository.existsByNumeroDocumento(dniNuevo)) {
-                        throw new RuntimeException("El DNI " + dniNuevo + " ya pertenece a otro cliente.");
+                        throw new ReglaDeNegocioException("El DNI " + dniNuevo + " ya pertenece a otro cliente.");
                     }
                     cw.getCliente().setNumeroDocumento(dniNuevo);
                 }

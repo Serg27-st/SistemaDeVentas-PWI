@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @Controller
 @RequestMapping("/usuarios")
 @RequiredArgsConstructor
-@PreAuthorize("hasAuthority('ROLE_ADMIN')") // 🔑 CORREGIDO: Ajustado para mapear de forma exacta el rol de la BD
+@PreAuthorize("hasAuthority('ROLE_ADMIN')")
 public class UsuarioController {
 
     private final UsuarioService usuarioService;

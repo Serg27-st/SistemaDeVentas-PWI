@@ -2,20 +2,16 @@ package com.tulicoreria.licoreria.controller;
 
 import com.tulicoreria.licoreria.dto.ItemCarritoDTO;
 import com.tulicoreria.licoreria.dto.ProductoResponseDTO;
-import com.tulicoreria.licoreria.dto.VentaResponseDTO;
 import com.tulicoreria.licoreria.model.Promocion;
 import com.tulicoreria.licoreria.service.BusquedaService;
 import com.tulicoreria.licoreria.util.FuzzySearchUtil;
-import com.tulicoreria.licoreria.model.ClienteWeb;
 import com.tulicoreria.licoreria.service.CategoriaService;
-import com.tulicoreria.licoreria.service.ClienteWebService;
 import com.tulicoreria.licoreria.service.EnvioService;
 import com.tulicoreria.licoreria.service.ProductoService;
 import com.tulicoreria.licoreria.service.PromocionService;
-import com.tulicoreria.licoreria.service.VentaService;
+import com.tulicoreria.licoreria.util.TarifasFiscales;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -33,18 +29,13 @@ public class PublicController {
 
     private final ProductoService productoService;
     private final CategoriaService categoriaService;
-    private final VentaService ventaService;
-    private final ClienteWebService clienteWebService;
     private final BusquedaService busquedaService;
     private final PromocionService promocionService;
     private final EnvioService envioService;
+    private final CarritoSessionHelper carritoSession;
 
     @org.springframework.beans.factory.annotation.Value("${app.carrito.pedido-minimo:50.00}")
     private BigDecimal pedidoMinimo;
-
-    private static final String CARRITO_KEY   = "carrito";
-    private static final String COMBOS_KEY    = "combosCarrito";
-    private static final BigDecimal IGV_RATE  = new BigDecimal("0.18");
 
     @ModelAttribute
     public void commonAttributes(Model model) {
@@ -143,22 +134,13 @@ public class PublicController {
     @GetMapping("/carrito")
     public String verCarrito(HttpSession session, Model model) {
         // Aplicar descuentos de volumen a los ítems del carrito
-        List<ItemCarritoDTO> items = getCarrito(session).values().stream()
-                .map(orig -> {
-                    ItemCarritoDTO copia = ItemCarritoDTO.builder()
-                            .productoId(orig.getProductoId())
-                            .nombre(orig.getNombre())
-                            .marca(orig.getMarca())
-                            .urlImagen(orig.getUrlImagen())
-                            .precioUnitario(orig.getPrecioUnitario())
-                            .cantidad(orig.getCantidad())
-                            .build();
-                    promocionService.aplicarDescuentoVolumen(copia);
-                    return copia;
-                }).toList();
+        List<ItemCarritoDTO> items = carritoSession.getCarrito(session).values().stream()
+                .map(CarritoSessionHelper::copiarItem)
+                .toList();
+        promocionService.aplicarDescuentoVolumen(items);
 
         // Expandir combos en ítems visuales
-        Map<Long, Integer> combosCarrito = getCombosCarrito(session);
+        Map<Long, Integer> combosCarrito = carritoSession.getCombosCarrito(session);
         List<ItemCarritoDTO> comboItems  = promocionService.expandirCombos(combosCarrito);
 
         List<ItemCarritoDTO> todosLosItems = Stream.concat(items.stream(), comboItems.stream()).toList();
@@ -170,7 +152,7 @@ public class PublicController {
                 .filter(i -> i.getDescuentoAplicado() != null)
                 .map(ItemCarritoDTO::getDescuentoAplicado)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal igv   = subtotal.multiply(IGV_RATE).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal igv   = subtotal.multiply(TarifasFiscales.IGV_RATE).setScale(2, RoundingMode.HALF_UP);
         BigDecimal total = subtotal.add(igv);
 
         model.addAttribute("items", todosLosItems);
@@ -191,7 +173,7 @@ public class PublicController {
                                HttpSession session,
                                RedirectAttributes flash) {
         try {
-            Map<Long, Integer> combos = getCombosCarrito(session);
+            Map<Long, Integer> combos = carritoSession.getCombosCarrito(session);
             combos.merge(comboId, cantidad, Integer::sum);
             flash.addFlashAttribute("carritoExito", "Pack agregado al carrito.");
         } catch (Exception e) {
@@ -202,7 +184,7 @@ public class PublicController {
 
     @PostMapping("/carrito/eliminar-combo")
     public String eliminarCombo(@RequestParam Long promocionId, HttpSession session) {
-        getCombosCarrito(session).remove(promocionId);
+        carritoSession.getCombosCarrito(session).remove(promocionId);
         return "redirect:/carrito";
     }
 
@@ -218,7 +200,7 @@ public class PublicController {
                 flash.addFlashAttribute("errorMensaje", "El producto está agotado.");
                 return "redirect:/producto/" + productoId;
             }
-            Map<Long, ItemCarritoDTO> carrito = getCarrito(session);
+            Map<Long, ItemCarritoDTO> carrito = carritoSession.getCarrito(session);
             if (carrito.containsKey(productoId)) {
                 ItemCarritoDTO item = carrito.get(productoId);
                 item.setCantidad(Math.min(item.getCantidad() + cantidad, p.getStock()));
@@ -244,7 +226,7 @@ public class PublicController {
             @RequestParam Long productoId,
             @RequestParam int cantidad,
             HttpSession session) {
-        Map<Long, ItemCarritoDTO> carrito = getCarrito(session);
+        Map<Long, ItemCarritoDTO> carrito = carritoSession.getCarrito(session);
         if (cantidad <= 0) {
             carrito.remove(productoId);
         } else {
@@ -258,99 +240,7 @@ public class PublicController {
 
     @PostMapping("/carrito/eliminar")
     public String eliminarDelCarrito(@RequestParam Long productoId, HttpSession session) {
-        getCarrito(session).remove(productoId);
+        carritoSession.getCarrito(session).remove(productoId);
         return "redirect:/carrito";
-    }
-
-    @PostMapping("/carrito/confirmar")
-    public String confirmarPedido(
-            @RequestParam String metodoPago,
-            @RequestParam(required = false, defaultValue = "") String distritoEnvio,
-            @RequestParam(required = false, defaultValue = "") String emailCliente,
-            HttpSession session,
-            Authentication authentication,
-            RedirectAttributes flash) {
-
-        Map<Long, ItemCarritoDTO> carrito = getCarrito(session);
-        if (carrito.isEmpty()) {
-            flash.addFlashAttribute("errorMensaje", "Tu carrito está vacío.");
-            return "redirect:/carrito";
-        }
-
-        try {
-            List<ItemCarritoDTO> items = new ArrayList<>(carrito.values());
-
-            // Resolver cliente registrado
-            Long clienteId = null;
-            String emailFinal = emailCliente;
-            if (authentication != null && authentication.isAuthenticated()) {
-                boolean esCliente = authentication.getAuthorities().stream()
-                        .anyMatch(a -> a.getAuthority().equals("ROLE_CLIENTE"));
-                if (esCliente) {
-                    try {
-                        ClienteWeb cw = clienteWebService.findByEmail(authentication.getName());
-                        if (cw.getCliente() != null) clienteId = cw.getCliente().getId();
-                        if (emailFinal.isBlank()) emailFinal = authentication.getName();
-                    } catch (Exception ignored) {}
-                }
-            }
-
-            // Enriquecer con descuentos de volumen
-            List<ItemCarritoDTO> itemsConDescuento = items.stream().map(orig -> {
-                ItemCarritoDTO copia = ItemCarritoDTO.builder()
-                        .productoId(orig.getProductoId()).nombre(orig.getNombre())
-                        .marca(orig.getMarca()).urlImagen(orig.getUrlImagen())
-                        .precioUnitario(orig.getPrecioUnitario()).cantidad(orig.getCantidad())
-                        .build();
-                promocionService.aplicarDescuentoVolumen(copia);
-                return copia;
-            }).collect(java.util.stream.Collectors.toCollection(ArrayList::new));
-
-            // Expandir combos y unirlos
-            Map<Long, Integer> combosCarrito = getCombosCarrito(session);
-            itemsConDescuento.addAll(promocionService.expandirCombos(combosCarrito));
-
-            // Calcular costo de envío
-            BigDecimal costoEnvio = envioService.getCosto(distritoEnvio);
-
-            VentaResponseDTO venta = ventaService.registrarDesdeCarrito(
-                    itemsConDescuento, metodoPago, clienteId, costoEnvio, distritoEnvio, null);
-
-            session.removeAttribute(CARRITO_KEY);
-            session.removeAttribute(COMBOS_KEY);
-            flash.addFlashAttribute("pedidoConfirmado", true);
-            flash.addFlashAttribute("comprobante", venta.getNumeroComprobante());
-            flash.addFlashAttribute("ventaId", venta.getId());
-            flash.addFlashAttribute("totalVenta", venta.getTotal());
-            flash.addFlashAttribute("costoEnvio", venta.getCostoEnvio());
-            flash.addFlashAttribute("distritoEnvio", venta.getDistritoEnvio());
-            flash.addFlashAttribute("metodoPago", venta.getMetodoPago());
-            flash.addFlashAttribute("fechaVenta", venta.getFechaHora());
-            flash.addFlashAttribute("pagoConTarjeta", false);
-        } catch (RuntimeException e) {
-            flash.addFlashAttribute("errorMensaje", e.getMessage());
-            return "redirect:/carrito";
-        }
-
-        return "redirect:/carrito/confirmacion";
-    }
-
-    @GetMapping("/carrito/confirmacion")
-    public String confirmacion() {
-        return "publica/confirmacion";
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<Long, ItemCarritoDTO> getCarrito(HttpSession session) {
-        Map<Long, ItemCarritoDTO> c = (Map<Long, ItemCarritoDTO>) session.getAttribute(CARRITO_KEY);
-        if (c == null) { c = new LinkedHashMap<>(); session.setAttribute(CARRITO_KEY, c); }
-        return c;
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<Long, Integer> getCombosCarrito(HttpSession session) {
-        Map<Long, Integer> c = (Map<Long, Integer>) session.getAttribute(COMBOS_KEY);
-        if (c == null) { c = new LinkedHashMap<>(); session.setAttribute(COMBOS_KEY, c); }
-        return c;
     }
 }

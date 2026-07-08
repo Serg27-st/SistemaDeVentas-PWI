@@ -2,6 +2,8 @@ package com.tulicoreria.licoreria.service;
 
 import com.tulicoreria.licoreria.model.Reclamacion;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.mail.SimpleMailMessage;
@@ -18,10 +20,15 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class NotificacionMailService {
 
+    private static final Logger log = LoggerFactory.getLogger(NotificacionMailService.class);
+
     private final JavaMailSender mailSender;
 
     @Value("${app.mail.admin:admin@licoreria.com}")
     private String emailAdmin;
+
+    @Value("${app.base-url:http://localhost:8081}")
+    private String baseUrl;
 
     @Async
     public void enviarAlertaReclamacion(Reclamacion r) {
@@ -46,12 +53,12 @@ public class NotificacionMailService {
                 + "Descripción:\n" + r.getDescripcion() + "\n\n"
                 + "Fecha: " + r.getFechaRegistro() + "\n\n"
                 + "Gestiona este caso en el panel admin:\n"
-                + "http://localhost:8081/reclamaciones/admin\n"
+                + baseUrl + "/reclamaciones/admin\n"
             );
             mailSender.send(msg);
         } catch (Exception e) {
             // No relanzamos — el reclamo queda guardado aunque falle el correo
-            System.err.println("⚠ No se pudo enviar el correo de alerta: " + e.getMessage());
+            log.warn("No se pudo enviar el correo de alerta: {}", e.getMessage());
         }
     }
 }

@@ -1,5 +1,7 @@
 package com.tulicoreria.licoreria.service.impl;
 
+import com.tulicoreria.licoreria.exception.RecursoNoEncontradoException;
+import com.tulicoreria.licoreria.exception.ReglaDeNegocioException;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -62,21 +64,21 @@ public class UsuarioServiceImpl implements UsuarioService, UserDetailsService {
     @Transactional(readOnly = true)
     public UsuarioResponseDTO buscarPorId(Long id) {
         return toDTO(usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + id)));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con id: " + id)));
     }
 
     @Override
     @Transactional
     public UsuarioResponseDTO crear(UsuarioRequestDTO dto) {
         if (usuarioRepository.existsByUsername(dto.getUsername())) {
-            throw new RuntimeException("El username ya está en uso: " + dto.getUsername());
+            throw new ReglaDeNegocioException("El username ya está en uso: " + dto.getUsername());
         }
         if (usuarioRepository.existsByCorreo(dto.getCorreo())) {
-            throw new RuntimeException("El correo ya está registrado: " + dto.getCorreo());
+            throw new ReglaDeNegocioException("El correo ya está registrado: " + dto.getCorreo());
         }
         Set<Rol> roles = dto.getRolIds().stream()
                 .map(rolId -> rolRepository.findById(rolId)
-                .orElseThrow(() -> new RuntimeException("Rol no encontrado con id: " + rolId)))
+                .orElseThrow(() -> new RecursoNoEncontradoException("Rol no encontrado con id: " + rolId)))
                 .collect(Collectors.toSet());
 
         Usuario usuario = Usuario.builder()
@@ -95,7 +97,7 @@ public class UsuarioServiceImpl implements UsuarioService, UserDetailsService {
     @Transactional
     public void desactivar(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con id: " + id));
         usuario.setActivo(false);
         usuarioRepository.save(usuario);
     }

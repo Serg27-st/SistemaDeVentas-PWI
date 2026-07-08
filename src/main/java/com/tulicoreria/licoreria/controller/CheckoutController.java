@@ -14,13 +14,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 /**
  * Flujo de checkout en 4 pantallas:
@@ -41,11 +37,9 @@ public class CheckoutController {
     private final ClienteWebService  clienteWebService;
     private final EnvioService       envioService;
     private final CategoriaService   categoriaService;
+    private final CarritoSessionHelper carritoSession;
 
-    private static final String CARRITO_KEY = "carrito";
-    private static final String COMBOS_KEY  = "combosCarrito";
     private static final String GUEST_EMAIL = "checkout_guest_email";
-    private static final BigDecimal IGV_RATE = new BigDecimal("0.18");
 
     // ── Datos Yape configurables desde application.properties ────────────────
     @Value("${app.pago.yape.numero:51977968942}")
@@ -66,8 +60,8 @@ public class CheckoutController {
 
     @PostMapping("/iniciar")
     public String iniciar(HttpSession session, Authentication auth, RedirectAttributes flash) {
-        Map<Long, ItemCarritoDTO> carrito = getCarrito(session);
-        Map<Long, Integer>        combos  = getCombosCarrito(session);
+        Map<Long, ItemCarritoDTO> carrito = carritoSession.getCarrito(session);
+        Map<Long, Integer>        combos  = carritoSession.getCombosCarrito(session);
 
         if (carrito.isEmpty() && combos.isEmpty()) {
             flash.addFlashAttribute("errorMensaje", "Tu carrito está vacío.");
@@ -75,11 +69,10 @@ public class CheckoutController {
         }
 
         // Construir lista con descuentos de volumen aplicados
-        List<ItemCarritoDTO> items = carrito.values().stream().map(orig -> {
-            ItemCarritoDTO copia = copiarItem(orig);
-            promocionService.aplicarDescuentoVolumen(copia);
-            return copia;
-        }).collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+        List<ItemCarritoDTO> items = carrito.values().stream()
+                .map(CarritoSessionHelper::copiarItem)
+                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+        promocionService.aplicarDescuentoVolumen(items);
 
         // Si el usuario no está autenticado como CLIENTE → pantalla de acceso
         if (!esCliente(auth)) {
@@ -126,14 +119,13 @@ public class CheckoutController {
         }
         session.setAttribute(GUEST_EMAIL, email.trim().toLowerCase());
 
-        Map<Long, ItemCarritoDTO> carrito = getCarrito(session);
-        Map<Long, Integer>        combos  = getCombosCarrito(session);
+        Map<Long, ItemCarritoDTO> carrito = carritoSession.getCarrito(session);
+        Map<Long, Integer>        combos  = carritoSession.getCombosCarrito(session);
 
-        List<ItemCarritoDTO> items = carrito.values().stream().map(orig -> {
-            ItemCarritoDTO copia = copiarItem(orig);
-            promocionService.aplicarDescuentoVolumen(copia);
-            return copia;
-        }).collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+        List<ItemCarritoDTO> items = carrito.values().stream()
+                .map(CarritoSessionHelper::copiarItem)
+                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+        promocionService.aplicarDescuentoVolumen(items);
 
         try {
             Pedido pedido = pedidoService.crear(items, combos, null, email.trim().toLowerCase());
@@ -234,8 +226,7 @@ public class CheckoutController {
         try {
             pedidoService.confirmarContraEntrega(id, metodoPago);
             // Limpiar carrito de la sesión
-            session.removeAttribute(CARRITO_KEY);
-            session.removeAttribute(COMBOS_KEY);
+            carritoSession.limpiar(session);
             session.removeAttribute(GUEST_EMAIL);
             return "redirect:/checkout/" + id + "/ok";
         } catch (RuntimeException e) {
@@ -255,8 +246,7 @@ public class CheckoutController {
         if (pedido == null) return "redirect:/carrito";
 
         // Limpiar carrito si aún no se limpió
-        session.removeAttribute(CARRITO_KEY);
-        session.removeAttribute(COMBOS_KEY);
+        carritoSession.limpiar(session);
         session.removeAttribute(GUEST_EMAIL);
 
         model.addAttribute("pedido", pedido);
@@ -309,23 +299,4 @@ public class CheckoutController {
         }
     }
 
-    private static ItemCarritoDTO copiarItem(ItemCarritoDTO orig) {
-        return ItemCarritoDTO.builder()
-                .productoId(orig.getProductoId()).nombre(orig.getNombre())
-                .marca(orig.getMarca()).urlImagen(orig.getUrlImagen())
-                .precioUnitario(orig.getPrecioUnitario()).cantidad(orig.getCantidad())
-                .build();
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<Long, ItemCarritoDTO> getCarrito(HttpSession session) {
-        Map<Long, ItemCarritoDTO> c = (Map<Long, ItemCarritoDTO>) session.getAttribute(CARRITO_KEY);
-        return c != null ? c : new LinkedHashMap<>();
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<Long, Integer> getCombosCarrito(HttpSession session) {
-        Map<Long, Integer> c = (Map<Long, Integer>) session.getAttribute(COMBOS_KEY);
-        return c != null ? c : new LinkedHashMap<>();
-    }
 }

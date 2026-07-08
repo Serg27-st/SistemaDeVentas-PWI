@@ -289,10 +289,10 @@ img { display: block; max-width: 100%; }
 .hero-section {
   background:
     linear-gradient(150deg,
-      rgba(12,12,21,0.94) 0%,
-      rgba(12,12,21,0.70) 55%,
-      rgba(22,10,4,0.84) 100%),
-    url('/images/hero-bg.jpg') center 40% / cover no-repeat fixed;
+      rgba(12,12,21,0.90) 0%,
+      rgba(12,12,21,0.72) 55%,
+      rgba(22,10,4,0.86) 100%),
+    url('/images/hero-bottle.png') center 55% / cover no-repeat fixed;
   min-height: calc(100vh - var(--nav-h));
   display: flex;
   align-items: center;

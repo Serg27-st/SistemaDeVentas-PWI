@@ -1,10 +1,14 @@
 package com.tulicoreria.licoreria.service.impl;
 
+import com.tulicoreria.licoreria.exception.RecursoNoEncontradoException;
+import com.tulicoreria.licoreria.exception.ReglaDeNegocioException;
 import com.tulicoreria.licoreria.dto.*;
 import com.tulicoreria.licoreria.model.*;
 import com.tulicoreria.licoreria.model.OrdenCompra.EstadoOrden;
 import com.tulicoreria.licoreria.repository.*;
 import com.tulicoreria.licoreria.service.OrdenCompraService;
+import com.tulicoreria.licoreria.util.GeneradorCorrelativo;
+import com.tulicoreria.licoreria.util.TarifasFiscales;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -27,24 +31,22 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
     private final UsuarioRepository usuarioRepository;
     private final KardexRepository kardexRepository;
 
-    private static final BigDecimal IGV = new BigDecimal("0.18");
-
     @Override
     @Transactional
     public OrdenCompraResponseDTO crear(OrdenCompraRequestDTO dto) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Usuario usuario = usuarioRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
 
         Proveedor proveedor = proveedorRepository.findById(dto.getProveedorId())
-                .orElseThrow(() -> new RuntimeException("Proveedor no encontrado"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Proveedor no encontrado"));
 
         List<DetalleCompra> detalles = new ArrayList<>();
         BigDecimal subtotalOrden = BigDecimal.ZERO;
 
         for (DetalleCompraRequestDTO detalleDTO : dto.getDetalles()) {
             Producto producto = productoRepository.findById(detalleDTO.getProductoId())
-                    .orElseThrow(() -> new RuntimeException(
+                    .orElseThrow(() -> new RecursoNoEncontradoException(
                         "Producto no encontrado con id: " + detalleDTO.getProductoId()));
 
             BigDecimal subtotalDetalle = detalleDTO.getPrecioUnitario()
@@ -62,7 +64,7 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
             subtotalOrden = subtotalOrden.add(subtotalDetalle);
         }
 
-        BigDecimal igvOrden   = subtotalOrden.multiply(IGV).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal igvOrden   = subtotalOrden.multiply(TarifasFiscales.IGV_RATE).setScale(2, RoundingMode.HALF_UP);
         BigDecimal totalOrden = subtotalOrden.add(igvOrden).setScale(2, RoundingMode.HALF_UP);
 
         OrdenCompra orden = OrdenCompra.builder()
@@ -90,18 +92,18 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
     @Transactional
     public OrdenCompraResponseDTO recibirMercaderia(Long id, String comprobanteProveedor) {
         OrdenCompra orden = ordenCompraRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Orden no encontrada con id: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Orden no encontrada con id: " + id));
 
         if (orden.getEstado() == EstadoOrden.RECIBIDA) {
-            throw new RuntimeException("La orden ya fue recibida anteriormente");
+            throw new ReglaDeNegocioException("La orden ya fue recibida anteriormente");
         }
         if (orden.getEstado() == EstadoOrden.ANULADA) {
-            throw new RuntimeException("No se puede recibir una orden anulada");
+            throw new ReglaDeNegocioException("No se puede recibir una orden anulada");
         }
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Usuario usuario = usuarioRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
 
         for (DetalleCompra detalle : orden.getDetalles()) {
             Producto producto = detalle.getProducto();
@@ -134,9 +136,9 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
     @Transactional
     public OrdenCompraResponseDTO anular(Long id) {
         OrdenCompra orden = ordenCompraRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Orden no encontrada con id: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Orden no encontrada con id: " + id));
         if (orden.getEstado() != EstadoOrden.PENDIENTE) {
-            throw new RuntimeException(
+            throw new ReglaDeNegocioException(
                 "Solo se pueden anular órdenes PENDIENTES. Estado actual: " + orden.getEstado());
         }
         orden.setEstado(EstadoOrden.ANULADA);
@@ -160,14 +162,11 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
     @Transactional(readOnly = true)
     public OrdenCompraResponseDTO buscarPorId(Long id) {
         return toDTO(ordenCompraRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Orden no encontrada con id: " + id)));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Orden no encontrada con id: " + id)));
     }
 
     private String generarNumeroOrden() {
-        String ultimo = ordenCompraRepository.findUltimoNumeroOrden();
-        int siguiente = ultimo != null
-                ? Integer.parseInt(ultimo.split("-")[1]) + 1 : 1;
-        return "OC-" + String.format("%06d", siguiente);
+        return GeneradorCorrelativo.siguiente("OC", ordenCompraRepository.findUltimoNumeroOrden());
     }
 
     private OrdenCompraResponseDTO toDTO(OrdenCompra o) {

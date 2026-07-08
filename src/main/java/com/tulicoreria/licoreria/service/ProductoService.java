@@ -26,10 +26,6 @@ public interface ProductoService {
 
     void desactivar(Long id);
 
-    /**
-     * 🔄 CORREGIDO: Se renombró el método para mantener la consistencia con el
-     * campo 'imagen' de la entidad Producto.
-     */
     void actualizarImagen(Long id, String ruta);
 
     // Usado internamente por VentaService y OrdenCompraService

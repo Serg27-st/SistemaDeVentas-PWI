@@ -32,23 +32,10 @@ public class Categoria {
     @Builder.Default
     private boolean activo = true;
 
-    // 🌟 CORREGIDO: Evita bucles infinitos en serialización y asegura la carga limpia
+    // Evita bucles infinitos en la serialización JSON del lado "muchos" de la relación
     @OneToMany(mappedBy = "categoria", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     @Builder.Default
-    @ToString.Exclude // 🔑 Evita que un toString() accidental rompa el hilo al llamar a la lista
+    @ToString.Exclude // Evita que un toString() accidental dispare la carga perezosa de la lista
     private List<Producto> productos = new ArrayList<>();
-
-    /**
-     * 🛠️ MÉTODO HELPER (Buenas prácticas JPA): Sincroniza ambos lados de la
-     * relación para evitar que la lista devuelva NullPointer o se quede colgada
-     * esperando al revés.
-     */
-    public void addProducto(Producto producto) {
-        if (this.productos == null) {
-            this.productos = new ArrayList<>();
-        }
-        this.productos.add(producto);
-        producto.setCategoria(this);
-    }
 }

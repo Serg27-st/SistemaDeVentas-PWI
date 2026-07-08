@@ -11,7 +11,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 
-import com.tulicoreria.licoreria.service.impl.UsuarioServiceImpl;
+import com.tulicoreria.licoreria.service.UsuarioService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final UsuarioServiceImpl usuarioServiceImpl;
+    private final UsuarioService usuarioService;
     private final ClienteWebUserDetailsService clienteWebUserDetailsService;
     private final CustomAuthSuccessHandler customAuthSuccessHandler;
     private final PasswordEncoder passwordEncoder;
@@ -95,7 +95,7 @@ public class SecurityConfig {
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(usuarioServiceImpl);
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(usuarioService);
         provider.setPasswordEncoder(this.passwordEncoder);
         return provider;
     }

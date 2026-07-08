@@ -14,6 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
   <link th:href="@{/css/publica.css}" rel="stylesheet"/>
   <link th:href="@{/css/buscador.css}" rel="stylesheet"/>
+  <link th:href="@{/css/chatbot.css}" rel="stylesheet"/>
 
   <th:block th:insert="${estilosExtra} ?: ~{}"></th:block>
 </head>
@@ -301,9 +302,37 @@
     <i class="bi bi-whatsapp"></i>
   </a>
 
+  <!-- ── Chatbot flotante (FAQ) ─────────────────────────────────────────── -->
+  <div id="chatbotWidget" class="chatbot-widget"
+       th:attr="data-yape-numero=${chatbotYapeNumero},data-yape-nombre=${chatbotYapeNombre},data-pedido-minimo=${chatbotPedidoMinimo},data-whatsapp-numero=${chatbotWhatsappNumero}">
+
+    <button id="chatbotToggle" type="button" class="chatbot-toggle"
+            aria-label="Abrir chat de ayuda" aria-expanded="false" data-tooltip="¿Necesitas ayuda?">
+      <i class="bi bi-chat-dots-fill" id="chatbotIconOpen"></i>
+      <i class="bi bi-x-lg" id="chatbotIconClose" style="display:none;"></i>
+    </button>
+
+    <div id="chatbotWindow" class="chatbot-window" role="dialog" aria-label="Asistente virtual">
+      <div class="chatbot-header">
+        <div class="chatbot-header-info">
+          <span class="chatbot-avatar"><i class="bi bi-robot"></i></span>
+          <div>
+            <div class="chatbot-title">Asistente Tu Licorería</div>
+            <div class="chatbot-subtitle"><span class="chatbot-dot"></span> En línea</div>
+          </div>
+        </div>
+        <button id="chatbotClose" type="button" class="chatbot-close" aria-label="Cerrar chat">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div id="chatbotBody" class="chatbot-body"></div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script th:src="@{/js/publica.js}"></script>
   <script th:src="@{/js/buscador-publico.js}"></script>
+  <script th:src="@{/js/chatbot.js}"></script>
   <th:block th:insert="${scriptsExtra} ?: ~{}"></th:block>
 
   <!-- ── Verificación de edad ──────────────────────────────────────────── -->

@@ -38,10 +38,11 @@ public interface PromocionService {
     BigDecimal calcularPrecioConDescuento(BigDecimal precioBase, Promocion promo);
 
     /**
-     * Aplica el descuento por volumen sobre el ItemCarritoDTO (muta el objeto).
-     * No hace nada si el producto no tiene promo de volumen activa.
+     * Aplica el descuento por volumen sobre cada ItemCarritoDTO de la lista
+     * (los muta in-place). Resuelve todas las promociones activas en una sola
+     * consulta en vez de una por ítem.
      */
-    void aplicarDescuentoVolumen(ItemCarritoDTO item);
+    void aplicarDescuentoVolumen(List<ItemCarritoDTO> items);
 
     /** Expande los combos del carrito en ItemCarritoDTO individuales con precio proporcional. */
     List<ItemCarritoDTO> expandirCombos(Map<Long, Integer> combosCarrito);

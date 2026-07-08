@@ -1,5 +1,6 @@
 package com.tulicoreria.licoreria.service.impl;
 
+import com.tulicoreria.licoreria.exception.ReglaDeNegocioException;
 import com.tulicoreria.licoreria.service.CulqiService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,13 +72,13 @@ public class CulqiServiceImpl implements CulqiService {
             if (errorMsg.isEmpty()) errorMsg = extractJsonString(responseBody, MESSAGE_PATTERN);
             if (errorMsg.isEmpty()) errorMsg = "Pago rechazado. Verifica los datos de tu tarjeta.";
             log.warn("Culqi rechazó el cargo: {} — HTTP {}", errorMsg, response.statusCode());
-            throw new RuntimeException(errorMsg);
+            throw new ReglaDeNegocioException(errorMsg);
 
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
             log.error("Error al conectar con Culqi: {}", e.getMessage());
-            throw new RuntimeException("No se pudo procesar el pago. Intenta de nuevo o elige otro método.");
+            throw new ReglaDeNegocioException("No se pudo procesar el pago. Intenta de nuevo o elige otro método.");
         }
     }
 

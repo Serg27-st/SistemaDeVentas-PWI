@@ -1,5 +1,7 @@
 package com.tulicoreria.licoreria.service.impl;
 
+import com.tulicoreria.licoreria.exception.RecursoNoEncontradoException;
+import com.tulicoreria.licoreria.exception.ReglaDeNegocioException;
 import com.tulicoreria.licoreria.dto.ClienteRequestDTO;
 import com.tulicoreria.licoreria.dto.ClienteResponseDTO;
 import com.tulicoreria.licoreria.model.Cliente;
@@ -28,14 +30,14 @@ public class ClienteServiceImpl implements ClienteService {
     @Transactional(readOnly = true)
     public ClienteResponseDTO buscarPorId(Long id) {
         return toDTO(clienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con id: " + id)));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado con id: " + id)));
     }
 
     @Override
     @Transactional(readOnly = true)
     public ClienteResponseDTO buscarPorDocumento(String numeroDocumento) {
         return toDTO(clienteRepository.findByNumeroDocumento(numeroDocumento)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con documento: " + numeroDocumento)));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado con documento: " + numeroDocumento)));
     }
 
     @Override
@@ -50,7 +52,7 @@ public class ClienteServiceImpl implements ClienteService {
     @Transactional
     public ClienteResponseDTO crear(ClienteRequestDTO dto) {
         if (clienteRepository.existsByNumeroDocumento(dto.getNumeroDocumento())) {
-            throw new RuntimeException("Ya existe un cliente con el documento: " + dto.getNumeroDocumento());
+            throw new ReglaDeNegocioException("Ya existe un cliente con el documento: " + dto.getNumeroDocumento());
         }
         Cliente cliente = Cliente.builder()
                 .nombre(dto.getNombre())
@@ -69,7 +71,7 @@ public class ClienteServiceImpl implements ClienteService {
     @Transactional
     public ClienteResponseDTO actualizar(Long id, ClienteRequestDTO dto) {
         Cliente cliente = clienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con id: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado con id: " + id));
         cliente.setNombre(dto.getNombre());
         cliente.setApellido(dto.getApellido());
         cliente.setTipoDocumento(dto.getTipoDocumento());
@@ -84,7 +86,7 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     public Cliente obtenerEntidad(Long id) {
         return clienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con id: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado con id: " + id));
     }
 
     @Override

@@ -1,5 +1,7 @@
 package com.tulicoreria.licoreria.service.impl;
 
+import com.tulicoreria.licoreria.exception.RecursoNoEncontradoException;
+import com.tulicoreria.licoreria.exception.ReglaDeNegocioException;
 import com.tulicoreria.licoreria.dto.ItemCarritoDTO;
 import com.tulicoreria.licoreria.dto.PromocionRequestDTO;
 import com.tulicoreria.licoreria.dto.PromocionResponseDTO;
@@ -43,7 +45,7 @@ public class PromocionServiceImpl implements PromocionService {
     @Transactional
     public PromocionResponseDTO actualizar(Long id, PromocionRequestDTO dto) {
         Promocion p = promocionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Promoción no encontrada: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Promoción no encontrada: " + id));
         buildFromDTO(p, dto);
         return toDTO(promocionRepository.save(p));
     }
@@ -52,7 +54,7 @@ public class PromocionServiceImpl implements PromocionService {
     @Transactional
     public void activar(Long id) {
         Promocion p = promocionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Promoción no encontrada: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Promoción no encontrada: " + id));
         p.setActivo(true);
         promocionRepository.save(p);
     }
@@ -61,7 +63,7 @@ public class PromocionServiceImpl implements PromocionService {
     @Transactional
     public void desactivar(Long id) {
         Promocion p = promocionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Promoción no encontrada: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Promoción no encontrada: " + id));
         p.setActivo(false);
         promocionRepository.save(p);
     }
@@ -70,7 +72,7 @@ public class PromocionServiceImpl implements PromocionService {
     @Transactional
     public void eliminar(Long id) {
         Promocion p = promocionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Promoción no encontrada: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Promoción no encontrada: " + id));
         promocionRepository.delete(p);
     }
 
@@ -85,7 +87,7 @@ public class PromocionServiceImpl implements PromocionService {
     @Transactional(readOnly = true)
     public PromocionResponseDTO buscarPorId(Long id) {
         return toDTO(promocionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Promoción no encontrada: " + id)));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Promoción no encontrada: " + id)));
     }
 
     // ── Consultas públicas ─────────────────────────────────────────────────────
@@ -114,7 +116,7 @@ public class PromocionServiceImpl implements PromocionService {
     @Transactional(readOnly = true)
     public Promocion findComboById(Long id) {
         return promocionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Combo no encontrado: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Combo no encontrado: " + id));
     }
 
     @Override
@@ -147,26 +149,32 @@ public class PromocionServiceImpl implements PromocionService {
 
     @Override
     @Transactional(readOnly = true)
-    public void aplicarDescuentoVolumen(ItemCarritoDTO item) {
-        Optional<Promocion> promoOpt =
-                findPromocionActivaVolumen(item.getProductoId());
-        if (promoOpt.isEmpty()) return;
+    public void aplicarDescuentoVolumen(List<ItemCarritoDTO> items) {
+        if (items == null || items.isEmpty()) return;
 
-        Promocion promo = promoOpt.get();
-        int compraX = promo.getCompraX() != null ? promo.getCompraX() : 0;
-        int llevaY  = promo.getLlevaY()  != null ? promo.getLlevaY()  : 0;
-        if (compraX <= 0 || llevaY <= 0 || llevaY >= compraX) return;
+        // Una sola consulta para todas las promociones de volumen activas,
+        // en vez de una consulta por cada ítem del carrito.
+        Map<Long, Promocion> promoPorProducto = buildMapPorProducto(TipoPromocion.VOLUMEN);
 
-        int cantidad = item.getCantidad();
-        int grupos   = cantidad / compraX;
-        int gratis   = grupos * (compraX - llevaY);
+        for (ItemCarritoDTO item : items) {
+            Promocion promo = promoPorProducto.get(item.getProductoId());
+            if (promo == null) continue;
 
-        if (gratis > 0) {
-            BigDecimal descuento = item.getPrecioUnitario()
-                    .multiply(BigDecimal.valueOf(gratis))
-                    .setScale(2, RoundingMode.HALF_UP);
-            item.setDescuentoAplicado(descuento);
-            item.setEtiquetaPromo(compraX + "×" + llevaY + " — " + gratis + " gratis");
+            int compraX = promo.getCompraX() != null ? promo.getCompraX() : 0;
+            int llevaY  = promo.getLlevaY()  != null ? promo.getLlevaY()  : 0;
+            if (compraX <= 0 || llevaY <= 0 || llevaY >= compraX) continue;
+
+            int cantidad = item.getCantidad();
+            int grupos   = cantidad / compraX;
+            int gratis   = grupos * (compraX - llevaY);
+
+            if (gratis > 0) {
+                BigDecimal descuento = item.getPrecioUnitario()
+                        .multiply(BigDecimal.valueOf(gratis))
+                        .setScale(2, RoundingMode.HALF_UP);
+                item.setDescuentoAplicado(descuento);
+                item.setEtiquetaPromo(compraX + "×" + llevaY + " — " + gratis + " gratis");
+            }
         }
     }
 
@@ -177,10 +185,15 @@ public class PromocionServiceImpl implements PromocionService {
 
         List<ItemCarritoDTO> resultado = new ArrayList<>();
 
+        // Una sola consulta para todos los combos del carrito, en vez de un
+        // findById() por cada entrada de combosCarrito.
+        Map<Long, Promocion> combosPorId = promocionRepository.findAllById(combosCarrito.keySet()).stream()
+                .collect(Collectors.toMap(Promocion::getId, p -> p));
+
         for (Map.Entry<Long, Integer> entry : combosCarrito.entrySet()) {
             Long   promocionId  = entry.getKey();
             int    cantidadPack = entry.getValue();
-            Promocion combo = promocionRepository.findById(promocionId).orElse(null);
+            Promocion combo = combosPorId.get(promocionId);
             if (combo == null || !combo.esActiva()) continue;
 
             // Calcular precio total sin descuento para distribuir proporcional
@@ -295,11 +308,11 @@ public class PromocionServiceImpl implements PromocionService {
                 Integer compraX = dto.getCompraX();
                 Integer llevaY = dto.getLlevaY();
                 if (compraX == null || llevaY == null || compraX <= 0 || llevaY <= 0) {
-                    throw new RuntimeException(
+                    throw new ReglaDeNegocioException(
                         "Promoción por volumen inválida: debes indicar cuántas unidades se llevan y cuántas se pagan.");
                 }
                 if (llevaY >= compraX) {
-                    throw new RuntimeException(
+                    throw new ReglaDeNegocioException(
                         "Promoción por volumen inválida: el cliente debe pagar menos unidades ("
                         + llevaY + ") de las que se lleva (" + compraX + ").");
                 }

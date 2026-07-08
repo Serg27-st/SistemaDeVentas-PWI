@@ -1,5 +1,8 @@
 package com.tulicoreria.licoreria.service.impl;
 
+import com.tulicoreria.licoreria.exception.RecursoNoEncontradoException;
+import com.tulicoreria.licoreria.exception.ReglaDeNegocioException;
+import com.tulicoreria.licoreria.util.GeneradorCorrelativo;
 import com.tulicoreria.licoreria.dto.DatosEnvioDTO;
 import com.tulicoreria.licoreria.dto.ItemCarritoDTO;
 import com.tulicoreria.licoreria.model.*;
@@ -15,6 +18,7 @@ import com.tulicoreria.licoreria.service.NotificacionPedidoService;
 import com.tulicoreria.licoreria.service.PedidoService;
 import com.tulicoreria.licoreria.service.PromocionService;
 import com.tulicoreria.licoreria.service.VentaService;
+import com.tulicoreria.licoreria.util.TarifasFiscales;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +38,6 @@ import java.util.stream.Stream;
 public class PedidoServiceImpl implements PedidoService {
 
     private static final Logger log = LoggerFactory.getLogger(PedidoServiceImpl.class);
-    private static final BigDecimal IGV_RATE = new BigDecimal("0.18");
     private static final int MINUTOS_EXPIRACION = 30;
 
     private final PedidoRepository          pedidoRepository;
@@ -62,7 +65,7 @@ public class PedidoServiceImpl implements PedidoService {
         ).toList();
 
         if (todosLosItems.isEmpty()) {
-            throw new RuntimeException("El carrito está vacío");
+            throw new ReglaDeNegocioException("El carrito está vacío");
         }
 
         // Validar stock
@@ -70,7 +73,7 @@ public class PedidoServiceImpl implements PedidoService {
             if (it.getProductoId() == null) continue;
             Producto prod = productoRepository.findById(it.getProductoId()).orElse(null);
             if (prod != null && prod.getStock() < it.getCantidad()) {
-                throw new RuntimeException(
+                throw new ReglaDeNegocioException(
                     "Stock insuficiente para \"" + it.getNombre() + "\". " +
                     "Disponible: " + prod.getStock() + ", solicitado: " + it.getCantidad());
             }
@@ -81,7 +84,7 @@ public class PedidoServiceImpl implements PedidoService {
                 .map(ItemCarritoDTO::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .setScale(2, RoundingMode.HALF_UP);
-        BigDecimal igv   = subtotal.multiply(IGV_RATE).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal igv   = subtotal.multiply(TarifasFiscales.IGV_RATE).setScale(2, RoundingMode.HALF_UP);
         BigDecimal total = subtotal.add(igv).setScale(2, RoundingMode.HALF_UP);
 
         // Resolver cliente web
@@ -160,11 +163,11 @@ public class PedidoServiceImpl implements PedidoService {
         if (tc == TipoComprobante.FACTURA) {
             String ruc = dto.getRuc() != null ? dto.getRuc().trim() : "";
             if (!ruc.matches("(10|15|16|17|20)\\d{9}")) {
-                throw new RuntimeException(
+                throw new ReglaDeNegocioException(
                     "El RUC debe tener 11 dígitos y empezar con 10, 15, 16, 17 o 20.");
             }
             if (dto.getRazonSocial() == null || dto.getRazonSocial().isBlank()) {
-                throw new RuntimeException("La razón social es obligatoria para facturación.");
+                throw new ReglaDeNegocioException("La razón social es obligatoria para facturación.");
             }
             dto.setRuc(ruc);
         }
@@ -263,7 +266,7 @@ public class PedidoServiceImpl implements PedidoService {
     @Transactional(readOnly = true)
     public Pedido buscarPorId(Long pedidoId) {
         return pedidoRepository.findById(pedidoId)
-                .orElseThrow(() -> new RuntimeException("Pedido no encontrado: " + pedidoId));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Pedido no encontrado: " + pedidoId));
     }
 
     // ── Liberar expirados ────────────────────────────────────────────────────
@@ -286,9 +289,9 @@ public class PedidoServiceImpl implements PedidoService {
         for (PedidoItem item : pedido.getItems()) {
             if (item.getProductoId() == null) continue;
             Producto prod = productoRepository.findById(item.getProductoId())
-                    .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + item.getProductoId()));
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado: " + item.getProductoId()));
             if (prod.getStock() < item.getCantidad()) {
-                throw new RuntimeException(
+                throw new ReglaDeNegocioException(
                     "Stock insuficiente para \"" + item.getProductoNombre() + "\". " +
                     "Solo quedan " + prod.getStock() + " unidades.");
             }
@@ -310,20 +313,14 @@ public class PedidoServiceImpl implements PedidoService {
                 && LocalDateTime.now().isAfter(pedido.getExpiraEn())
                 && pedido.getEstado() == EstadoPedido.PENDIENTE_PAGO) {
             cancelar(pedido.getId(), "Expirado por tiempo de pago");
-            throw new RuntimeException("Tu sesión de pago expiró. Vuelve al carrito para intentarlo de nuevo.");
+            throw new ReglaDeNegocioException("Tu sesión de pago expiró. Vuelve al carrito para intentarlo de nuevo.");
         }
         if (pedido.getEstado() == EstadoPedido.CANCELADO) {
-            throw new RuntimeException("Este pedido fue cancelado. Regresa al carrito para iniciar uno nuevo.");
+            throw new ReglaDeNegocioException("Este pedido fue cancelado. Regresa al carrito para iniciar uno nuevo.");
         }
     }
 
     private String generarNumero() {
-        String ultimo = pedidoRepository.findUltimoNumeroPedido();
-        int siguiente = 1;
-        if (ultimo != null && ultimo.contains("-")) {
-            try { siguiente = Integer.parseInt(ultimo.split("-")[1]) + 1; }
-            catch (NumberFormatException ignored) {}
-        }
-        return "PED-" + String.format("%06d", siguiente);
+        return GeneradorCorrelativo.siguiente("PED", pedidoRepository.findUltimoNumeroPedido());
     }
 }

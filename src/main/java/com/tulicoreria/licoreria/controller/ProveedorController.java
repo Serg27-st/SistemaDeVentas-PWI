@@ -24,14 +24,14 @@ public class ProveedorController {
     }
 
     @GetMapping("/nuevo")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_ALMACEN')") // 🔑 CORREGIDO: Mapeo exacto de múltiples autoridades
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_ALMACEN')")
     public String nuevoForm(Model model) {
         model.addAttribute("proveedor", new ProveedorRequestDTO());
         return "proveedores/formulario";
     }
 
     @PostMapping("/nuevo")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_ALMACEN')") // 🔑 CORREGIDO
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_ALMACEN')")
     public String crear(@ModelAttribute("proveedor") ProveedorRequestDTO dto,
             Model model,
             RedirectAttributes flash) {
@@ -47,12 +47,11 @@ public class ProveedorController {
     }
 
     @GetMapping("/editar/{id}")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_ALMACEN')") // 🔑 CORREGIDO
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_ALMACEN')")
     public String editarForm(@PathVariable Long id, Model model) {
-        // Obtenemos los datos actuales desde la BD
         ProveedorResponseDTO responseDTO = proveedorService.buscarPorId(id);
 
-        // 🛠️ CORREGIDO: Mapeamos explícitamente hacia el RequestDTO con su ID para Thymeleaf
+        // Mapeo explícito a RequestDTO (con id) porque el formulario de Thymeleaf lo necesita
         ProveedorRequestDTO requestDTO = ProveedorRequestDTO.builder()
                 .id(responseDTO.getId())
                 .ruc(responseDTO.getRuc())
@@ -67,7 +66,7 @@ public class ProveedorController {
     }
 
     @PostMapping("/editar/{id}")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_ALMACEN')") // 🔑 CORREGIDO
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_ALMACEN')")
     public String actualizar(@PathVariable Long id,
             @ModelAttribute("proveedor") ProveedorRequestDTO dto,
             Model model,
@@ -83,7 +82,7 @@ public class ProveedorController {
     }
 
     @PostMapping("/desactivar/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')") // 🔑 CORREGIDO: Solo el administrador puede dar de baja
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public String desactivar(@PathVariable Long id, RedirectAttributes flash) {
         try {
             proveedorService.desactivar(id);
@@ -93,9 +92,4 @@ public class ProveedorController {
         }
         return "redirect:/proveedores";
     }
-
-
-    
-
-
 }
