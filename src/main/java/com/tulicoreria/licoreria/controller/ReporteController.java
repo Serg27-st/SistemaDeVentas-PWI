@@ -4,6 +4,7 @@ import com.tulicoreria.licoreria.service.ExcelExportService;
 import com.tulicoreria.licoreria.service.ReporteService;
 import com.tulicoreria.licoreria.service.impl.ReporteServiceImpl.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Controller
 @RequestMapping("/reportes")
@@ -30,56 +32,54 @@ public class ReporteController {
         return "reportes/menu";
     }
 
-    // ── Reporte 1: Ventas por Mes ────────────────────────────────────────────
+    // ── Reporte 1: Ventas por Período ────────────────────────────────────────
     @GetMapping("/ventas-mes")
     public String ventasPorMes(
-            @RequestParam(defaultValue = "0") int mes,
-            @RequestParam(defaultValue = "0") int anio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin,
             Model model) {
 
-        // Si no se pasan parámetros, usa el mes y año actual
-        if (mes == 0)  mes  = LocalDate.now().getMonthValue();
-        if (anio == 0) anio = LocalDate.now().getYear();
+        LocalDate[] rango = normalizarRango(fechaInicio, fechaFin);
+        fechaInicio = rango[0];
+        fechaFin = rango[1];
 
-        int anioActual = LocalDate.now().getYear();
-        model.addAttribute("reporte", reporteService.reporteVentasPorMes(mes, anio));
-        model.addAttribute("mes", mes);
-        model.addAttribute("anio", anio);
-        model.addAttribute("anioActual", anioActual);
+        model.addAttribute("reporte", reporteService.reporteVentasPorMes(fechaInicio, fechaFin));
+        model.addAttribute("fechaInicio", fechaInicio);
+        model.addAttribute("fechaFin", fechaFin);
         return "reportes/ventas-mes";
     }
 
     // ── Reporte 2: Ventas por Cliente ────────────────────────────────────────
     @GetMapping("/clientes")
     public String ventasPorCliente(
-            @RequestParam(defaultValue = "0") int mes,
-            @RequestParam(defaultValue = "0") int anio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin,
             Model model) {
 
-        if (mes == 0)  mes  = LocalDate.now().getMonthValue();
-        if (anio == 0) anio = LocalDate.now().getYear();
+        LocalDate[] rango = normalizarRango(fechaInicio, fechaFin);
+        fechaInicio = rango[0];
+        fechaFin = rango[1];
 
-        model.addAttribute("reporte", reporteService.reporteVentasPorCliente(mes, anio));
-        model.addAttribute("mes", mes);
-        model.addAttribute("anio", anio);
-        model.addAttribute("anioActual", LocalDate.now().getYear());
+        model.addAttribute("reporte", reporteService.reporteVentasPorCliente(fechaInicio, fechaFin));
+        model.addAttribute("fechaInicio", fechaInicio);
+        model.addAttribute("fechaFin", fechaFin);
         return "reportes/clientes";
     }
 
     // ── Reporte 3: Ventas por Producto ───────────────────────────────────────
     @GetMapping("/productos")
     public String ventasPorProducto(
-            @RequestParam(defaultValue = "0") int mes,
-            @RequestParam(defaultValue = "0") int anio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin,
             Model model) {
 
-        if (mes == 0)  mes  = LocalDate.now().getMonthValue();
-        if (anio == 0) anio = LocalDate.now().getYear();
+        LocalDate[] rango = normalizarRango(fechaInicio, fechaFin);
+        fechaInicio = rango[0];
+        fechaFin = rango[1];
 
-        model.addAttribute("reporte", reporteService.reporteVentasPorProducto(mes, anio));
-        model.addAttribute("mes", mes);
-        model.addAttribute("anio", anio);
-        model.addAttribute("anioActual", LocalDate.now().getYear());
+        model.addAttribute("reporte", reporteService.reporteVentasPorProducto(fechaInicio, fechaFin));
+        model.addAttribute("fechaInicio", fechaInicio);
+        model.addAttribute("fechaFin", fechaFin);
         return "reportes/productos";
     }
 
@@ -87,44 +87,64 @@ public class ReporteController {
 
     @GetMapping("/ventas-mes/excel")
     public ResponseEntity<byte[]> descargarVentasMesExcel(
-            @RequestParam(defaultValue = "0") int mes,
-            @RequestParam(defaultValue = "0") int anio) throws IOException {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) throws IOException {
 
-        if (mes == 0)  mes  = LocalDate.now().getMonthValue();
-        if (anio == 0) anio = LocalDate.now().getYear();
+        LocalDate[] rango = normalizarRango(fechaInicio, fechaFin);
+        fechaInicio = rango[0];
+        fechaFin = rango[1];
 
-        ReporteVentasMesDTO reporte = reporteService.reporteVentasPorMes(mes, anio);
+        ReporteVentasMesDTO reporte = reporteService.reporteVentasPorMes(fechaInicio, fechaFin);
         byte[] bytes = excelExportService.exportarVentasPorMes(reporte);
-        String filename = "ventas-mes-" + reporte.getNombreMes() + "-" + anio + ".xlsx";
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String filename = "ventas-" + fechaInicio.format(fmt) + "_a_" + fechaFin.format(fmt) + ".xlsx";
         return excelResponse(bytes, filename);
     }
 
     @GetMapping("/clientes/excel")
     public ResponseEntity<byte[]> descargarClientesExcel(
-            @RequestParam(defaultValue = "0") int mes,
-            @RequestParam(defaultValue = "0") int anio) throws IOException {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) throws IOException {
 
-        if (mes == 0)  mes  = LocalDate.now().getMonthValue();
-        if (anio == 0) anio = LocalDate.now().getYear();
+        LocalDate[] rango = normalizarRango(fechaInicio, fechaFin);
+        fechaInicio = rango[0];
+        fechaFin = rango[1];
 
-        ReporteClientesDTO reporte = reporteService.reporteVentasPorCliente(mes, anio);
+        ReporteClientesDTO reporte = reporteService.reporteVentasPorCliente(fechaInicio, fechaFin);
         byte[] bytes = excelExportService.exportarVentasPorCliente(reporte);
-        String filename = "clientes-" + reporte.getNombreMes() + "-" + anio + ".xlsx";
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String filename = "clientes-" + fechaInicio.format(fmt) + "_a_" + fechaFin.format(fmt) + ".xlsx";
         return excelResponse(bytes, filename);
     }
 
     @GetMapping("/productos/excel")
     public ResponseEntity<byte[]> descargarProductosExcel(
-            @RequestParam(defaultValue = "0") int mes,
-            @RequestParam(defaultValue = "0") int anio) throws IOException {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) throws IOException {
 
-        if (mes == 0)  mes  = LocalDate.now().getMonthValue();
-        if (anio == 0) anio = LocalDate.now().getYear();
+        LocalDate[] rango = normalizarRango(fechaInicio, fechaFin);
+        fechaInicio = rango[0];
+        fechaFin = rango[1];
 
-        ReporteProductosDTO reporte = reporteService.reporteVentasPorProducto(mes, anio);
+        ReporteProductosDTO reporte = reporteService.reporteVentasPorProducto(fechaInicio, fechaFin);
         byte[] bytes = excelExportService.exportarVentasPorProducto(reporte);
-        String filename = "productos-" + reporte.getNombreMes() + "-" + anio + ".xlsx";
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String filename = "productos-" + fechaInicio.format(fmt) + "_a_" + fechaFin.format(fmt) + ".xlsx";
         return excelResponse(bytes, filename);
+    }
+
+    // Si no se pasan fechas, usa el mes actual (día 1 → hoy); si el inicio es
+    // posterior al fin, se intercambian.
+    private LocalDate[] normalizarRango(LocalDate fechaInicio, LocalDate fechaFin) {
+        LocalDate hoy = LocalDate.now();
+        if (fechaInicio == null) fechaInicio = hoy.withDayOfMonth(1);
+        if (fechaFin == null) fechaFin = hoy;
+        if (fechaFin.isBefore(fechaInicio)) {
+            LocalDate tmp = fechaInicio;
+            fechaInicio = fechaFin;
+            fechaFin = tmp;
+        }
+        return new LocalDate[]{fechaInicio, fechaFin};
     }
 
     private ResponseEntity<byte[]> excelResponse(byte[] bytes, String filename) {

@@ -14,49 +14,62 @@
 
     <th:block th:fragment="main-content">
 
-        <!-- ── Encabezado + selector ──────────────────────────────────────── -->
-        <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
-            <div class="d-flex align-items-center gap-3">
-                <a th:href="@{/reportes}" class="btn btn-outline-secondary btn-sm rounded-circle">
-                    <i class="bi bi-arrow-left"></i>
-                </a>
-                <div>
-                    <h4 class="fw-bold mb-1" style="color: var(--text-main);">Ventas por mes</h4>
-                    <p class="text-muted mb-0 small">
-                        Resumen mensual —
-                        <span th:text="${reporte.nombreMes + ' ' + reporte.anio}"
-                              class="fw-semibold text-dark"></span>
-                    </p>
-                </div>
+        <!-- ── Encabezado ─────────────────────────────────────────────────── -->
+        <div class="d-flex align-items-center gap-3 mb-3">
+            <a th:href="@{/reportes}" class="btn btn-outline-secondary btn-sm rounded-circle">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h4 class="fw-bold mb-1" style="color: var(--text-main);">Ventas por período</h4>
+                <p class="text-muted mb-0 small">
+                    Resumen del período —
+                    <span th:text="${#temporals.format(fechaInicio, 'dd MMM yyyy') + ' al ' + #temporals.format(fechaFin, 'dd MMM yyyy')}"
+                          class="fw-semibold text-dark"></span>
+                </p>
             </div>
+        </div>
 
-            <form th:action="@{/reportes/ventas-mes}" method="get"
-                  class="d-flex gap-2 align-items-center flex-wrap">
-                <!-- Selector mes: usa el año del reporte para obtener el nombre correcto -->
-                <select name="mes" class="form-select form-select-sm shadow-sm" style="width:140px">
-                    <option th:each="m : ${#numbers.sequence(1,12)}"
-                            th:value="${m}"
-                            th:selected="${m == mes}"
-                            th:text="${#temporals.format(#temporals.create(anioActual, m, 1), 'MMMM')}">
-                    </option>
-                </select>
-                <!-- Selector año: dinámico (año actual − 3 … año actual + 1) -->
-                <select name="anio" class="form-select form-select-sm shadow-sm" style="width:90px">
-                    <option th:each="a : ${#numbers.sequence(anioActual - 3, anioActual + 1)}"
-                            th:value="${a}"
-                            th:selected="${a == anio}"
-                            th:text="${a}">
-                    </option>
-                </select>
-                <button type="submit" class="btn btn-primary btn-sm fw-semibold shadow-sm"
-                        style="background-color: var(--accent-blue); border:none;">
-                    <i class="bi bi-search me-1"></i>Consultar
-                </button>
-                <a th:href="@{/reportes/ventas-mes/excel(mes=${mes}, anio=${anio})}"
-                   class="btn btn-success btn-sm fw-semibold shadow-sm">
-                    <i class="bi bi-file-earmark-excel me-1"></i>Excel
-                </a>
-            </form>
+        <!-- ── Barra de filtros ───────────────────────────────────────────── -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body py-3">
+                <form th:action="@{/reportes/ventas-mes}" method="get"
+                      class="d-flex flex-wrap align-items-end gap-3">
+
+                    <div>
+                        <label class="form-label small text-muted fw-semibold mb-1 d-block">Rango rápido</label>
+                        <div class="btn-group btn-group-sm shadow-sm" role="group" aria-label="Rangos rápidos">
+                            <button type="button" class="btn btn-outline-secondary preset-btn" data-preset="hoy">Hoy</button>
+                            <button type="button" class="btn btn-outline-secondary preset-btn" data-preset="7d">7 días</button>
+                            <button type="button" class="btn btn-outline-secondary preset-btn" data-preset="30d">30 días</button>
+                            <button type="button" class="btn btn-outline-secondary preset-btn" data-preset="mes">Este mes</button>
+                            <button type="button" class="btn btn-outline-secondary preset-btn" data-preset="anio">Este año</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="form-label small text-muted fw-semibold mb-1 d-block">Desde</label>
+                        <input type="date" name="fechaInicio" th:value="${fechaInicio}" th:max="${fechaFin}"
+                               class="form-control form-control-sm shadow-sm" style="width:160px" required>
+                    </div>
+
+                    <div>
+                        <label class="form-label small text-muted fw-semibold mb-1 d-block">Hasta</label>
+                        <input type="date" name="fechaFin" th:value="${fechaFin}" th:min="${fechaInicio}"
+                               class="form-control form-control-sm shadow-sm" style="width:160px" required>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm fw-semibold shadow-sm"
+                                style="background-color: var(--accent-blue); border:none;">
+                            <i class="bi bi-search me-1"></i>Consultar
+                        </button>
+                        <a th:href="@{/reportes/ventas-mes/excel(fechaInicio=${fechaInicio}, fechaFin=${fechaFin})}"
+                           class="btn btn-success btn-sm fw-semibold shadow-sm">
+                            <i class="bi bi-file-earmark-excel me-1"></i>Excel
+                        </a>
+                    </div>
+                </form>
+            </div>
         </div>
 
         <!-- ── Tarjetas de estadísticas ────────────────────────────────────── -->
@@ -189,7 +202,7 @@
                 <h6 class="fw-bold mb-0" style="color:var(--text-main)">
                     <i class="bi bi-calendar3 me-2 text-primary"></i>
                     Desglose diario —
-                    <span th:text="${reporte.nombreMes + ' ' + reporte.anio}"></span>
+                    <span th:text="${#temporals.format(fechaInicio, 'dd MMM yyyy') + ' al ' + #temporals.format(fechaFin, 'dd MMM yyyy')}"></span>
                 </h6>
                 <span class="badge bg-light text-muted"
                       th:text="${#lists.size(reporte.porDia) + ' días con ventas'}"></span>
@@ -214,10 +227,10 @@
                         <tr th:each="dia : ${reporte.porDia}">
                             <td class="ps-4">
                                 <span class="badge bg-primary rounded-pill fw-bold"
-                                      th:text="${dia.dia}"></span>
+                                      th:text="${dia.fecha.dayOfMonth}"></span>
                             </td>
                             <td class="text-muted small"
-                                th:text="${dia.dia + ' de ' + reporte.nombreMes + ' ' + reporte.anio}">
+                                th:text="${#temporals.format(dia.fecha, 'dd MMMM yyyy')}">
                             </td>
                             <td class="text-center">
                                 <span class="badge bg-light text-dark border"
@@ -230,7 +243,7 @@
                     </tbody>
                     <tfoot class="bg-light">
                         <tr>
-                            <td class="ps-4 fw-bold" colspan="2">Total del mes</td>
+                            <td class="ps-4 fw-bold" colspan="2">Total del período</td>
                             <td class="text-center fw-bold"
                                 th:text="${reporte.cantidadVentas + ' venta(s)'}"></td>
                             <td class="text-end pe-4 fw-bold text-primary"
@@ -247,7 +260,7 @@
                 <h6 class="fw-bold mb-0" style="color:var(--text-main)">
                     <i class="bi bi-file-earmark-text me-2 text-secondary"></i>
                     Resumen tributario —
-                    <span th:text="${reporte.nombreMes + ' ' + reporte.anio}"></span>
+                    <span th:text="${#temporals.format(fechaInicio, 'dd MMM yyyy') + ' al ' + #temporals.format(fechaFin, 'dd MMM yyyy')}"></span>
                 </h6>
             </div>
             <div class="table-responsive">
@@ -290,9 +303,38 @@
 
     <th:block th:fragment="extraScripts">
         <script>
-            // Auto-submit al cambiar mes o año
-            document.querySelectorAll('select[name="mes"], select[name="anio"]')
-                .forEach(sel => sel.addEventListener('change', () => sel.form.submit()));
+            (function () {
+                const inputInicio = document.querySelector('input[name="fechaInicio"]');
+                const inputFin    = document.querySelector('input[name="fechaFin"]');
+                if (!inputInicio || !inputFin) return;
+
+                const pad = n => String(n).padStart(2, '0');
+                const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+                // Mantiene coherente el rango al elegir fechas manualmente
+                inputInicio.addEventListener('change', () => { inputFin.min = inputInicio.value; });
+                inputFin.addEventListener('change', () => { inputInicio.max = inputFin.value; });
+
+                // Botones de rango rápido: calculan el rango y envían el formulario
+                document.querySelectorAll('.preset-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const hoy = new Date();
+                        let ini = new Date(hoy);
+                        switch (btn.dataset.preset) {
+                            case 'hoy':  break;
+                            case '7d':   ini.setDate(hoy.getDate() - 6);  break;
+                            case '30d':  ini.setDate(hoy.getDate() - 29); break;
+                            case 'mes':  ini = new Date(hoy.getFullYear(), hoy.getMonth(), 1); break;
+                            case 'anio': ini = new Date(hoy.getFullYear(), 0, 1); break;
+                        }
+                        inputInicio.max = '';
+                        inputFin.min = '';
+                        inputInicio.value = iso(ini);
+                        inputFin.value = iso(hoy);
+                        inputInicio.form.submit();
+                    });
+                });
+            })();
         </script>
     </th:block>
 

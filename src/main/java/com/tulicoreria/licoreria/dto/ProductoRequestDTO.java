@@ -2,6 +2,7 @@ package com.tulicoreria.licoreria.dto;
 
 import java.math.BigDecimal;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.AllArgsConstructor;
@@ -42,7 +43,10 @@ public class ProductoRequestDTO {
     private BigDecimal precioVenta;
     private Integer stock;
     private Integer stockMinimo;
-// nuevo
+
+    // Formato ISO (yyyy-MM-dd) para que th:field lo renderice correctamente
+    // en el <input type="date"> del formulario de edición.
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate fechaVencimiento;
 
     private Long categoriaId;

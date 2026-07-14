@@ -24,21 +24,6 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
     // ── Reporte por Cliente ──────────────────────────────────────────────────
 
-    // Clientes con más compras en un mes: devuelve [Cliente, cantVentas, totalGastado]
-    // Usado en ReporteService para el reporte mensual por cliente
-    @Query("SELECT v.cliente, COUNT(v), SUM(v.total) " +
-           "FROM Venta v " +
-           "WHERE v.estado = 'COMPLETADA' " +
-           "AND MONTH(v.fechaHora) = :mes " +
-           "AND YEAR(v.fechaHora) = :anio " +
-           "AND v.cliente IS NOT NULL " +
-           "GROUP BY v.cliente " +
-           "ORDER BY SUM(v.total) DESC")
-    List<Object[]> findClientesMasCompradoresPorMes(
-            @Param("mes") int mes,
-            @Param("anio") int anio
-    );
-
     // Clientes con más compras en un rango de fechas libre
     @Query("SELECT v.cliente, COUNT(v), SUM(v.total) " +
            "FROM Venta v " +

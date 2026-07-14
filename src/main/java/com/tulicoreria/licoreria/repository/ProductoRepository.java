@@ -43,20 +43,6 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
     // ── Reporte por Producto ─────────────────────────────────────────────────
 
-    // Productos más vendidos en un mes: devuelve [Producto, unidades, ingresos]
-    // Usado en ReporteService para el reporte mensual por producto
-    @Query("SELECT d.producto, SUM(d.cantidad), SUM(d.subtotal) " +
-           "FROM DetalleVenta d JOIN d.venta v " +
-           "WHERE v.estado = 'COMPLETADA' " +
-           "AND MONTH(v.fechaHora) = :mes " +
-           "AND YEAR(v.fechaHora) = :anio " +
-           "GROUP BY d.producto " +
-           "ORDER BY SUM(d.cantidad) DESC")
-    List<Object[]> findProductosMasVendidosPorMes(
-            @Param("mes") int mes,
-            @Param("anio") int anio
-    );
-
     // Productos más vendidos en un rango de fechas libre
     @Query("SELECT d.producto, SUM(d.cantidad), SUM(d.subtotal) " +
            "FROM DetalleVenta d JOIN d.venta v " +

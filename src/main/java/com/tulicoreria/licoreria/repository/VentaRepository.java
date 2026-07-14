@@ -59,7 +59,7 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
             @Param("fin") LocalDateTime fin
     );
 
-    // ── Reporte por Mes ──────────────────────────────────────────────────────
+    // ── Reporte por Período ──────────────────────────────────────────────────
 
     // Resumen de ventas agrupado por mes y año:
     // devuelve [anio, mes, cantVentas, totalVendido]
@@ -72,54 +72,60 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
            "ORDER BY YEAR(v.fechaHora) DESC, MONTH(v.fechaHora) DESC")
     List<Object[]> findResumenPorMes();
 
-    // Detalle de ventas de un mes específico con totales por tipo de comprobante:
+    // Detalle de ventas de un período con totales por tipo de comprobante:
     // devuelve [tipoComprobante, cantVentas, totalVendido]
     @Query("SELECT v.tipoComprobante, COUNT(v), SUM(v.total) " +
            "FROM Venta v " +
            "WHERE v.estado = 'COMPLETADA' " +
-           "AND MONTH(v.fechaHora) = :mes " +
-           "AND YEAR(v.fechaHora) = :anio " +
+           "AND v.fechaHora BETWEEN :inicio AND :fin " +
            "GROUP BY v.tipoComprobante")
-    List<Object[]> findResumenPorTipoComprobante(
-            @Param("mes") int mes,
-            @Param("anio") int anio
+    List<Object[]> findResumenPorTipoComprobanteEnRango(
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fin") LocalDateTime fin
     );
 
-    // Totales por método de pago en un mes:
+    // Totales por método de pago en un período:
     // devuelve [metodoPago, cantVentas, totalVendido]
     @Query("SELECT v.metodoPago, COUNT(v), SUM(v.total) " +
            "FROM Venta v " +
            "WHERE v.estado = 'COMPLETADA' " +
-           "AND MONTH(v.fechaHora) = :mes " +
-           "AND YEAR(v.fechaHora) = :anio " +
+           "AND v.fechaHora BETWEEN :inicio AND :fin " +
            "GROUP BY v.metodoPago")
-    List<Object[]> findResumenPorMetodoPago(
-            @Param("mes") int mes,
-            @Param("anio") int anio
+    List<Object[]> findResumenPorMetodoPagoEnRango(
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fin") LocalDateTime fin
     );
 
-    // Total, IGV y subtotal del mes para declaración tributaria.
+    // Total, IGV y subtotal del período para declaración tributaria.
     // Retorna List<Object[]> con exactamente 1 fila: [subtotal, igv, total].
     @Query("SELECT COALESCE(SUM(v.subtotal), 0), " +
            "COALESCE(SUM(v.igv), 0), " +
            "COALESCE(SUM(v.total), 0) " +
            "FROM Venta v " +
            "WHERE v.estado = 'COMPLETADA' " +
-           "AND MONTH(v.fechaHora) = :mes " +
-           "AND YEAR(v.fechaHora)  = :anio")
-    List<Object[]> findTotalesPorMes(
-            @Param("mes") int mes,
-            @Param("anio") int anio);
+           "AND v.fechaHora BETWEEN :inicio AND :fin")
+    List<Object[]> findTotalesPorRango(
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fin") LocalDateTime fin);
 
-    // Desglose diario del mes: [dia(int), cantVentas(Long), total(BigDecimal)]
-    @Query("SELECT DAY(v.fechaHora), COUNT(v), SUM(v.total) " +
+    // Desglose diario del período: [fecha(date), cantVentas(Long), total(BigDecimal)]
+    @Query("SELECT CAST(v.fechaHora AS date), COUNT(v), SUM(v.total) " +
            "FROM Venta v " +
            "WHERE v.estado = 'COMPLETADA' " +
-           "AND MONTH(v.fechaHora) = :mes " +
-           "AND YEAR(v.fechaHora)  = :anio " +
-           "GROUP BY DAY(v.fechaHora) " +
-           "ORDER BY DAY(v.fechaHora)")
-    List<Object[]> findResumenPorDia(
-            @Param("mes") int mes,
-            @Param("anio") int anio);
+           "AND v.fechaHora BETWEEN :inicio AND :fin " +
+           "GROUP BY CAST(v.fechaHora AS date) " +
+           "ORDER BY CAST(v.fechaHora AS date)")
+    List<Object[]> findResumenPorDiaEnRango(
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fin") LocalDateTime fin);
+
+    // Ventas COMPLETADA del período con su cliente cargado, ordenadas por fecha.
+    // Usada para el detalle de ventas (con fecha y hora) de los reportes Excel.
+    @Query("SELECT v FROM Venta v LEFT JOIN FETCH v.cliente " +
+           "WHERE v.estado = 'COMPLETADA' " +
+           "AND v.fechaHora BETWEEN :inicio AND :fin " +
+           "ORDER BY v.fechaHora")
+    List<Venta> findVentasDetalleEnRango(
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fin") LocalDateTime fin);
 }

@@ -4,6 +4,7 @@ import com.tulicoreria.licoreria.dto.DashboardDTO;
 import com.tulicoreria.licoreria.model.Cliente;
 import com.tulicoreria.licoreria.model.OrdenCompra.EstadoOrden;
 import com.tulicoreria.licoreria.model.Producto;
+import com.tulicoreria.licoreria.model.Venta;
 import com.tulicoreria.licoreria.repository.*;
 import com.tulicoreria.licoreria.service.ReporteService;
 import lombok.*;
@@ -14,9 +15,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Month;
 import java.time.format.DateTimeFormatter;
-import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -31,21 +30,22 @@ public class ReporteServiceImpl implements ReporteService {
     private final OrdenCompraRepository ordenCompraRepository;
 
     // ════════════════════════════════════════════════════════════════════════
-    // REPORTE 1 — VENTAS POR MES
+    // REPORTE 1 — VENTAS POR PERÍODO
     // ════════════════════════════════════════════════════════════════════════
     @Override
     @Transactional(readOnly = true)
-    public ReporteVentasMesDTO reporteVentasPorMes(int mes, int anio) {
+    public ReporteVentasMesDTO reporteVentasPorMes(LocalDate fechaInicio, LocalDate fechaFin) {
 
-        // Totales del mes — la query devuelve List<Object[]> con 1 fila siempre
-        List<Object[]> totalesList = ventaRepository.findTotalesPorMes(mes, anio);
+        LocalDateTime inicio = fechaInicio.atStartOfDay();
+        LocalDateTime fin    = fechaFin.atTime(23, 59, 59);
+
+        // Totales del período — la query devuelve List<Object[]> con 1 fila siempre
+        List<Object[]> totalesList = ventaRepository.findTotalesPorRango(inicio, fin);
         Object[] totales  = totalesList.isEmpty() ? new Object[]{0, 0, 0} : totalesList.get(0);
         BigDecimal subtotal = toBigDecimal(totales, 0);
         BigDecimal igv      = toBigDecimal(totales, 1);
         BigDecimal total    = toBigDecimal(totales, 2);
 
-        LocalDateTime inicio = LocalDateTime.of(anio, mes, 1, 0, 0);
-        LocalDateTime fin    = inicio.plusMonths(1).minusSeconds(1);
         Long cantidadVentas  = ventaRepository.countVentasByFechaHoraBetween(inicio, fin);
         if (cantidadVentas == null) cantidadVentas = 0L;
 
@@ -53,9 +53,9 @@ public class ReporteServiceImpl implements ReporteService {
                 ? total.divide(BigDecimal.valueOf(cantidadVentas), 2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
 
-        // Por tipo de comprobante — se calcula el % sobre el total del mes
+        // Por tipo de comprobante — se calcula el % sobre el total del período
         List<ResumenComprobanteDTO> comprobantes = ventaRepository
-                .findResumenPorTipoComprobante(mes, anio).stream()
+                .findResumenPorTipoComprobanteEnRango(inicio, fin).stream()
                 .map(row -> {
                     BigDecimal rowTotal = toBigDecimal(row, 2);
                     int pct = calcularPorcentaje(rowTotal, total);
@@ -70,7 +70,7 @@ public class ReporteServiceImpl implements ReporteService {
 
         // Por método de pago
         List<ResumenMetodoPagoDTO> metodosPago = ventaRepository
-                .findResumenPorMetodoPago(mes, anio).stream()
+                .findResumenPorMetodoPagoEnRango(inicio, fin).stream()
                 .map(row -> {
                     BigDecimal rowTotal = toBigDecimal(row, 2);
                     int pct = calcularPorcentaje(rowTotal, total);
@@ -85,23 +85,23 @@ public class ReporteServiceImpl implements ReporteService {
 
         // Desglose diario
         List<ResumenDiaDTO> porDia = ventaRepository
-                .findResumenPorDia(mes, anio).stream()
+                .findResumenPorDiaEnRango(inicio, fin).stream()
                 .map(row -> ResumenDiaDTO.builder()
-                        .dia(toInt(row[0]))
+                        .fecha(toLocalDate(row[0]))
                         .cantidadVentas(toLong(row[1]))
                         .total(toBigDecimal(row, 2))
                         .build())
                 .toList();
 
         return ReporteVentasMesDTO.builder()
-                .mes(mes).anio(anio)
-                .nombreMes(nombreMes(mes))
+                .fechaInicio(fechaInicio).fechaFin(fechaFin)
                 .cantidadVentas(cantidadVentas)
                 .subtotal(subtotal).igv(igv).total(total)
                 .ticketPromedio(ticketPromedio)
                 .porTipoComprobante(comprobantes)
                 .porMetodoPago(metodosPago)
                 .porDia(porDia)
+                .detalleVentas(buildDetalleVentas(inicio, fin))
                 .build();
     }
 
@@ -110,10 +110,13 @@ public class ReporteServiceImpl implements ReporteService {
     // ════════════════════════════════════════════════════════════════════════
     @Override
     @Transactional(readOnly = true)
-    public ReporteClientesDTO reporteVentasPorCliente(int mes, int anio) {
+    public ReporteClientesDTO reporteVentasPorCliente(LocalDate fechaInicio, LocalDate fechaFin) {
+
+        LocalDateTime inicio = fechaInicio.atStartOfDay();
+        LocalDateTime fin    = fechaFin.atTime(23, 59, 59);
 
         // Primero construimos los items sin porcentaje para calcular el total
-        List<Object[]> rows = clienteRepository.findClientesMasCompradoresPorMes(mes, anio);
+        List<Object[]> rows = clienteRepository.findClientesMasCompradoresPorRango(inicio, fin);
 
         List<ReporteClienteItemDTO> itemsSinPct = rows.stream()
                 .map(row -> {
@@ -129,27 +132,27 @@ public class ReporteServiceImpl implements ReporteService {
                             .build();
                 }).toList();
 
-        BigDecimal totalMes = itemsSinPct.stream()
+        BigDecimal totalPeriodo = itemsSinPct.stream()
                 .map(ReporteClienteItemDTO::getTotalGastado)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // Segunda pasada: asignar porcentaje ahora que tenemos el total
         List<ReporteClienteItemDTO> items = itemsSinPct.stream()
                 .map(item -> {
-                    item.setPorcentaje(calcularPorcentaje(item.getTotalGastado(), totalMes));
+                    item.setPorcentaje(calcularPorcentaje(item.getTotalGastado(), totalPeriodo));
                     return item;
                 }).toList();
 
         BigDecimal ticketPromedio = items.isEmpty() ? BigDecimal.ZERO
-                : totalMes.divide(BigDecimal.valueOf(items.size()), 2, RoundingMode.HALF_UP);
+                : totalPeriodo.divide(BigDecimal.valueOf(items.size()), 2, RoundingMode.HALF_UP);
 
         return ReporteClientesDTO.builder()
-                .mes(mes).anio(anio)
-                .nombreMes(nombreMes(mes))
+                .fechaInicio(fechaInicio).fechaFin(fechaFin)
                 .totalClientes(items.size())
-                .totalVendido(totalMes)
+                .totalVendido(totalPeriodo)
                 .ticketPromedio(ticketPromedio)
                 .clientes(items)
+                .detalleVentas(buildDetalleVentas(inicio, fin))
                 .build();
     }
 
@@ -158,11 +161,14 @@ public class ReporteServiceImpl implements ReporteService {
     // ════════════════════════════════════════════════════════════════════════
     @Override
     @Transactional(readOnly = true)
-    public ReporteProductosDTO reporteVentasPorProducto(int mes, int anio) {
+    public ReporteProductosDTO reporteVentasPorProducto(LocalDate fechaInicio, LocalDate fechaFin) {
+
+        LocalDateTime inicio = fechaInicio.atStartOfDay();
+        LocalDateTime fin    = fechaFin.atTime(23, 59, 59);
 
         // Primera pasada: construir items sin porcentaje
         List<ReporteProductoItemDTO> itemsSinPct = productoRepository
-                .findProductosMasVendidosPorMes(mes, anio).stream()
+                .findProductosMasVendidosPorRango(inicio, fin).stream()
                 .map(row -> {
                     Producto p = (Producto) row[0];
                     return ReporteProductoItemDTO.builder()
@@ -195,12 +201,12 @@ public class ReporteServiceImpl implements ReporteService {
                 }).toList();
 
         return ReporteProductosDTO.builder()
-                .mes(mes).anio(anio)
-                .nombreMes(nombreMes(mes))
+                .fechaInicio(fechaInicio).fechaFin(fechaFin)
                 .totalProductosVendidos(items.size())
                 .totalUnidades(totalUnidades)
                 .totalIngresos(totalIngresos)
                 .productos(items)
+                .detalleVentas(buildDetalleVentas(inicio, fin))
                 .build();
     }
 
@@ -243,9 +249,6 @@ public class ReporteServiceImpl implements ReporteService {
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
-    private String nombreMes(int mes) {
-        return Month.of(mes).getDisplayName(TextStyle.FULL, Locale.of("es", "PE"));
-    }
 
     /** Convierte cualquier elemento de Object[] a BigDecimal de forma segura. */
     private BigDecimal toBigDecimal(Object[] arr, int idx) {
@@ -264,11 +267,15 @@ public class ReporteServiceImpl implements ReporteService {
         return 0L;
     }
 
-    /** DAY() devuelve Integer en la mayoría de proveedores. */
-    private int toInt(Object v) {
-        if (v == null) return 0;
-        if (v instanceof Number n) return n.intValue();
-        return 0;
+    /** CAST(... AS date) puede devolver LocalDate, java.sql.Date o Timestamp según el proveedor JPA. */
+    private LocalDate toLocalDate(Object v) {
+        if (v == null) return null;
+        if (v instanceof LocalDate ld) return ld;
+        if (v instanceof java.sql.Date sd) return sd.toLocalDate();
+        if (v instanceof java.sql.Timestamp ts) return ts.toLocalDateTime().toLocalDate();
+        if (v instanceof LocalDateTime ldt) return ldt.toLocalDate();
+        if (v instanceof java.util.Date d) return d.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+        return null;
     }
 
     /** Porcentaje entero de parcial respecto al total; 0 si total es 0. */
@@ -279,6 +286,24 @@ public class ReporteServiceImpl implements ReporteService {
                 .intValue();
     }
 
+    /** Lista de ventas del período con su fecha/hora, para el detalle de los Excel. */
+    private List<VentaDetalleDTO> buildDetalleVentas(LocalDateTime inicio, LocalDateTime fin) {
+        return ventaRepository.findVentasDetalleEnRango(inicio, fin).stream()
+                .map(v -> VentaDetalleDTO.builder()
+                        .fechaHora(v.getFechaHora())
+                        .numeroComprobante(v.getNumeroComprobante())
+                        .tipoComprobante(v.getTipoComprobante().name())
+                        .cliente(v.getCliente() != null
+                                ? v.getCliente().getNombre() + " " + v.getCliente().getApellido()
+                                : "Público general")
+                        .metodoPago(v.getMetodoPago().name())
+                        .subtotal(v.getSubtotal())
+                        .igv(v.getIgv())
+                        .total(v.getTotal())
+                        .build())
+                .toList();
+    }
+
 
     // ════════════════════════════════════════════════════════════════════════
     // DTOs INTERNOS — solo usados por ReporteService
@@ -286,9 +311,8 @@ public class ReporteServiceImpl implements ReporteService {
 
     @Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
     public static class ReporteVentasMesDTO {
-        private int mes;
-        private int anio;
-        private String nombreMes;
+        private LocalDate fechaInicio;
+        private LocalDate fechaFin;
         private Long cantidadVentas;
         private BigDecimal subtotal;
         private BigDecimal igv;
@@ -297,6 +321,19 @@ public class ReporteServiceImpl implements ReporteService {
         private List<ResumenComprobanteDTO> porTipoComprobante;
         private List<ResumenMetodoPagoDTO>  porMetodoPago;
         private List<ResumenDiaDTO>         porDia;
+        private List<VentaDetalleDTO>       detalleVentas;
+    }
+
+    @Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class VentaDetalleDTO {
+        private LocalDateTime fechaHora;
+        private String numeroComprobante;
+        private String tipoComprobante;
+        private String cliente;
+        private String metodoPago;
+        private BigDecimal subtotal;
+        private BigDecimal igv;
+        private BigDecimal total;
     }
 
     @Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
@@ -317,20 +354,20 @@ public class ReporteServiceImpl implements ReporteService {
 
     @Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
     public static class ResumenDiaDTO {
-        private int dia;
+        private LocalDate fecha;
         private Long cantidadVentas;
         private BigDecimal total;
     }
 
     @Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
     public static class ReporteClientesDTO {
-        private int mes;
-        private int anio;
-        private String nombreMes;
+        private LocalDate fechaInicio;
+        private LocalDate fechaFin;
         private int totalClientes;
         private BigDecimal totalVendido;
         private BigDecimal ticketPromedio;
         private List<ReporteClienteItemDTO> clientes;
+        private List<VentaDetalleDTO> detalleVentas;
     }
 
     @Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
@@ -346,13 +383,13 @@ public class ReporteServiceImpl implements ReporteService {
 
     @Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
     public static class ReporteProductosDTO {
-        private int mes;
-        private int anio;
-        private String nombreMes;
+        private LocalDate fechaInicio;
+        private LocalDate fechaFin;
         private int totalProductosVendidos;
         private Long totalUnidades;
         private BigDecimal totalIngresos;
         private List<ReporteProductoItemDTO> productos;
+        private List<VentaDetalleDTO> detalleVentas;
     }
 
     @Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor

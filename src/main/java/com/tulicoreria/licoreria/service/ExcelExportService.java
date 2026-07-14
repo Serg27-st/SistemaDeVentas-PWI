@@ -9,18 +9,35 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Service
 public class ExcelExportService {
 
+    private static final DateTimeFormatter FECHA_SHEET  = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private static final DateTimeFormatter FECHA_TITULO = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DateTimeFormatter FECHA_HORA   = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    private String rangoSheet(LocalDate inicio, LocalDate fin) {
+        return inicio.format(FECHA_SHEET) + " a " + fin.format(FECHA_SHEET);
+    }
+
+    private String rangoTitulo(LocalDate inicio, LocalDate fin) {
+        return inicio.format(FECHA_TITULO) + " al " + fin.format(FECHA_TITULO);
+    }
+
     // ════════════════════════════════════════════════════════════════════════
-    // REPORTE 1 — VENTAS POR MES
+    // REPORTE 1 — VENTAS POR PERÍODO
     // ════════════════════════════════════════════════════════════════════════
     public byte[] exportarVentasPorMes(ReporteVentasMesDTO reporte) throws IOException {
         try (XSSFWorkbook wb = new XSSFWorkbook();
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
-            Sheet sheet = wb.createSheet(reporte.getNombreMes() + " " + reporte.getAnio());
+            String rangoSheet  = rangoSheet(reporte.getFechaInicio(), reporte.getFechaFin());
+            String rangoTitulo = rangoTitulo(reporte.getFechaInicio(), reporte.getFechaFin());
+
+            Sheet sheet = wb.createSheet(rangoSheet);
 
             CellStyle headerStyle   = headerStyle(wb);
             CellStyle currencyStyle = currencyStyle(wb);
@@ -30,7 +47,7 @@ public class ExcelExportService {
             int r = 0;
 
             // Título
-            r = writeTitle(sheet, r, "Reporte de Ventas — " + reporte.getNombreMes() + " " + reporte.getAnio(), titleStyle, 3);
+            r = writeTitle(sheet, r, "Reporte de Ventas — " + rangoTitulo, titleStyle, 3);
 
             // Resumen general
             Row h = sheet.createRow(r++);
@@ -81,19 +98,21 @@ public class ExcelExportService {
             // Desglose diario
             r = writeSectionTitle(sheet, r, "Desglose Diario", boldStyle);
             Row dh = sheet.createRow(r++);
-            headerCell(dh, 0, "Día",              headerStyle);
-            headerCell(dh, 1, "Fecha",            headerStyle);
-            headerCell(dh, 2, "Cantidad Ventas",  headerStyle);
-            headerCell(dh, 3, "Total del Día",    headerStyle);
+            headerCell(dh, 0, "Fecha",            headerStyle);
+            headerCell(dh, 1, "Cantidad Ventas",  headerStyle);
+            headerCell(dh, 2, "Total del Día",    headerStyle);
             for (ResumenDiaDTO dia : reporte.getPorDia()) {
                 Row row = sheet.createRow(r++);
-                row.createCell(0).setCellValue(dia.getDia());
-                row.createCell(1).setCellValue(dia.getDia() + " de " + reporte.getNombreMes() + " " + reporte.getAnio());
-                row.createCell(2).setCellValue(dia.getCantidadVentas());
-                currencyCell(row, 3, dia.getTotal(), currencyStyle);
+                row.createCell(0).setCellValue(dia.getFecha().format(FECHA_TITULO));
+                row.createCell(1).setCellValue(dia.getCantidadVentas());
+                currencyCell(row, 2, dia.getTotal(), currencyStyle);
             }
 
             autoSize(sheet, 4);
+
+            // Hoja aparte con el detalle de cada venta y su fecha/hora
+            writeDetalleVentasSheet(wb, reporte.getDetalleVentas(), headerStyle, currencyStyle);
+
             wb.write(out);
             return out.toByteArray();
         }
@@ -106,7 +125,10 @@ public class ExcelExportService {
         try (XSSFWorkbook wb = new XSSFWorkbook();
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
-            Sheet sheet = wb.createSheet(reporte.getNombreMes() + " " + reporte.getAnio());
+            String rangoSheet  = rangoSheet(reporte.getFechaInicio(), reporte.getFechaFin());
+            String rangoTitulo = rangoTitulo(reporte.getFechaInicio(), reporte.getFechaFin());
+
+            Sheet sheet = wb.createSheet(rangoSheet);
 
             CellStyle headerStyle   = headerStyle(wb);
             CellStyle currencyStyle = currencyStyle(wb);
@@ -114,11 +136,11 @@ public class ExcelExportService {
 
             int r = 0;
 
-            r = writeTitle(sheet, r, "Reporte por Cliente — " + reporte.getNombreMes() + " " + reporte.getAnio(), titleStyle, 6);
+            r = writeTitle(sheet, r, "Reporte por Cliente — " + rangoTitulo, titleStyle, 6);
 
             // Resumen
             Row sh = sheet.createRow(r++);
-            headerCell(sh, 0, "Clientes del mes", headerStyle);
+            headerCell(sh, 0, "Clientes del período", headerStyle);
             headerCell(sh, 1, "Total vendido",    headerStyle);
             headerCell(sh, 2, "Gasto promedio",   headerStyle);
 
@@ -151,6 +173,10 @@ public class ExcelExportService {
             }
 
             autoSize(sheet, 7);
+
+            // Hoja aparte con el detalle de cada venta y su fecha/hora
+            writeDetalleVentasSheet(wb, reporte.getDetalleVentas(), headerStyle, currencyStyle);
+
             wb.write(out);
             return out.toByteArray();
         }
@@ -163,7 +189,10 @@ public class ExcelExportService {
         try (XSSFWorkbook wb = new XSSFWorkbook();
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
-            Sheet sheet = wb.createSheet(reporte.getNombreMes() + " " + reporte.getAnio());
+            String rangoSheet  = rangoSheet(reporte.getFechaInicio(), reporte.getFechaFin());
+            String rangoTitulo = rangoTitulo(reporte.getFechaInicio(), reporte.getFechaFin());
+
+            Sheet sheet = wb.createSheet(rangoSheet);
 
             CellStyle headerStyle   = headerStyle(wb);
             CellStyle currencyStyle = currencyStyle(wb);
@@ -171,7 +200,7 @@ public class ExcelExportService {
 
             int r = 0;
 
-            r = writeTitle(sheet, r, "Reporte por Producto — " + reporte.getNombreMes() + " " + reporte.getAnio(), titleStyle, 8);
+            r = writeTitle(sheet, r, "Reporte por Producto — " + rangoTitulo, titleStyle, 8);
 
             // Resumen
             Row sh = sheet.createRow(r++);
@@ -220,12 +249,49 @@ public class ExcelExportService {
             }
 
             autoSize(sheet, 10);
+
+            // Hoja aparte con el detalle de cada venta y su fecha/hora
+            writeDetalleVentasSheet(wb, reporte.getDetalleVentas(), headerStyle, currencyStyle);
+
             wb.write(out);
             return out.toByteArray();
         }
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
+
+    /** Hoja "Detalle de Ventas": cada venta del período con su fecha y hora. */
+    private void writeDetalleVentasSheet(Workbook wb, java.util.List<VentaDetalleDTO> ventas,
+                                         CellStyle headerStyle, CellStyle currencyStyle) {
+        Sheet sheet = wb.createSheet("Detalle de Ventas");
+        int r = 0;
+
+        Row h = sheet.createRow(r++);
+        headerCell(h, 0, "Fecha y Hora",   headerStyle);
+        headerCell(h, 1, "N° Comprobante", headerStyle);
+        headerCell(h, 2, "Tipo",           headerStyle);
+        headerCell(h, 3, "Cliente",        headerStyle);
+        headerCell(h, 4, "Método de Pago", headerStyle);
+        headerCell(h, 5, "Subtotal",       headerStyle);
+        headerCell(h, 6, "IGV",            headerStyle);
+        headerCell(h, 7, "Total",          headerStyle);
+
+        if (ventas != null) {
+            for (VentaDetalleDTO v : ventas) {
+                Row row = sheet.createRow(r++);
+                row.createCell(0).setCellValue(v.getFechaHora() != null ? v.getFechaHora().format(FECHA_HORA) : "");
+                row.createCell(1).setCellValue(v.getNumeroComprobante());
+                row.createCell(2).setCellValue(v.getTipoComprobante());
+                row.createCell(3).setCellValue(v.getCliente());
+                row.createCell(4).setCellValue(v.getMetodoPago());
+                currencyCell(row, 5, v.getSubtotal(), currencyStyle);
+                currencyCell(row, 6, v.getIgv(),      currencyStyle);
+                currencyCell(row, 7, v.getTotal(),    currencyStyle);
+            }
+        }
+
+        autoSize(sheet, 8);
+    }
 
     private int writeTitle(Sheet sheet, int rowNum, String text, CellStyle style, int lastCol) {
         Row row = sheet.createRow(rowNum);

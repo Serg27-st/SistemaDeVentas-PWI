@@ -11,10 +11,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.tulicoreria.licoreria.dto.UsuarioRequestDTO;
+import com.tulicoreria.licoreria.model.Rol;
 import com.tulicoreria.licoreria.repository.RolRepository;
 import com.tulicoreria.licoreria.service.UsuarioService;
 
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
 
 @Controller
 @RequestMapping("/usuarios")
@@ -34,7 +37,7 @@ public class UsuarioController {
     @GetMapping("/nuevo")
     public String nuevoForm(Model model) {
         model.addAttribute("usuario", new UsuarioRequestDTO());
-        model.addAttribute("roles", rolRepository.findAll());
+        model.addAttribute("roles", rolesAsignables());
         return "usuarios/formulario";
     }
 
@@ -47,12 +50,21 @@ public class UsuarioController {
             flash.addFlashAttribute("exito", "Usuario creado correctamente");
             return "redirect:/usuarios"; // Solo redirecciona si todo salió bien
         } catch (RuntimeException e) {
-            // 💡 MEJORA: Si hay error, recarga la misma página inyectando los datos enviados 
+            // 💡 MEJORA: Si hay error, recarga la misma página inyectando los datos enviados
             // para que el administrador no pierda el texto que ya digitó.
             model.addAttribute("error", e.getMessage());
-            model.addAttribute("roles", rolRepository.findAll());
+            model.addAttribute("roles", rolesAsignables());
             return "usuarios/formulario";
         }
+    }
+
+    // ROLE_CLIENTE es exclusivo del autoregistro público (tienda web) y no
+    // corresponde a una cuenta de personal interno: si se asignara aquí, ese
+    // usuario obtendría acceso a "/mi-cuenta" sin tener un ClienteWeb asociado.
+    private List<Rol> rolesAsignables() {
+        return rolRepository.findAll().stream()
+                .filter(rol -> !"ROLE_CLIENTE".equals(rol.getNombre()))
+                .toList();
     }
 
     @PostMapping("/desactivar/{id}")

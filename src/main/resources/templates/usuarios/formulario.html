@@ -113,8 +113,9 @@
 
                                 <div class="row g-3">
                                     <div th:each="rol : ${roles}" class="col-md-4">
-                                        <input type="checkbox" class="btn-check" name="rolIds" th:value="${rol.id}"
-                                            th:id="'rol-' + ${rol.id}" />
+                                        <!-- radio (no checkbox): un usuario interno tiene exactamente un rol -->
+                                        <input type="radio" class="btn-check" name="rolId" th:value="${rol.id}"
+                                            th:id="'rol-' + ${rol.id}" required />
                                         <label th:for="'rol-' + ${rol.id}"
                                             class="btn btn-outline-light text-start w-100 p-3 h-100 shadow-sm border rounded-3 position-relative d-flex flex-column justify-content-between text-wrap"
                                             style="transition: all 0.2s ease; cursor: pointer; min-height: 110px;">
@@ -236,11 +237,11 @@
                         confirmar.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
 
-                    // Verificar que al menos un rol esté seleccionado
-                    const rolesChecked = document.querySelectorAll('input[name="rolIds"]:checked');
-                    if (rolesChecked.length === 0) {
+                    // Verificar que se haya seleccionado un rol (radio: como máximo 1 ya lo garantiza el navegador)
+                    const rolSeleccionado = document.querySelector('input[name="rolId"]:checked');
+                    if (!rolSeleccionado) {
                         valido = false;
-                        alert('Por favor, selecciona al menos un rol de acceso para el usuario.');
+                        alert('Por favor, selecciona un rol de acceso para el usuario.');
                     }
 
                     if (!valido) {

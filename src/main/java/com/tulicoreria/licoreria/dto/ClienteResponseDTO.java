@@ -2,6 +2,8 @@
 
 import java.time.LocalDate;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 import com.tulicoreria.licoreria.model.Cliente.TipoDocumento;
 
 import lombok.AllArgsConstructor;
@@ -22,7 +24,12 @@ public class ClienteResponseDTO {
     private String nombreCompleto;       // nombre + apellido para mostrar en vista
     private TipoDocumento tipoDocumento;
     private String numeroDocumento;
+
+    // Formato ISO (yyyy-MM-dd) para que th:field lo renderice correctamente
+    // en el <input type="date"> del formulario de edición.
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate fechaNacimiento;
+
     private String telefono;
     private String correo;
     private String direccion;

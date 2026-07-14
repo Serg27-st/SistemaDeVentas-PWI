@@ -2,8 +2,6 @@ package com.tulicoreria.licoreria.dto;
 
 import lombok.*;
 
-import java.util.Set;
-
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,5 +12,7 @@ public class UsuarioRequestDTO {
     private String password;
     private String nombreCompleto;
     private String correo;
-    private Set<Long> rolIds;
+
+    // Un usuario interno tiene exactamente un rol (Administrador, Vendedor o Almacén)
+    private Long rolId;
 }

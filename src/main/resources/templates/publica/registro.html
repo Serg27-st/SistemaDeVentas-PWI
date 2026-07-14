@@ -67,7 +67,7 @@
             </div>
 
             <!-- Formulario -->
-            <form th:action="@{/registro}" method="post" th:object="${dto}">
+            <form th:action="@{/registro}" method="post" th:object="${dto}" id="formRegistro">
               <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
               <div class="row g-3">
@@ -125,10 +125,16 @@
                 </div>
 
                 <div class="col-sm-6">
-                  <label class="form-label">Fecha de nacimiento</label>
-                  <input type="date" name="fechaNacimiento" class="form-control"
-                         th:value="${dto?.fechaNacimiento}"/>
-                  <div class="form-text">Requerida para verificar mayoría de edad.</div>
+                  <label class="form-label">Fecha de nacimiento *</label>
+                  <input type="date" name="fechaNacimiento" id="fechaNac" class="form-control"
+                         th:value="${dto?.fechaNacimiento}"
+                         th:max="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}"
+                         required/>
+                  <div class="form-text">Debes ser mayor de 18 años para registrarte.</div>
+                  <div id="alertaMenor" class="alert alert-danger py-2 mt-2 small d-none border-0">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i>
+                    Debes ser mayor de 18 años para crear una cuenta.
+                  </div>
                 </div>
 
                 <div class="col-sm-6">
@@ -213,6 +219,38 @@
         ? '<i class="bi bi-plus me-1"></i>Agregar dirección de envío (opcional)'
         : '<i class="bi bi-dash me-1"></i>Ocultar dirección';
     }
+
+    // Bloquea el registro de menores de 18 años (la tienda vende alcohol)
+    const fechaNac = document.getElementById('fechaNac');
+    const alertaMenor = document.getElementById('alertaMenor');
+    const formRegistro = document.getElementById('formRegistro');
+
+    function esMayorDeEdad(fechaStr) {
+      const hoy = new Date();
+      const nacimiento = new Date(fechaStr + 'T00:00:00');
+      let edad = hoy.getFullYear() - nacimiento.getFullYear();
+      const mes = hoy.getMonth() - nacimiento.getMonth();
+      if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) edad--;
+      return edad >= 18;
+    }
+
+    function verificarEdad() {
+      if (!fechaNac.value) { alertaMenor.classList.add('d-none'); return true; }
+      const esMenor = !esMayorDeEdad(fechaNac.value);
+      alertaMenor.classList.toggle('d-none', !esMenor);
+      fechaNac.setCustomValidity(esMenor ? 'Debes ser mayor de 18 años.' : '');
+      return !esMenor;
+    }
+
+    fechaNac.addEventListener('change', verificarEdad);
+    verificarEdad(); // por si el form recarga con una fecha ya escrita (ej: correo duplicado)
+
+    formRegistro.addEventListener('submit', function(e) {
+      if (!verificarEdad()) {
+        e.preventDefault();
+        fechaNac.focus();
+      }
+    });
 
     // Si hay datos de dirección (vuelta tras error), mostrar la sección
     (function() {

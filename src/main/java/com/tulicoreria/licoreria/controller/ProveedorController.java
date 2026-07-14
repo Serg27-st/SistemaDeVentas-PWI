@@ -59,6 +59,7 @@ public class ProveedorController {
                 .telefono(responseDTO.getTelefono())
                 .correo(responseDTO.getCorreo())
                 .direccion(responseDTO.getDireccion())
+                .contactoNombre(responseDTO.getContactoNombre())
                 .build();
 
         model.addAttribute("proveedor", requestDTO);

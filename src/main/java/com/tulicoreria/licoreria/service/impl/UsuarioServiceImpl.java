@@ -76,10 +76,17 @@ public class UsuarioServiceImpl implements UsuarioService, UserDetailsService {
         if (usuarioRepository.existsByCorreo(dto.getCorreo())) {
             throw new ReglaDeNegocioException("El correo ya está registrado: " + dto.getCorreo());
         }
-        Set<Rol> roles = dto.getRolIds().stream()
-                .map(rolId -> rolRepository.findById(rolId)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Rol no encontrado con id: " + rolId)))
-                .collect(Collectors.toSet());
+        if (dto.getRolId() == null) {
+            throw new ReglaDeNegocioException("Debes seleccionar un rol de acceso para el usuario.");
+        }
+        Rol rol = rolRepository.findById(dto.getRolId())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Rol no encontrado con id: " + dto.getRolId()));
+
+        // ROLE_CLIENTE es exclusivo de cuentas de la tienda web (ClienteWeb) y no
+        // debe asignarse a personal interno, aunque llegue directo por request.
+        if ("ROLE_CLIENTE".equals(rol.getNombre())) {
+            throw new ReglaDeNegocioException("El rol Cliente no puede asignarse a cuentas de personal interno.");
+        }
 
         Usuario usuario = Usuario.builder()
                 .username(dto.getUsername())
@@ -87,7 +94,7 @@ public class UsuarioServiceImpl implements UsuarioService, UserDetailsService {
                 .nombreCompleto(dto.getNombreCompleto())
                 .correo(dto.getCorreo())
                 .activo(true)
-                .roles(roles)
+                .roles(Set.of(rol))
                 .build();
 
         return toDTO(usuarioRepository.save(usuario));

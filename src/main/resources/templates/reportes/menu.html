@@ -28,10 +28,10 @@ th:replace="~{admin/layout :: layout(
                     <div class="reporte-icon bg-primary-soft mb-3 mx-auto">
                         <i class="bi bi-bar-chart-line text-primary fs-2"></i>
                     </div>
-                    <h5 class="fw-bold">Ventas por mes</h5>
+                    <h5 class="fw-bold">Ventas por período</h5>
                     <p class="text-muted small mb-4">
-                        Resumen mensual de ventas con desglose por tipo
-                        de comprobante, método de pago e IGV.
+                        Resumen de ventas entre las fechas que elijas, con
+                        desglose por tipo de comprobante, método de pago e IGV.
                     </p>
                     <a th:href="@{/reportes/ventas-mes}"
                        class="btn btn-primary w-100 fw-semibold">
@@ -50,8 +50,8 @@ th:replace="~{admin/layout :: layout(
                     </div>
                     <h5 class="fw-bold">Ventas por cliente</h5>
                     <p class="text-muted small mb-4">
-                        Ranking de clientes con mayor consumo mensual,
-                        cantidad de compras y total gastado.
+                        Ranking de clientes con mayor consumo en el período
+                        que elijas, cantidad de compras y total gastado.
                     </p>
                     <a th:href="@{/reportes/clientes}"
                        class="btn btn-success w-100 fw-semibold">
@@ -70,8 +70,8 @@ th:replace="~{admin/layout :: layout(
                     </div>
                     <h5 class="fw-bold">Ventas por producto</h5>
                     <p class="text-muted small mb-4">
-                        Productos más vendidos del mes con unidades
-                        despachadas e ingresos generados.
+                        Productos más vendidos en el período que elijas,
+                        con unidades despachadas e ingresos generados.
                     </p>
                     <a th:href="@{/reportes/productos}"
                        class="btn btn-warning w-100 fw-semibold">

@@ -2,6 +2,8 @@ package com.tulicoreria.licoreria.dto;
 
 import java.math.BigDecimal;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -31,7 +33,8 @@ public class ProductoResponseDTO {
     private BigDecimal precioVenta;
     private Integer stock;
     private Integer stockMinimo;
-    
+
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate fechaVencimiento;
 
     private boolean activo;

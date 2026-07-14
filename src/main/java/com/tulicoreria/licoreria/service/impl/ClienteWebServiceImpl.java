@@ -35,6 +35,9 @@ public class ClienteWebServiceImpl implements ClienteWebService {
         if (!dto.getPassword().equals(dto.getConfirmarPassword())) {
             throw new ReglaDeNegocioException("Las contraseñas no coinciden.");
         }
+        if (dto.getFechaNacimiento() == null) {
+            throw new ReglaDeNegocioException("La fecha de nacimiento es obligatoria para verificar la mayoría de edad.");
+        }
 
         // Determinar número de documento
         boolean tieneDni = dto.getDni() != null && !dto.getDni().isBlank();
@@ -53,6 +56,12 @@ public class ClienteWebServiceImpl implements ClienteWebService {
                 .correo(dto.getEmail())
                 .fechaNacimiento(dto.getFechaNacimiento())
                 .build();
+
+        // La tienda vende bebidas alcohólicas: no se permite el registro de menores
+        if (!cliente.esMayorDeEdad()) {
+            throw new ReglaDeNegocioException(
+                    "Debes ser mayor de 18 años para registrarte, ya que esta tienda vende bebidas alcohólicas.");
+        }
 
         ClienteWeb cw = ClienteWeb.builder()
                 .email(dto.getEmail())
